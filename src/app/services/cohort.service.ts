@@ -66,6 +66,12 @@ export class CohortService {
     
     return querySnapshot.docs.map(doc => {
       const data = doc.data();
+      const classes = (data['classes'] || []).map((cls: any, index: number) => ({
+        ...cls,
+        classId: cls.classId || `${doc.id}_class_${index}`,
+        enrolled: cls.enrolled || 0
+      }));
+      
       return {
         cohortId: doc.id,
         ...data,
@@ -73,7 +79,7 @@ export class CohortService {
         applicationEndDate: data['applicationEndDate']?.toDate ? data['applicationEndDate'].toDate() : new Date(data['applicationEndDate']),
         cohortStartDate: data['cohortStartDate']?.toDate ? data['cohortStartDate'].toDate() : new Date(data['cohortStartDate']),
         cohortEndDate: data['cohortEndDate']?.toDate ? data['cohortEndDate'].toDate() : new Date(data['cohortEndDate']),
-        classes: data['classes'] || []
+        classes: classes
       } as Cohort;
     });
   }
@@ -84,6 +90,12 @@ export class CohortService {
     
     if (docSnap.exists()) {
       const data = docSnap.data();
+      const classes = (data['classes'] || []).map((cls: any, index: number) => ({
+        ...cls,
+        classId: cls.classId || `${docSnap.id}_class_${index}`,
+        enrolled: cls.enrolled || 0
+      }));
+      
       return {
         cohortId: docSnap.id,
         ...data,
@@ -91,7 +103,7 @@ export class CohortService {
         applicationEndDate: data['applicationEndDate']?.toDate ? data['applicationEndDate'].toDate() : new Date(data['applicationEndDate']),
         cohortStartDate: data['cohortStartDate']?.toDate ? data['cohortStartDate'].toDate() : new Date(data['cohortStartDate']),
         cohortEndDate: data['cohortEndDate']?.toDate ? data['cohortEndDate'].toDate() : new Date(data['cohortEndDate']),
-        classes: data['classes'] || []
+        classes: classes
       } as Cohort;
     }
     return null;

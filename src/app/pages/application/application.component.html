@@ -187,9 +187,6 @@
                   (click)="toggleClassSelection(cohortClass.classId)">
                   <div class="class-header">
                     <h4>{{ cohortClass.name }}</h4>
-                    <div class="class-capacity">
-                      {{ cohortClass.enrolled }}/{{ cohortClass.capacity }}
-                    </div>
                   </div>
                   <div class="class-schedule">
                     {{ formatClassSchedule(cohortClass) }}
@@ -508,15 +505,19 @@
 
           <div class="quality-item" formGroupName="proactivePersonality">
             <label>Proactive Personality *</label>
-            <div class="rating-scale-10">
-              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
-                <div 
-                  class="rating-dot"
-                  [class.selected]="applicationForm.get('personalQualities.proactivePersonality.rating')?.value === rating"
-                  (click)="applicationForm.get('personalQualities.proactivePersonality.rating')?.setValue(rating)">
-                  {{ rating }}
-                </div>
-              }
+            <div class="rating-slider">
+              <input 
+                type="range" 
+                min="0" 
+                max="10" 
+                step="1"
+                formControlName="rating"
+                class="slider">
+              <div class="slider-labels">
+                <span>0</span>
+                <span>Current: {{ applicationForm.get('personalQualities.proactivePersonality.rating')?.value ?? 'Not set' }}</span>
+                <span>10</span>
+              </div>
             </div>
             <textarea 
               formControlName="example"
@@ -527,15 +528,19 @@
 
           <div class="quality-item" formGroupName="persistenceHandleDifficulties">
             <label>Persistence & Ability to Handle Difficulties *</label>
-            <div class="rating-scale-10">
-              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
-                <div 
-                  class="rating-dot"
-                  [class.selected]="applicationForm.get('personalQualities.persistenceHandleDifficulties.rating')?.value === rating"
-                  (click)="applicationForm.get('personalQualities.persistenceHandleDifficulties.rating')?.setValue(rating)">
-                  {{ rating }}
-                </div>
-              }
+            <div class="rating-slider">
+              <input 
+                type="range" 
+                min="0" 
+                max="10" 
+                step="1"
+                formControlName="rating"
+                class="slider">
+              <div class="slider-labels">
+                <span>0</span>
+                <span>Current: {{ applicationForm.get('personalQualities.persistenceHandleDifficulties.rating')?.value ?? 'Not set' }}</span>
+                <span>10</span>
+              </div>
             </div>
             <textarea 
               formControlName="example"
@@ -546,15 +551,19 @@
 
           <div class="quality-item" formGroupName="performUnderStress">
             <label>Ability to Perform Under Stress *</label>
-            <div class="rating-scale-10">
-              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
-                <div 
-                  class="rating-dot"
-                  [class.selected]="applicationForm.get('personalQualities.performUnderStress.rating')?.value === rating"
-                  (click)="applicationForm.get('personalQualities.performUnderStress.rating')?.setValue(rating)">
-                  {{ rating }}
-                </div>
-              }
+            <div class="rating-slider">
+              <input 
+                type="range" 
+                min="0" 
+                max="10" 
+                step="1"
+                formControlName="rating"
+                class="slider">
+              <div class="slider-labels">
+                <span>0</span>
+                <span>Current: {{ applicationForm.get('personalQualities.performUnderStress.rating')?.value ?? 'Not set' }}</span>
+                <span>10</span>
+              </div>
             </div>
             <textarea 
               formControlName="example"
@@ -565,15 +574,19 @@
 
           <div class="quality-item" formGroupName="independence">
             <label>Independence *</label>
-            <div class="rating-scale-10">
-              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
-                <div 
-                  class="rating-dot"
-                  [class.selected]="applicationForm.get('personalQualities.independence.rating')?.value === rating"
-                  (click)="applicationForm.get('personalQualities.independence.rating')?.setValue(rating)">
-                  {{ rating }}
-                </div>
-              }
+            <div class="rating-slider">
+              <input 
+                type="range" 
+                min="0" 
+                max="10" 
+                step="1"
+                formControlName="rating"
+                class="slider">
+              <div class="slider-labels">
+                <span>0</span>
+                <span>Current: {{ applicationForm.get('personalQualities.independence.rating')?.value ?? 'Not set' }}</span>
+                <span>10</span>
+              </div>
             </div>
             <textarea 
               formControlName="example"
@@ -584,15 +597,19 @@
 
           <div class="quality-item" formGroupName="teamwork">
             <label>Teamwork *</label>
-            <div class="rating-scale-10">
-              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
-                <div 
-                  class="rating-dot"
-                  [class.selected]="applicationForm.get('personalQualities.teamwork.rating')?.value === rating"
-                  (click)="applicationForm.get('personalQualities.teamwork.rating')?.setValue(rating)">
-                  {{ rating }}
-                </div>
-              }
+            <div class="rating-slider">
+              <input 
+                type="range" 
+                min="0" 
+                max="10" 
+                step="1"
+                formControlName="rating"
+                class="slider">
+              <div class="slider-labels">
+                <span>0</span>
+                <span>Current: {{ applicationForm.get('personalQualities.teamwork.rating')?.value ?? 'Not set' }}</span>
+                <span>10</span>
+              </div>
             </div>
             <textarea 
               formControlName="example"
@@ -603,15 +620,19 @@
 
           <div class="quality-item" formGroupName="mentalFlexibility">
             <label>Mental Flexibility *</label>
-            <div class="rating-scale-10">
-              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
-                <div 
-                  class="rating-dot"
-                  [class.selected]="applicationForm.get('personalQualities.mentalFlexibility.rating')?.value === rating"
-                  (click)="applicationForm.get('personalQualities.mentalFlexibility.rating')?.setValue(rating)">
-                  {{ rating }}
-                </div>
-              }
+            <div class="rating-slider">
+              <input 
+                type="range" 
+                min="0" 
+                max="10" 
+                step="1"
+                formControlName="rating"
+                class="slider">
+              <div class="slider-labels">
+                <span>0</span>
+                <span>Current: {{ applicationForm.get('personalQualities.mentalFlexibility.rating')?.value ?? 'Not set' }}</span>
+                <span>10</span>
+              </div>
             </div>
             <textarea 
               formControlName="example"
@@ -622,15 +643,19 @@
 
           <div class="quality-item" formGroupName="passionForProjects">
             <label>Passion for Projects You Lead *</label>
-            <div class="rating-scale-10">
-              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
-                <div 
-                  class="rating-dot"
-                  [class.selected]="applicationForm.get('personalQualities.passionForProjects.rating')?.value === rating"
-                  (click)="applicationForm.get('personalQualities.passionForProjects.rating')?.setValue(rating)">
-                  {{ rating }}
-                </div>
-              }
+            <div class="rating-slider">
+              <input 
+                type="range" 
+                min="0" 
+                max="10" 
+                step="1"
+                formControlName="rating"
+                class="slider">
+              <div class="slider-labels">
+                <span>0</span>
+                <span>Current: {{ applicationForm.get('personalQualities.passionForProjects.rating')?.value ?? 'Not set' }}</span>
+                <span>10</span>
+              </div>
             </div>
             <textarea 
               formControlName="example"
@@ -641,15 +666,19 @@
 
           <div class="quality-item" formGroupName="creativeThinking">
             <label>Creative Thinking *</label>
-            <div class="rating-scale-10">
-              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
-                <div 
-                  class="rating-dot"
-                  [class.selected]="applicationForm.get('personalQualities.creativeThinking.rating')?.value === rating"
-                  (click)="applicationForm.get('personalQualities.creativeThinking.rating')?.setValue(rating)">
-                  {{ rating }}
-                </div>
-              }
+            <div class="rating-slider">
+              <input 
+                type="range" 
+                min="0" 
+                max="10" 
+                step="1"
+                formControlName="rating"
+                class="slider">
+              <div class="slider-labels">
+                <span>0</span>
+                <span>Current: {{ applicationForm.get('personalQualities.creativeThinking.rating')?.value ?? 'Not set' }}</span>
+                <span>10</span>
+              </div>
             </div>
             <textarea 
               formControlName="example"
@@ -682,33 +711,16 @@
       <!-- Section 7: Cover Letter -->
       @if (currentStep() === 7) {
         <div class="form-section" formGroupName="coverLetter">
-          <div class="upload-section">
-            <h3>Upload Cover Letter</h3>
-            <p class="field-description">Upload a 300-word cover letter explaining why you should be accepted to the program.</p>
-            
-            <div class="file-upload-area" (click)="fileInput.click()">
-              <input 
-                #fileInput
-                type="file" 
-                accept=".pdf,.doc,.docx"
-                (change)="onFileSelected($event, 'coverLetter')"
-                style="display: none;">
-              
-              @if (applicationForm.get('coverLetter.fileName')?.value) {
-                <div class="uploaded-file">
-                  <i class="fas fa-file-alt"></i>
-                  <span>{{ applicationForm.get('coverLetter.fileName')?.value }}</span>
-                  <button type="button" class="remove-file" (click)="removeFile('coverLetter'); $event.stopPropagation()">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-              } @else {
-                <div class="upload-placeholder">
-                  <i class="fas fa-cloud-upload-alt"></i>
-                  <p>Click to upload your cover letter</p>
-                  <small>PDF, DOC, or DOCX files accepted</small>
-                </div>
-              }
+          <div class="form-group">
+            <label>Cover Letter *</label>
+            <p class="field-description">Write a 300-word cover letter explaining why you should be accepted to the program.</p>
+            <textarea 
+              formControlName="content"
+              class="form-textarea"
+              rows="12"
+              placeholder="Write your cover letter here..."></textarea>
+            <div class="word-count">
+              {{ getWordCount(applicationForm.get('coverLetter.content')?.value || '') }}/300 words
             </div>
           </div>
         </div>

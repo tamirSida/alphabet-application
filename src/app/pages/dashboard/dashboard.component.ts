@@ -84,7 +84,12 @@ export class DashboardComponent implements OnInit {
   }
 
   goToApplication() {
-    this.router.navigate(['/application']);
+    const cohort = this.currentAcceptingCohort();
+    if (cohort) {
+      this.router.navigate(['/application'], { queryParams: { cohort: cohort.cohortId } });
+    } else {
+      this.error.set('No active cohort available for applications.');
+    }
   }
 
   statusDisplay = signal({ text: 'Loading...', class: 'status-unknown', icon: 'fas fa-question' });

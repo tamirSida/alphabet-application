@@ -86,49 +86,49 @@ export class ApplicationComponent implements OnInit {
       
       // Section 4: Skills (1-5 scale)
       skills: this.fb.group({
-        aiDailyUse: [1, [Validators.required, Validators.min(1), Validators.max(5)]],
-        programming: [1, [Validators.required, Validators.min(1), Validators.max(5)]],
-        marketingSales: [1, [Validators.required, Validators.min(1), Validators.max(5)]],
-        management: [1, [Validators.required, Validators.min(1), Validators.max(5)]],
-        graphicDesign: [1, [Validators.required, Validators.min(1), Validators.max(5)]],
+        aiDailyUse: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
+        programming: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
+        marketingSales: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
+        management: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
+        graphicDesign: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
         other: this.fb.group({
           skill: [''],
-          rating: [1, [Validators.min(1), Validators.max(5)]]
+          rating: [null, [Validators.min(1), Validators.max(5)]]
         })
       }),
       
       // Section 5: Personal Qualities (0-10 scale)
       personalQualities: this.fb.group({
         proactivePersonality: this.fb.group({
-          rating: [5, [Validators.required, Validators.min(0), Validators.max(10)]],
+          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
           example: ['', Validators.required]
         }),
         persistenceHandleDifficulties: this.fb.group({
-          rating: [5, [Validators.required, Validators.min(0), Validators.max(10)]],
+          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
           example: ['', Validators.required]
         }),
         performUnderStress: this.fb.group({
-          rating: [5, [Validators.required, Validators.min(0), Validators.max(10)]],
+          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
           example: ['', Validators.required]
         }),
         independence: this.fb.group({
-          rating: [5, [Validators.required, Validators.min(0), Validators.max(10)]],
+          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
           example: ['', Validators.required]
         }),
         teamwork: this.fb.group({
-          rating: [5, [Validators.required, Validators.min(0), Validators.max(10)]],
+          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
           example: ['', Validators.required]
         }),
         mentalFlexibility: this.fb.group({
-          rating: [5, [Validators.required, Validators.min(0), Validators.max(10)]],
+          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
           example: ['', Validators.required]
         }),
         passionForProjects: this.fb.group({
-          rating: [5, [Validators.required, Validators.min(0), Validators.max(10)]],
+          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
           example: ['', Validators.required]
         }),
         creativeThinking: this.fb.group({
-          rating: [5, [Validators.required, Validators.min(0), Validators.max(10)]],
+          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
           example: ['', Validators.required]
         })
       }),
@@ -140,8 +140,7 @@ export class ApplicationComponent implements OnInit {
       
       // Section 7: Cover Letter
       coverLetter: this.fb.group({
-        fileUrl: ['', Validators.required],
-        fileName: ['', Validators.required]
+        content: ['', [Validators.required, this.wordCountValidator(300)]]
       }),
       
       // Section 8: Video Introduction
@@ -210,7 +209,7 @@ export class ApplicationComponent implements OnInit {
         this.applicationForm.patchValue({
           personalInformation: {
             studentId: userData.operatorId,
-            firstName: userData.email.split('@')[0], // Extract from email if no name
+            firstName: '', 
             lastName: '', 
             telephone: userData.phone || '',
             email: userData.email
