@@ -633,7 +633,6 @@
   margin-bottom: 1rem;
   flex-wrap: nowrap;
   justify-content: center;
-  overflow-x: auto;
 }
 
 .rating-option {
@@ -653,8 +652,10 @@
 }
 
 .rating-option.selected {
-  background: rgba(30, 41, 59, 0.5);
+  background: rgba(226, 232, 240, 0.1);
   transform: scale(1.05);
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
 }
 
 .rating-circle {
@@ -674,10 +675,11 @@
 }
 
 .rating-option.selected .rating-circle {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  border-color: #334155;
-  color: white;
-  box-shadow: 0 4px 15px rgba(30, 41, 59, 0.4);
+  background: #e2e8f0;
+  border-color: #e2e8f0;
+  color: #1e293b;
+  font-weight: 900;
+  box-shadow: 0 0 0 3px rgba(226, 232, 240, 0.3);
 }
 
 .rating-label {
