@@ -224,6 +224,110 @@
                   </div>
                 </div>
 
+                <!-- Classes Section -->
+                <div class="classes-section">
+                  <div class="classes-header">
+                    <h3>Classes Configuration</h3>
+                    <button type="button" class="add-class-button" (click)="addNewClass()">
+                      <i class="fas fa-plus"></i>
+                      Add Class
+                    </button>
+                  </div>
+
+                  <div formArrayName="classes" class="classes-list">
+                    @for (classControl of classesArray.controls; track $index) {
+                      <div [formGroupName]="$index" class="class-item">
+                        <div class="class-header">
+                          <div class="class-basic-info">
+                            <div class="form-group">
+                              <label>Class Name</label>
+                              <input
+                                type="text"
+                                formControlName="name"
+                                class="form-input class-name-input"
+                                placeholder="e.g., Class A">
+                            </div>
+                            <div class="form-group">
+                              <label>Capacity</label>
+                              <input
+                                type="number"
+                                formControlName="capacity"
+                                class="form-input capacity-input"
+                                min="1"
+                                placeholder="25">
+                            </div>
+                          </div>
+                          
+                          @if (classesArray.length > 1) {
+                            <button 
+                              type="button" 
+                              class="remove-class-button"
+                              (click)="removeClass($index)">
+                              <i class="fas fa-trash"></i>
+                            </button>
+                          }
+                        </div>
+
+                        <!-- Weekdays Selection -->
+                        <div class="weekdays-section">
+                          <label class="section-label">Select Weekdays</label>
+                          <div class="weekdays-grid" formGroupName="weekdays">
+                            @for (day of ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']; track day) {
+                              <div class="weekday-item">
+                                <input 
+                                  type="checkbox"
+                                  [id]="'weekday-' + $index + '-' + day"
+                                  [formControlName]="day"
+                                  (change)="onWeekdayChange($index, day, $any($event.target).checked)">
+                                <label [for]="'weekday-' + $index + '-' + day" class="weekday-label">
+                                  {{ day.substring(0, 3) }}
+                                </label>
+                              </div>
+                            }
+                          </div>
+                        </div>
+
+                        <!-- Times for Selected Days -->
+                        <div class="times-section" formGroupName="times">
+                          <label class="section-label">Class Times</label>
+                          <div class="times-grid">
+                            @for (day of getSelectedWeekdays($index); track day) {
+                              <div class="time-row" [formGroupName]="day">
+                                <div class="day-name">{{ day }}</div>
+                                <div class="time-inputs">
+                                  <input
+                                    type="time"
+                                    formControlName="startTime"
+                                    class="form-input time-input">
+                                  <span class="time-separator">to</span>
+                                  <input
+                                    type="time"
+                                    formControlName="endTime"
+                                    class="form-input time-input">
+                                </div>
+                              </div>
+                            }
+                          </div>
+                          
+                          @if (getSelectedWeekdays($index).length === 0) {
+                            <div class="no-days-selected">
+                              <i class="fas fa-info-circle"></i>
+                              Select weekdays above to set class times
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  @if (classesArray.length === 0) {
+                    <div class="no-classes">
+                      <i class="fas fa-plus-circle"></i>
+                      <p>Add at least one class to continue</p>
+                    </div>
+                  }
+                </div>
+
                 <div class="form-actions">
                   <button type="button" class="secondary-button" (click)="toggleCohortForm()">
                     Cancel

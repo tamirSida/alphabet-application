@@ -28,13 +28,22 @@ export class ApplicationService {
       throw new Error('User not found');
     }
 
+    // Calculate red flags
+    const flags = {
+      englishProficiency: 
+        request.formData.serviceAvailability.countryOfService === 'IL' && 
+        request.formData.serviceAvailability.englishProficiency === 'No',
+      combatService: request.formData.experienceBackground.combatService === 'No'
+    };
+
     const applicationData = {
       userId,
       cohortId: request.cohortId,
       operatorId: user.operatorId,
       status: 'submitted' as const,
       submittedAt: new Date(),
-      formData: request.formData
+      formData: request.formData,
+      flags
     };
 
     const docRef = await addDoc(

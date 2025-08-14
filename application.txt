@@ -1,0 +1,77 @@
+Alphabet application form
+
+Section 1 – Personal Information
+Student ID (auto-generated): ####-###-### (display only, uneditable)
+First Name:
+Last Name:
+Telephone Number (optional):
+Email Address:
+Note: Share your Student ID with up to two friends if you want us to try to place you together (no guarantees). (this is a cute feature not a must - connects to section 9)
+
+Section 2 – Service & Availability
+Country of Service: (US / IL)
+English Proficiency (shown only if “IL” selected in Q6)
+This program is conducted entirely in English. Are you comfortable with this? (Yes / No)
+No == redflag -> screening
+Class A – Availability: (select times; capped)
+Class B – Availability: (select times; capped)
+Can select both 
+
+
+Section 3 – Experience & Background
+Combat Service: Were you a combat soldier or did you serve in a combat role? (Yes / No)
+No == redflag -> screening
+Military Service Description:
+Describe your service, including your role/title and responsibilities. (max 75 words)
+Professional Experience: not mandatory
+Describe your work experience or entrepreneurial activity. (max 150 words)
+Initiative or Project Idea: this is an exercise to test your imagination.. 
+We wont hold you to it!!
+Describe an initiative or project you’d like to develop during your studies. (max 200 words)
+Problem Statement:
+What problem are you aiming to solve?
+Idea Summary:
+Briefly explain your proposed solution.
+Solution Approach:
+How will your idea solve the problem?
+Market & Clients:
+Briefly describe the relevant market and potential clients.
+
+Section 4 – Skills (Rate 1–5)
+AI – daily use of LLM tools (e.g., ChatGPT)
+Programming
+Marketing & Sales
+Management
+Graphic Design
+Other (specify) not mandatory
+
+
+Section 5 – Personal Qualities
+Rate each 0–10 (0 = doesn’t describe me, 10 = describes me perfectly) and give a brief example from past experience.
+Proactive personality 
+Persistence & ability to handle difficulties
+Ability to perform under stress
+Independence
+Teamwork
+Mental flexibility
+Passion for projects you lead
+Creative thinking
+
+Section 6 – Short Answers
+Describe a failure (max 200 words) – what happened and what you learned.
+
+Section 7 – Cover Letter
+Upload a 300-word cover letter.
+
+Section 8 – Video Introduction
+30–60 second video: Introduce yourself and explain why you should be accepted to the program.
+Upload to YouTube (set to Unlisted) or another platform.
+
+Section 9 – Optional: Friends
+I’m signing up with friends (up to 2): (optional)
+Friend #1 Student ID (9 digits): ____________
+Friend #2 Student ID (9 digits): ____________
+We’ll do our best to place you together, but it’s not guaranteed. Not a must
+Feedback you need to address:
+This looks great. My one comment is on the questions 13-17 about an idea - I think we need to make it clear this is not a prerequisite to the program. Some folks will want to be able to say they have no idea but want to learn about how to come up with an idea and that's great. Perhaps we preempt that section with a question asking them whether they have a business or idea in mind they would like to work on.
+

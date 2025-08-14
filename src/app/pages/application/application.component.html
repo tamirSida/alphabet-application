@@ -1,0 +1,842 @@
+<div class="application-container">
+  @if (isLoading()) {
+    <div class="loading-overlay">
+      <div class="loading-content">
+        <i class="fas fa-spinner fa-spin loading-icon"></i>
+        <p>Loading application...</p>
+      </div>
+    </div>
+  } @else {
+    <!-- Header -->
+    <header class="app-header">
+      <button class="back-button" (click)="router.navigate(['/dashboard'])">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <div class="header-content">
+        <h1>Application Form</h1>
+        <p>{{ cohort()?.number }}</p>
+      </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div 
+          class="progress-fill" 
+          [style.width.%]="progress()">
+        </div>
+      </div>
+      <div class="step-indicator">
+        <span class="current-step">{{ currentStep() }}</span>
+        <span class="step-separator">/</span>
+        <span class="total-steps">{{ totalSteps }}</span>
+      </div>
+    </div>
+
+    <!-- Step Title -->
+    <div class="step-header">
+      <h2>{{ getStepTitle(currentStep()) }}</h2>
+      <div class="step-dots">
+        @for (step of [1,2,3,4,5,6,7,8,9]; track step) {
+          <div 
+            class="step-dot"
+            [class.active]="currentStep() === step"
+            [class.completed]="currentStep() > step"
+            (click)="goToStep(step)">
+            @if (currentStep() > step) {
+              <i class="fas fa-check"></i>
+            } @else {
+              {{ step }}
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Form Content -->
+    <form [formGroup]="applicationForm" class="application-form">
+      
+      <!-- Section 1: Personal Information -->
+      @if (currentStep() === 1) {
+        <div class="form-section" formGroupName="personalInformation">
+          <div class="form-group">
+            <label>Student ID</label>
+            <input 
+              type="text" 
+              formControlName="studentId" 
+              readonly
+              class="form-input readonly">
+            <small class="form-help">Auto-generated and cannot be changed</small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name *</label>
+              <input 
+                type="text" 
+                formControlName="firstName" 
+                class="form-input"
+                placeholder="Enter your first name">
+            </div>
+            <div class="form-group">
+              <label>Last Name *</label>
+              <input 
+                type="text" 
+                formControlName="lastName" 
+                class="form-input"
+                placeholder="Enter your last name">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Telephone Number</label>
+            <input 
+              type="tel" 
+              formControlName="telephone" 
+              class="form-input"
+              placeholder="Optional">
+          </div>
+
+          <div class="form-group">
+            <label>Email Address *</label>
+            <input 
+              type="email" 
+              formControlName="email" 
+              readonly
+              class="form-input readonly">
+            <small class="form-help">This is your registered email</small>
+          </div>
+
+          <div class="friend-note">
+            <i class="fas fa-users"></i>
+            <p><strong>Friend Matching:</strong> Share your Student ID with up to two friends if you want us to try to place you together (no guarantees).</p>
+          </div>
+        </div>
+      }
+
+      <!-- Section 2: Service & Availability -->
+      @if (currentStep() === 2) {
+        <div class="form-section" formGroupName="serviceAvailability">
+          <div class="form-group">
+            <label>Country of Service *</label>
+            <div class="radio-group">
+              <div class="radio-option">
+                <input 
+                  type="radio" 
+                  id="country-us" 
+                  formControlName="countryOfService" 
+                  value="US">
+                <label for="country-us">
+                  <span class="radio-circle"></span>
+                  <span class="radio-text">United States</span>
+                </label>
+              </div>
+              <div class="radio-option">
+                <input 
+                  type="radio" 
+                  id="country-il" 
+                  formControlName="countryOfService" 
+                  value="IL">
+                <label for="country-il">
+                  <span class="radio-circle"></span>
+                  <span class="radio-text">Israel</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          @if (applicationForm.get('serviceAvailability.countryOfService')?.value === 'IL') {
+            <div class="form-group english-proficiency">
+              <label>English Proficiency *</label>
+              <p class="field-description">This program is conducted entirely in English. Are you comfortable with this?</p>
+              <div class="radio-group">
+                <div class="radio-option">
+                  <input 
+                    type="radio" 
+                    id="english-yes" 
+                    formControlName="englishProficiency" 
+                    value="Yes">
+                  <label for="english-yes">
+                    <span class="radio-circle"></span>
+                    <span class="radio-text">Yes</span>
+                  </label>
+                </div>
+                <div class="radio-option">
+                  <input 
+                    type="radio" 
+                    id="english-no" 
+                    formControlName="englishProficiency" 
+                    value="No">
+                  <label for="english-no">
+                    <span class="radio-circle"></span>
+                    <span class="radio-text">No</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          }
+
+          <div class="form-group">
+            <label>Class Availability *</label>
+            <p class="field-description">Select the classes you're available for (you can select both):</p>
+            <div class="class-options">
+              @for (cohortClass of cohort()?.classes || []; track cohortClass.classId) {
+                <div 
+                  class="class-option"
+                  [class.selected]="isClassSelected(cohortClass.classId)"
+                  (click)="toggleClassSelection(cohortClass.classId)">
+                  <div class="class-header">
+                    <h4>{{ cohortClass.name }}</h4>
+                    <div class="class-capacity">
+                      {{ cohortClass.enrolled }}/{{ cohortClass.capacity }}
+                    </div>
+                  </div>
+                  <div class="class-schedule">
+                    {{ formatClassSchedule(cohortClass) }}
+                  </div>
+                  <div class="selection-indicator">
+                    @if (isClassSelected(cohortClass.classId)) {
+                      <i class="fas fa-check-circle"></i>
+                    } @else {
+                      <i class="far fa-circle"></i>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Section 3: Experience & Background -->
+      @if (currentStep() === 3) {
+        <div class="form-section" formGroupName="experienceBackground">
+          <div class="form-group">
+            <label>Combat Service *</label>
+            <p class="field-description">Were you a combat soldier or did you serve in a combat role?</p>
+            <div class="radio-group">
+              <div class="radio-option">
+                <input 
+                  type="radio" 
+                  id="combat-yes" 
+                  formControlName="combatService" 
+                  value="Yes">
+                <label for="combat-yes">
+                  <span class="radio-circle"></span>
+                  <span class="radio-text">Yes</span>
+                </label>
+              </div>
+              <div class="radio-option">
+                <input 
+                  type="radio" 
+                  id="combat-no" 
+                  formControlName="combatService" 
+                  value="No">
+                <label for="combat-no">
+                  <span class="radio-circle"></span>
+                  <span class="radio-text">No</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Military Service Description *</label>
+            <textarea 
+              formControlName="militaryServiceDescription"
+              class="form-textarea"
+              rows="4"
+              placeholder="Describe your service, including your role/title and responsibilities..."
+              maxlength="500"></textarea>
+            <div class="word-count">
+              {{ getWordCount(applicationForm.get('experienceBackground.militaryServiceDescription')?.value) }}/75 words
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Professional Experience</label>
+            <textarea 
+              formControlName="professionalExperience"
+              class="form-textarea"
+              rows="4"
+              placeholder="Describe your work experience or entrepreneurial activity (optional)..."
+              maxlength="1000"></textarea>
+            <div class="word-count">
+              {{ getWordCount(applicationForm.get('experienceBackground.professionalExperience')?.value) }}/150 words
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Do you have a business or project idea in mind? *</label>
+            <p class="field-description">This is not a prerequisite. If you don't have an idea yet, that's perfectly fine - learning to develop ideas is part of the program!</p>
+            <div class="radio-group">
+              <div class="radio-option">
+                <input 
+                  type="radio" 
+                  id="idea-yes" 
+                  formControlName="hasProjectIdea" 
+                  value="Yes">
+                <label for="idea-yes">
+                  <span class="radio-circle"></span>
+                  <span class="radio-text">Yes, I have an idea</span>
+                </label>
+              </div>
+              <div class="radio-option">
+                <input 
+                  type="radio" 
+                  id="idea-no" 
+                  formControlName="hasProjectIdea" 
+                  value="No">
+                <label for="idea-no">
+                  <span class="radio-circle"></span>
+                  <span class="radio-text">No, I want to learn how to develop ideas</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          @if (applicationForm.get('experienceBackground.hasProjectIdea')?.value === 'Yes') {
+            <div class="project-idea-section" formGroupName="projectIdea">
+              <h3>Tell us about your project idea</h3>
+              
+              <div class="form-group">
+                <label>Problem Statement *</label>
+                <textarea 
+                  formControlName="problemStatement"
+                  class="form-textarea"
+                  rows="3"
+                  placeholder="What problem are you aiming to solve?"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Idea Summary *</label>
+                <textarea 
+                  formControlName="ideaSummary"
+                  class="form-textarea"
+                  rows="3"
+                  placeholder="Briefly explain your proposed solution."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Solution Approach *</label>
+                <textarea 
+                  formControlName="solutionApproach"
+                  class="form-textarea"
+                  rows="3"
+                  placeholder="How will your idea solve the problem?"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Market & Clients *</label>
+                <textarea 
+                  formControlName="marketClients"
+                  class="form-textarea"
+                  rows="3"
+                  placeholder="Briefly describe the relevant market and potential clients."></textarea>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Section 4: Skills (1-5 scale) -->
+      @if (currentStep() === 4) {
+        <div class="form-section" formGroupName="skills">
+          <div class="skills-intro">
+            <p>Rate your skills on a scale of 1-5 (1 = Beginner, 5 = Expert)</p>
+          </div>
+
+          <div class="skill-item">
+            <label>AI – Daily use of LLM tools (e.g., ChatGPT) *</label>
+            <div class="rating-scale-5">
+              @for (rating of [1,2,3,4,5]; track rating) {
+                <div 
+                  class="rating-option"
+                  [class.selected]="applicationForm.get('skills.aiDailyUse')?.value === rating"
+                  (click)="applicationForm.get('skills.aiDailyUse')?.setValue(rating)">
+                  <div class="rating-circle">{{ rating }}</div>
+                  <div class="rating-label">
+                    @switch (rating) {
+                      @case (1) { Never }
+                      @case (2) { Rarely }
+                      @case (3) { Sometimes }
+                      @case (4) { Often }
+                      @case (5) { Daily }
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="skill-item">
+            <label>Programming *</label>
+            <div class="rating-scale-5">
+              @for (rating of [1,2,3,4,5]; track rating) {
+                <div 
+                  class="rating-option"
+                  [class.selected]="applicationForm.get('skills.programming')?.value === rating"
+                  (click)="applicationForm.get('skills.programming')?.setValue(rating)">
+                  <div class="rating-circle">{{ rating }}</div>
+                  <div class="rating-label">
+                    @switch (rating) {
+                      @case (1) { None }
+                      @case (2) { Basic }
+                      @case (3) { Intermediate }
+                      @case (4) { Advanced }
+                      @case (5) { Expert }
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="skill-item">
+            <label>Marketing & Sales *</label>
+            <div class="rating-scale-5">
+              @for (rating of [1,2,3,4,5]; track rating) {
+                <div 
+                  class="rating-option"
+                  [class.selected]="applicationForm.get('skills.marketingSales')?.value === rating"
+                  (click)="applicationForm.get('skills.marketingSales')?.setValue(rating)">
+                  <div class="rating-circle">{{ rating }}</div>
+                  <div class="rating-label">
+                    @switch (rating) {
+                      @case (1) { None }
+                      @case (2) { Basic }
+                      @case (3) { Intermediate }
+                      @case (4) { Advanced }
+                      @case (5) { Expert }
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="skill-item">
+            <label>Management *</label>
+            <div class="rating-scale-5">
+              @for (rating of [1,2,3,4,5]; track rating) {
+                <div 
+                  class="rating-option"
+                  [class.selected]="applicationForm.get('skills.management')?.value === rating"
+                  (click)="applicationForm.get('skills.management')?.setValue(rating)">
+                  <div class="rating-circle">{{ rating }}</div>
+                  <div class="rating-label">
+                    @switch (rating) {
+                      @case (1) { None }
+                      @case (2) { Basic }
+                      @case (3) { Intermediate }
+                      @case (4) { Advanced }
+                      @case (5) { Expert }
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="skill-item">
+            <label>Graphic Design *</label>
+            <div class="rating-scale-5">
+              @for (rating of [1,2,3,4,5]; track rating) {
+                <div 
+                  class="rating-option"
+                  [class.selected]="applicationForm.get('skills.graphicDesign')?.value === rating"
+                  (click)="applicationForm.get('skills.graphicDesign')?.setValue(rating)">
+                  <div class="rating-circle">{{ rating }}</div>
+                  <div class="rating-label">
+                    @switch (rating) {
+                      @case (1) { None }
+                      @case (2) { Basic }
+                      @case (3) { Intermediate }
+                      @case (4) { Advanced }
+                      @case (5) { Expert }
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="other-skill-section" formGroupName="other">
+            <div class="form-group">
+              <label>Other Skill (Optional)</label>
+              <input 
+                type="text" 
+                formControlName="skill"
+                class="form-input"
+                placeholder="Specify another skill...">
+            </div>
+            
+            @if (applicationForm.get('skills.other.skill')?.value) {
+              <div class="skill-item">
+                <label>{{ applicationForm.get('skills.other.skill')?.value }} Rating</label>
+                <div class="rating-scale-5">
+                  @for (rating of [1,2,3,4,5]; track rating) {
+                    <div 
+                      class="rating-option"
+                      [class.selected]="applicationForm.get('skills.other.rating')?.value === rating"
+                      (click)="applicationForm.get('skills.other.rating')?.setValue(rating)">
+                      <div class="rating-circle">{{ rating }}</div>
+                      <div class="rating-label">
+                        @switch (rating) {
+                          @case (1) { None }
+                          @case (2) { Basic }
+                          @case (3) { Intermediate }
+                          @case (4) { Advanced }
+                          @case (5) { Expert }
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Section 5: Personal Qualities (0-10 scale) -->
+      @if (currentStep() === 5) {
+        <div class="form-section" formGroupName="personalQualities">
+          <div class="qualities-intro">
+            <p>Rate each quality from 0-10 (0 = doesn't describe me, 10 = describes me perfectly) and provide a brief example from your past experience.</p>
+          </div>
+
+          <div class="quality-item" formGroupName="proactivePersonality">
+            <label>Proactive Personality *</label>
+            <div class="rating-scale-10">
+              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
+                <div 
+                  class="rating-dot"
+                  [class.selected]="applicationForm.get('personalQualities.proactivePersonality.rating')?.value === rating"
+                  (click)="applicationForm.get('personalQualities.proactivePersonality.rating')?.setValue(rating)">
+                  {{ rating }}
+                </div>
+              }
+            </div>
+            <textarea 
+              formControlName="example"
+              class="form-textarea"
+              rows="3"
+              placeholder="Give a brief example from your past experience..."></textarea>
+          </div>
+
+          <div class="quality-item" formGroupName="persistenceHandleDifficulties">
+            <label>Persistence & Ability to Handle Difficulties *</label>
+            <div class="rating-scale-10">
+              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
+                <div 
+                  class="rating-dot"
+                  [class.selected]="applicationForm.get('personalQualities.persistenceHandleDifficulties.rating')?.value === rating"
+                  (click)="applicationForm.get('personalQualities.persistenceHandleDifficulties.rating')?.setValue(rating)">
+                  {{ rating }}
+                </div>
+              }
+            </div>
+            <textarea 
+              formControlName="example"
+              class="form-textarea"
+              rows="3"
+              placeholder="Give a brief example from your past experience..."></textarea>
+          </div>
+
+          <div class="quality-item" formGroupName="performUnderStress">
+            <label>Ability to Perform Under Stress *</label>
+            <div class="rating-scale-10">
+              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
+                <div 
+                  class="rating-dot"
+                  [class.selected]="applicationForm.get('personalQualities.performUnderStress.rating')?.value === rating"
+                  (click)="applicationForm.get('personalQualities.performUnderStress.rating')?.setValue(rating)">
+                  {{ rating }}
+                </div>
+              }
+            </div>
+            <textarea 
+              formControlName="example"
+              class="form-textarea"
+              rows="3"
+              placeholder="Give a brief example from your past experience..."></textarea>
+          </div>
+
+          <div class="quality-item" formGroupName="independence">
+            <label>Independence *</label>
+            <div class="rating-scale-10">
+              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
+                <div 
+                  class="rating-dot"
+                  [class.selected]="applicationForm.get('personalQualities.independence.rating')?.value === rating"
+                  (click)="applicationForm.get('personalQualities.independence.rating')?.setValue(rating)">
+                  {{ rating }}
+                </div>
+              }
+            </div>
+            <textarea 
+              formControlName="example"
+              class="form-textarea"
+              rows="3"
+              placeholder="Give a brief example from your past experience..."></textarea>
+          </div>
+
+          <div class="quality-item" formGroupName="teamwork">
+            <label>Teamwork *</label>
+            <div class="rating-scale-10">
+              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
+                <div 
+                  class="rating-dot"
+                  [class.selected]="applicationForm.get('personalQualities.teamwork.rating')?.value === rating"
+                  (click)="applicationForm.get('personalQualities.teamwork.rating')?.setValue(rating)">
+                  {{ rating }}
+                </div>
+              }
+            </div>
+            <textarea 
+              formControlName="example"
+              class="form-textarea"
+              rows="3"
+              placeholder="Give a brief example from your past experience..."></textarea>
+          </div>
+
+          <div class="quality-item" formGroupName="mentalFlexibility">
+            <label>Mental Flexibility *</label>
+            <div class="rating-scale-10">
+              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
+                <div 
+                  class="rating-dot"
+                  [class.selected]="applicationForm.get('personalQualities.mentalFlexibility.rating')?.value === rating"
+                  (click)="applicationForm.get('personalQualities.mentalFlexibility.rating')?.setValue(rating)">
+                  {{ rating }}
+                </div>
+              }
+            </div>
+            <textarea 
+              formControlName="example"
+              class="form-textarea"
+              rows="3"
+              placeholder="Give a brief example from your past experience..."></textarea>
+          </div>
+
+          <div class="quality-item" formGroupName="passionForProjects">
+            <label>Passion for Projects You Lead *</label>
+            <div class="rating-scale-10">
+              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
+                <div 
+                  class="rating-dot"
+                  [class.selected]="applicationForm.get('personalQualities.passionForProjects.rating')?.value === rating"
+                  (click)="applicationForm.get('personalQualities.passionForProjects.rating')?.setValue(rating)">
+                  {{ rating }}
+                </div>
+              }
+            </div>
+            <textarea 
+              formControlName="example"
+              class="form-textarea"
+              rows="3"
+              placeholder="Give a brief example from your past experience..."></textarea>
+          </div>
+
+          <div class="quality-item" formGroupName="creativeThinking">
+            <label>Creative Thinking *</label>
+            <div class="rating-scale-10">
+              @for (rating of [0,1,2,3,4,5,6,7,8,9,10]; track rating) {
+                <div 
+                  class="rating-dot"
+                  [class.selected]="applicationForm.get('personalQualities.creativeThinking.rating')?.value === rating"
+                  (click)="applicationForm.get('personalQualities.creativeThinking.rating')?.setValue(rating)">
+                  {{ rating }}
+                </div>
+              }
+            </div>
+            <textarea 
+              formControlName="example"
+              class="form-textarea"
+              rows="3"
+              placeholder="Give a brief example from your past experience..."></textarea>
+          </div>
+        </div>
+      }
+
+      <!-- Section 6: Short Answer -->
+      @if (currentStep() === 6) {
+        <div class="form-section" formGroupName="shortAnswer">
+          <div class="form-group">
+            <label>Describe a Failure *</label>
+            <p class="field-description">Tell us about a time you failed - what happened and what you learned from it. (Maximum 200 words)</p>
+            <textarea 
+              formControlName="failureDescription"
+              class="form-textarea"
+              rows="6"
+              placeholder="Share your experience with failure and the lessons you learned..."
+              maxlength="1200"></textarea>
+            <div class="word-count">
+              {{ getWordCount(applicationForm.get('shortAnswer.failureDescription')?.value) }}/200 words
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Section 7: Cover Letter -->
+      @if (currentStep() === 7) {
+        <div class="form-section" formGroupName="coverLetter">
+          <div class="upload-section">
+            <h3>Upload Cover Letter</h3>
+            <p class="field-description">Upload a 300-word cover letter explaining why you should be accepted to the program.</p>
+            
+            <div class="file-upload-area" (click)="fileInput.click()">
+              <input 
+                #fileInput
+                type="file" 
+                accept=".pdf,.doc,.docx"
+                (change)="onFileSelected($event, 'coverLetter')"
+                style="display: none;">
+              
+              @if (applicationForm.get('coverLetter.fileName')?.value) {
+                <div class="uploaded-file">
+                  <i class="fas fa-file-alt"></i>
+                  <span>{{ applicationForm.get('coverLetter.fileName')?.value }}</span>
+                  <button type="button" class="remove-file" (click)="removeFile('coverLetter'); $event.stopPropagation()">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              } @else {
+                <div class="upload-placeholder">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <p>Click to upload your cover letter</p>
+                  <small>PDF, DOC, or DOCX files accepted</small>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Section 8: Video Introduction -->
+      @if (currentStep() === 8) {
+        <div class="form-section" formGroupName="videoIntroduction">
+          <div class="form-group">
+            <label>Video Introduction *</label>
+            <p class="field-description">Create a 30-60 second video introducing yourself and explaining why you should be accepted to the program. Upload to YouTube (set to Unlisted) or another platform and paste the link below.</p>
+            
+            <input 
+              type="url" 
+              formControlName="videoUrl"
+              class="form-input"
+              placeholder="https://youtube.com/watch?v=...">
+            
+            <div class="video-help">
+              <i class="fas fa-info-circle"></i>
+              <div>
+                <p><strong>Video Tips:</strong></p>
+                <ul>
+                  <li>Keep it between 30-60 seconds</li>
+                  <li>Introduce yourself briefly</li>
+                  <li>Explain why you want to join the program</li>
+                  <li>Set YouTube videos to "Unlisted" for privacy</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Section 9: Friends -->
+      @if (currentStep() === 9) {
+        <div class="form-section" formGroupName="friends">
+          <div class="friends-intro">
+            <i class="fas fa-user-friends"></i>
+            <div>
+              <h3>Friends (Optional)</h3>
+              <p>If you're signing up with friends, enter their Student IDs below. We'll do our best to place you together, but it's not guaranteed.</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Friend #1 Student ID</label>
+            <input 
+              type="text" 
+              formControlName="friend1StudentId"
+              class="form-input"
+              placeholder="####-###-### (9 digits)"
+              pattern="[0-9]{4}-[0-9]{3}-[0-9]{3}"
+              maxlength="11">
+            <small class="form-help">Format: ####-###-###</small>
+          </div>
+
+          <div class="form-group">
+            <label>Friend #2 Student ID</label>
+            <input 
+              type="text" 
+              formControlName="friend2StudentId"
+              class="form-input"
+              placeholder="####-###-### (9 digits)"
+              pattern="[0-9]{4}-[0-9]{3}-[0-9]{3}"
+              maxlength="11">
+            <small class="form-help">Format: ####-###-###</small>
+          </div>
+
+          <div class="friends-note">
+            <i class="fas fa-heart"></i>
+            <p>Friend matching is a best-effort service. We'll try our hardest to place you with your friends in the same class, but final placement depends on availability and program requirements.</p>
+          </div>
+        </div>
+      }
+      
+    </form>
+
+    <!-- Navigation -->
+    <div class="form-navigation">
+      @if (currentStep() > 1) {
+        <button type="button" class="nav-button prev" (click)="prevStep()">
+          <i class="fas fa-chevron-left"></i>
+          Previous
+        </button>
+      }
+      
+      <div class="nav-spacer"></div>
+      
+      @if (currentStep() < totalSteps) {
+        <button 
+          type="button" 
+          class="nav-button next"
+          [disabled]="!isCurrentStepValid()"
+          (click)="nextStep()">
+          Next
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      } @else {
+        <button 
+          type="button" 
+          class="nav-button submit"
+          [disabled]="!applicationForm.valid || isLoading()"
+          (click)="submitApplication()">
+          @if (isLoading()) {
+            <i class="fas fa-spinner fa-spin"></i>
+            Submitting...
+          } @else {
+            <i class="fas fa-paper-plane"></i>
+            Submit Application
+          }
+        </button>
+      }
+    </div>
+
+    <!-- Success/Error Messages -->
+    @if (success()) {
+      <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i>
+        {{ success() }}
+      </div>
+    }
+
+    @if (error()) {
+      <div class="alert alert-error">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ error() }}
+      </div>
+    }
+  }
+</div>

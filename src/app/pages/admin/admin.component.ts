@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService, UserService, ApplicationService, CohortService } from '../../services';
 import { User, Application, Cohort } from '../../models';
@@ -42,8 +42,12 @@ export class AdminComponent implements OnInit {
       applicationEndDate: ['', Validators.required],
       applicationEndTime: ['23:59', Validators.required],
       cohortStartDate: ['', Validators.required],
-      cohortEndDate: ['', Validators.required]
+      cohortEndDate: ['', Validators.required],
+      classes: this.fb.array([], [Validators.required, Validators.minLength(1)])
     });
+
+    // Add initial class
+    this.addNewClass();
 
     this.adminForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -159,16 +163,19 @@ export class AdminComponent implements OnInit {
           applicationEndDate: appEndDateTime,
           cohortStartDate: new Date(formData.cohortStartDate),
           cohortEndDate: new Date(formData.cohortEndDate)
+          // Note: For now, we don't update classes. In the future, this could be enhanced.
         });
         this.success.set('Cohort updated successfully!');
       } else {
         // Create new cohort
+        const cohortClasses = this.convertFormClassesToCohortClasses(formData.classes);
         await this.cohortService.createCohort({
           number: formData.number,
           applicationStartDate: appStartDateTime,
           applicationEndDate: appEndDateTime,
           cohortStartDate: new Date(formData.cohortStartDate),
-          cohortEndDate: new Date(formData.cohortEndDate)
+          cohortEndDate: new Date(formData.cohortEndDate),
+          classes: cohortClasses
         });
         this.success.set('Cohort created successfully!');
       }
@@ -268,6 +275,82 @@ export class AdminComponent implements OnInit {
     this.showCohortForm.set(false);
     this.error.set(null);
     this.success.set(null);
+  }
+
+  // Class management methods
+  get classesArray(): FormArray {
+    return this.cohortForm.get('classes') as FormArray;
+  }
+
+  createClassFormGroup(): FormGroup {
+    return this.fb.group({
+      name: ['', Validators.required],
+      capacity: [25, [Validators.required, Validators.min(1)]],
+      weekdays: this.fb.group({
+        Monday: [false],
+        Tuesday: [false],
+        Wednesday: [false],
+        Thursday: [false],
+        Friday: [false]
+      }),
+      times: this.fb.group({
+        Monday: this.fb.group({ startTime: ['09:00'], endTime: ['12:00'] }),
+        Tuesday: this.fb.group({ startTime: ['09:00'], endTime: ['12:00'] }),
+        Wednesday: this.fb.group({ startTime: ['09:00'], endTime: ['12:00'] }),
+        Thursday: this.fb.group({ startTime: ['09:00'], endTime: ['12:00'] }),
+        Friday: this.fb.group({ startTime: ['09:00'], endTime: ['12:00'] })
+      })
+    });
+  }
+
+  addNewClass() {
+    const classForm = this.createClassFormGroup();
+    
+    // Set default name based on current count
+    const classCount = this.classesArray.length + 1;
+    classForm.get('name')?.setValue(`Class ${String.fromCharCode(64 + classCount)}`);
+    
+    this.classesArray.push(classForm);
+  }
+
+  removeClass(index: number) {
+    if (this.classesArray.length > 1) { // Keep at least one class
+      this.classesArray.removeAt(index);
+    }
+  }
+
+  onWeekdayChange(classIndex: number, day: string, checked: boolean) {
+    const weekdaysGroup = this.classesArray.at(classIndex).get('weekdays') as FormGroup;
+    weekdaysGroup.get(day)?.setValue(checked);
+  }
+
+  isWeekdaySelected(classIndex: number, day: string): boolean {
+    const weekdaysGroup = this.classesArray.at(classIndex).get('weekdays') as FormGroup;
+    return weekdaysGroup.get(day)?.value || false;
+  }
+
+  getSelectedWeekdays(classIndex: number): string[] {
+    const weekdaysGroup = this.classesArray.at(classIndex).get('weekdays') as FormGroup;
+    return Object.keys(weekdaysGroup.controls).filter(day => weekdaysGroup.get(day)?.value);
+  }
+
+  // Convert form classes to cohort classes format
+  private convertFormClassesToCohortClasses(formClasses: any[]): any[] {
+    return formClasses.map(formClass => {
+      const selectedDays = Object.keys(formClass.weekdays).filter(day => formClass.weekdays[day]);
+      
+      const weeklySchedule = selectedDays.map(day => ({
+        day: day as 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday',
+        startTime: formClass.times[day].startTime,
+        endTime: formClass.times[day].endTime
+      }));
+
+      return {
+        name: formClass.name,
+        capacity: formClass.capacity,
+        weeklySchedule
+      };
+    });
   }
 
   getStatusClass(status: string): string {

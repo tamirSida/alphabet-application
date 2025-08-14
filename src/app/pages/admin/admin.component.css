@@ -546,6 +546,234 @@
   color: #10b981;
 }
 
+/* Classes Section Styles */
+.classes-section {
+  background: rgba(17, 24, 39, 0.3);
+  border: 1px solid rgba(30, 41, 59, 0.5);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+.classes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.classes-header h3 {
+  margin: 0;
+  color: #e5e7eb;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.add-class-button {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.add-class-button:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+}
+
+.classes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.class-item {
+  background: rgba(30, 41, 59, 0.2);
+  border: 1px solid rgba(30, 41, 59, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.class-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.class-basic-info {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  flex: 1;
+}
+
+.class-name-input {
+  font-weight: 600;
+}
+
+.capacity-input {
+  text-align: center;
+}
+
+.remove-class-button {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 1rem;
+}
+
+.remove-class-button:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: scale(1.05);
+}
+
+.section-label {
+  display: block;
+  margin-bottom: 1rem;
+  color: #e5e7eb;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Weekdays Section */
+.weekdays-section {
+  margin-bottom: 1.5rem;
+}
+
+.weekdays-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+}
+
+.weekday-item {
+  position: relative;
+}
+
+.weekday-item input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.weekday-label {
+  display: block;
+  padding: 1rem 0.5rem;
+  text-align: center;
+  border: 2px solid rgba(30, 41, 59, 0.5);
+  border-radius: 8px;
+  background: rgba(17, 24, 39, 0.3);
+  color: #9ca3af;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 0;
+}
+
+.weekday-label:hover {
+  border-color: #334155;
+  background: rgba(17, 24, 39, 0.5);
+}
+
+.weekday-item input[type="checkbox"]:checked + .weekday-label {
+  border-color: #1e293b;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: white;
+  transform: scale(1.05);
+}
+
+/* Times Section */
+.times-section {
+  margin-bottom: 1rem;
+}
+
+.times-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.time-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(17, 24, 39, 0.5);
+  border: 1px solid rgba(30, 41, 59, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.day-name {
+  font-weight: 600;
+  color: #e5e7eb;
+  min-width: 80px;
+  text-align: left;
+}
+
+.time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.time-input {
+  width: 120px;
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+}
+
+.time-separator {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.no-days-selected {
+  text-align: center;
+  padding: 2rem;
+  color: #9ca3af;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(17, 24, 39, 0.5);
+  border: 1px dashed rgba(30, 41, 59, 0.3);
+  border-radius: 8px;
+}
+
+.no-classes {
+  text-align: center;
+  padding: 3rem;
+  color: #9ca3af;
+}
+
+.no-classes i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #374151;
+}
+
+.no-classes p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Mobile Responsiveness */
 @media (max-width: 768px) {
   .form-row {
     grid-template-columns: 1fr;
@@ -553,5 +781,56 @@
   
   .form-actions {
     flex-direction: column;
+  }
+
+  .classes-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .class-basic-info {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .class-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .remove-class-button {
+    align-self: flex-end;
+    margin-left: 0;
+  }
+
+  .weekdays-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .weekday-label {
+    padding: 0.75rem 0.25rem;
+    font-size: 0.8rem;
+  }
+
+  .time-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .day-name {
+    text-align: center;
+    min-width: auto;
+  }
+
+  .time-inputs {
+    justify-content: center;
+  }
+
+  .time-input {
+    width: 100px;
   }
 }
