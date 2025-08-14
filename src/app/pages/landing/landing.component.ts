@@ -43,13 +43,10 @@ export class LandingComponent implements OnInit {
 
   private async loadCohortInfo() {
     try {
-      const [nextCohort, currentCohort] = await Promise.all([
-        this.cohortService.getNextOpenCohort(),
-        this.cohortService.getCurrentAcceptingCohort()
-      ]);
-
-      this.nextCohort.set(nextCohort);
-      this.currentAcceptingCohort.set(currentCohort);
+      const { current, next } = await this.cohortService.getCohortsForLanding();
+      
+      this.currentAcceptingCohort.set(current);
+      this.nextCohort.set(next);
     } catch (error) {
       console.error('Error loading cohort info:', error);
       // Set default values when Firestore is not accessible
@@ -60,6 +57,14 @@ export class LandingComponent implements OnInit {
 
   goToAuth() {
     this.router.navigate(['/auth']);
+  }
+
+  goToCreateAccount() {
+    this.router.navigate(['/auth'], { queryParams: { mode: 'register' } });
+  }
+
+  goToSignIn() {
+    this.router.navigate(['/auth'], { queryParams: { mode: 'login' } });
   }
 
   goToDashboard() {

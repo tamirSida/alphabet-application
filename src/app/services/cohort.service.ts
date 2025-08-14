@@ -154,6 +154,32 @@ export class CohortService {
     await deleteDoc(cohortRef);
   }
 
+  // Alternative methods that work better for unauthenticated users
+  async getCohortsForLanding(): Promise<{ current: Cohort | null, next: Cohort | null }> {
+    try {
+      const cohorts = await this.getAllCohorts();
+      const now = new Date();
+      
+      // Find current accepting cohort
+      const currentCohort = cohorts.find(cohort => 
+        now >= cohort.applicationStartDate && 
+        now <= cohort.applicationEndDate
+      ) || null;
+      
+      // Find next upcoming cohort
+      const upcomingCohorts = cohorts.filter(cohort => 
+        cohort.applicationStartDate > now
+      ).sort((a, b) => a.applicationStartDate.getTime() - b.applicationStartDate.getTime());
+      
+      const nextCohort = upcomingCohorts.length > 0 ? upcomingCohorts[0] : null;
+      
+      return { current: currentCohort, next: nextCohort };
+    } catch (error) {
+      console.error('Error getting cohorts for landing:', error);
+      return { current: null, next: null };
+    }
+  }
+
   async checkApplicationPeriodOverlap(startDate: Date, endDate: Date, excludeCohortId?: string): Promise<boolean> {
     const allCohorts = await this.getAllCohorts();
     

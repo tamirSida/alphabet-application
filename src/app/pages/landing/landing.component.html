@@ -31,10 +31,16 @@
                 Go to Dashboard
               </button>
             } @else {
-              <button class="primary-button" (click)="goToAuth()">
-                <i class="fas fa-user-plus"></i>
-                Sign Up / Sign In
-              </button>
+              <div class="auth-buttons">
+                <button class="primary-button" (click)="goToCreateAccount()">
+                  <i class="fas fa-user-plus"></i>
+                  Create Account
+                </button>
+                <button class="secondary-button" (click)="goToSignIn()">
+                  <i class="fas fa-sign-in-alt"></i>
+                  Sign In
+                </button>
+              </div>
             }
           </div>
         } @else if (showNextCohortInfo) {
@@ -60,10 +66,16 @@
                 <i class="fas fa-info-circle"></i>
                 Create your account now to be ready when applications open!
               </p>
-              <button class="secondary-button" (click)="goToAuth()">
-                <i class="fas fa-user-plus"></i>
-                Create Account
-              </button>
+              <div class="auth-buttons">
+                <button class="secondary-button" (click)="goToCreateAccount()">
+                  <i class="fas fa-user-plus"></i>
+                  Create Account
+                </button>
+                <button class="tertiary-button" (click)="goToSignIn()">
+                  <i class="fas fa-sign-in-alt"></i>
+                  Sign In
+                </button>
+              </div>
             }
           </div>
         } @else if (noUpcomingCohorts) {
@@ -81,10 +93,16 @@
                 <i class="fas fa-info-circle"></i>
                 Create your account now to be ready when cohorts are announced!
               </p>
-              <button class="secondary-button" (click)="goToAuth()">
-                <i class="fas fa-user-plus"></i>
-                Create Account
-              </button>
+              <div class="auth-buttons">
+                <button class="secondary-button" (click)="goToCreateAccount()">
+                  <i class="fas fa-user-plus"></i>
+                  Create Account
+                </button>
+                <button class="tertiary-button" (click)="goToSignIn()">
+                  <i class="fas fa-sign-in-alt"></i>
+                  Sign In
+                </button>
+              </div>
             }
           </div>
         }

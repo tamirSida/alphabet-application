@@ -28,6 +28,11 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    // Wait for auth service to finish loading
+    while (this.authService.isLoading()) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
     if (!this.authService.isAuthenticated || this.authService.isAdmin) {
       this.router.navigate(['/']);
       return;

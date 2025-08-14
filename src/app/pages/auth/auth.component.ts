@@ -1,7 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { UserService, AuthService, CohortService } from '../../services';
 
 @Component({
@@ -11,7 +11,7 @@ import { UserService, AuthService, CohortService } from '../../services';
   templateUrl: './auth.component.html',
   styleUrls: ['./auth.component.css']
 })
-export class AuthComponent {
+export class AuthComponent implements OnInit {
   isLogin = signal(true);
   isLoading = signal(false);
   error = signal<string | null>(null);
@@ -26,7 +26,8 @@ export class AuthComponent {
     private userService: UserService,
     private authService: AuthService,
     private cohortService: CohortService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -38,6 +39,17 @@ export class AuthComponent {
       phone: [''],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]]
+    });
+  }
+
+  ngOnInit() {
+    // Check query parameters to set initial mode
+    this.route.queryParams.subscribe(params => {
+      if (params['mode'] === 'register') {
+        this.isLogin.set(false);
+      } else if (params['mode'] === 'login') {
+        this.isLogin.set(true);
+      }
     });
   }
 
