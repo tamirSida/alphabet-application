@@ -23,6 +23,20 @@ export class LandingComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    // Check if user is already logged in and redirect accordingly
+    if (this.authService.isAuthenticated) {
+      const userData = this.authService.userData();
+      if (userData) {
+        if (userData.role === 'admin') {
+          this.router.navigate(['/admin']);
+          return;
+        } else {
+          this.router.navigate(['/dashboard']);
+          return;
+        }
+      }
+    }
+
     await this.loadCohortInfo();
     this.isLoading.set(false);
   }

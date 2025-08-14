@@ -148,7 +148,7 @@
           @if (showCohortForm()) {
             <div class="form-container">
               <form [formGroup]="cohortForm" (ngSubmit)="createCohort()" class="create-form">
-                <h3>Create New Cohort</h3>
+                <h3>{{ editingCohort() ? 'Edit Cohort' : 'Create New Cohort' }}</h3>
                 
                 <div class="form-group">
                   <label for="cohort-number">Cohort Number</label>
@@ -172,11 +172,32 @@
                     />
                   </div>
                   <div class="form-group">
+                    <label for="app-start-time">Start Time</label>
+                    <input
+                      type="time"
+                      id="app-start-time"
+                      formControlName="applicationStartTime"
+                      class="form-input"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
                     <label for="app-end">Application End Date</label>
                     <input
                       type="date"
                       id="app-end"
                       formControlName="applicationEndDate"
+                      class="form-input"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="app-end-time">End Time</label>
+                    <input
+                      type="time"
+                      id="app-end-time"
+                      formControlName="applicationEndTime"
                       class="form-input"
                     />
                   </div>
@@ -208,8 +229,8 @@
                     Cancel
                   </button>
                   <button type="submit" class="primary-button" [disabled]="cohortForm.invalid">
-                    <i class="fas fa-plus"></i>
-                    Create Cohort
+                    <i class="fas {{ editingCohort() ? 'fa-save' : 'fa-plus' }}"></i>
+                    {{ editingCohort() ? 'Update Cohort' : 'Create Cohort' }}
                   </button>
                 </div>
               </form>
@@ -236,7 +257,7 @@
                   <div class="cohort-timeline">
                     <div class="timeline-item">
                       <i class="fas fa-calendar-plus"></i>
-                      <span>Applications: {{ cohort.applicationStartDate | date:'shortDate' }} - {{ cohort.applicationEndDate | date:'shortDate' }}</span>
+                      <span>Applications: {{ cohort.applicationStartDate | date:'short' }} - {{ cohort.applicationEndDate | date:'short' }}</span>
                     </div>
                     <div class="timeline-item">
                       <i class="fas fa-play-circle"></i>
@@ -245,9 +266,13 @@
                   </div>
 
                   <div class="cohort-actions">
-                    <button class="action-button secondary-button" disabled>
+                    <button class="action-button edit-button" (click)="editCohort(cohort)">
                       <i class="fas fa-edit"></i>
                       Edit
+                    </button>
+                    <button class="action-button delete-button" (click)="deleteCohort(cohort.cohortId)">
+                      <i class="fas fa-trash"></i>
+                      Delete
                     </button>
                   </div>
                 </div>

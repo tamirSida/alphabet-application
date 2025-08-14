@@ -25,6 +25,7 @@ export class AdminComponent implements OnInit {
   adminForm: FormGroup;
   showCohortForm = signal(false);
   showAdminForm = signal(false);
+  editingCohort = signal<Cohort | null>(null);
 
   constructor(
     public authService: AuthService,
@@ -37,7 +38,9 @@ export class AdminComponent implements OnInit {
     this.cohortForm = this.fb.group({
       number: ['', Validators.required],
       applicationStartDate: ['', Validators.required],
+      applicationStartTime: ['09:00', Validators.required],
       applicationEndDate: ['', Validators.required],
+      applicationEndTime: ['23:59', Validators.required],
       cohortStartDate: ['', Validators.required],
       cohortEndDate: ['', Validators.required]
     });
@@ -138,20 +141,40 @@ export class AdminComponent implements OnInit {
 
     try {
       const formData = this.cohortForm.value;
-      await this.cohortService.createCohort({
-        number: formData.number,
-        applicationStartDate: new Date(formData.applicationStartDate),
-        applicationEndDate: new Date(formData.applicationEndDate),
-        cohortStartDate: new Date(formData.cohortStartDate),
-        cohortEndDate: new Date(formData.cohortEndDate)
-      });
+      
+      // Combine date and time for application dates
+      const appStartDateTime = new Date(`${formData.applicationStartDate}T${formData.applicationStartTime}`);
+      const appEndDateTime = new Date(`${formData.applicationEndDate}T${formData.applicationEndTime}`);
+      
+      if (this.editingCohort()) {
+        // Update existing cohort
+        await this.cohortService.updateCohort(this.editingCohort()!.cohortId, {
+          number: formData.number,
+          applicationStartDate: appStartDateTime,
+          applicationEndDate: appEndDateTime,
+          cohortStartDate: new Date(formData.cohortStartDate),
+          cohortEndDate: new Date(formData.cohortEndDate)
+        });
+        this.success.set('Cohort updated successfully!');
+      } else {
+        // Create new cohort
+        await this.cohortService.createCohort({
+          number: formData.number,
+          applicationStartDate: appStartDateTime,
+          applicationEndDate: appEndDateTime,
+          cohortStartDate: new Date(formData.cohortStartDate),
+          cohortEndDate: new Date(formData.cohortEndDate)
+        });
+        this.success.set('Cohort created successfully!');
+      }
 
-      this.success.set('Cohort created successfully!');
       this.showCohortForm.set(false);
+      this.editingCohort.set(null);
       this.cohortForm.reset();
+      this.resetCohortFormDefaults();
       await this.loadCohorts();
     } catch (error: any) {
-      this.error.set(error.message || 'Failed to create cohort.');
+      this.error.set(error.message || 'Failed to save cohort.');
     }
   }
 
@@ -180,6 +203,59 @@ export class AdminComponent implements OnInit {
     this.showAdminForm.set(false);
     this.error.set(null);
     this.success.set(null);
+    
+    if (!this.showCohortForm()) {
+      this.editingCohort.set(null);
+      this.cohortForm.reset();
+      this.resetCohortFormDefaults();
+    }
+  }
+
+  private resetCohortFormDefaults() {
+    this.cohortForm.patchValue({
+      applicationStartTime: '09:00',
+      applicationEndTime: '23:59'
+    });
+  }
+
+  editCohort(cohort: Cohort) {
+    this.editingCohort.set(cohort);
+    this.showCohortForm.set(true);
+    this.showAdminForm.set(false);
+    this.error.set(null);
+    this.success.set(null);
+    
+    // Format dates for form inputs
+    const appStartDate = cohort.applicationStartDate.toISOString().split('T')[0];
+    const appStartTime = cohort.applicationStartDate.toTimeString().slice(0, 5);
+    const appEndDate = cohort.applicationEndDate.toISOString().split('T')[0];
+    const appEndTime = cohort.applicationEndDate.toTimeString().slice(0, 5);
+    const cohortStartDate = cohort.cohortStartDate.toISOString().split('T')[0];
+    const cohortEndDate = cohort.cohortEndDate.toISOString().split('T')[0];
+    
+    this.cohortForm.patchValue({
+      number: cohort.number,
+      applicationStartDate: appStartDate,
+      applicationStartTime: appStartTime,
+      applicationEndDate: appEndDate,
+      applicationEndTime: appEndTime,
+      cohortStartDate: cohortStartDate,
+      cohortEndDate: cohortEndDate
+    });
+  }
+
+  async deleteCohort(cohortId: string) {
+    if (!confirm('Are you sure you want to delete this cohort? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await this.cohortService.deleteCohort(cohortId);
+      this.success.set('Cohort deleted successfully!');
+      await this.loadCohorts();
+    } catch (error: any) {
+      this.error.set(error.message || 'Failed to delete cohort.');
+    }
   }
 
   toggleAdminForm() {

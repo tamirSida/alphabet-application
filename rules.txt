@@ -22,9 +22,9 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     
-    // Cohorts - readable by all authenticated users, writable by admins only
+    // Cohorts - readable by all users (including unauthenticated for landing page), writable by admins only
     match /cohorts/{cohortId} {
-      allow read: if request.auth != null;
+      allow read: if true;
       allow write: if request.auth != null && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';

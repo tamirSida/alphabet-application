@@ -57,9 +57,12 @@ export class ApplicationService {
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
+      const data = docSnap.data();
       return {
         applicationId: docSnap.id,
-        ...docSnap.data()
+        ...data,
+        submittedAt: data['submittedAt']?.toDate ? data['submittedAt'].toDate() : new Date(data['submittedAt']),
+        reviewedAt: data['reviewedAt'] ? (data['reviewedAt']?.toDate ? data['reviewedAt'].toDate() : new Date(data['reviewedAt'])) : undefined
       } as Application;
     }
     return null;
@@ -78,9 +81,12 @@ export class ApplicationService {
     }
 
     const doc = querySnapshot.docs[0];
+    const data = doc.data();
     return {
       applicationId: doc.id,
-      ...doc.data()
+      ...data,
+      submittedAt: data['submittedAt']?.toDate ? data['submittedAt'].toDate() : new Date(data['submittedAt']),
+      reviewedAt: data['reviewedAt'] ? (data['reviewedAt']?.toDate ? data['reviewedAt'].toDate() : new Date(data['reviewedAt'])) : undefined
     } as Application;
   }
 
@@ -89,10 +95,15 @@ export class ApplicationService {
       collection(this.firebaseService.firestore, 'applications')
     );
     
-    return querySnapshot.docs.map(doc => ({
-      applicationId: doc.id,
-      ...doc.data()
-    } as Application));
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        applicationId: doc.id,
+        ...data,
+        submittedAt: data['submittedAt']?.toDate ? data['submittedAt'].toDate() : new Date(data['submittedAt']),
+        reviewedAt: data['reviewedAt'] ? (data['reviewedAt']?.toDate ? data['reviewedAt'].toDate() : new Date(data['reviewedAt'])) : undefined
+      } as Application;
+    });
   }
 
   async getCohortApplications(cohortId: string): Promise<Application[]> {
@@ -103,10 +114,15 @@ export class ApplicationService {
 
     const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map(doc => ({
-      applicationId: doc.id,
-      ...doc.data()
-    } as Application));
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        applicationId: doc.id,
+        ...data,
+        submittedAt: data['submittedAt']?.toDate ? data['submittedAt'].toDate() : new Date(data['submittedAt']),
+        reviewedAt: data['reviewedAt'] ? (data['reviewedAt']?.toDate ? data['reviewedAt'].toDate() : new Date(data['reviewedAt'])) : undefined
+      } as Application;
+    });
   }
 
   async updateApplicationStatus(applicationId: string, status: Application['status']): Promise<void> {

@@ -364,6 +364,24 @@
   opacity: 0.6;
 }
 
+.edit-button {
+  background: #3b82f6;
+  color: white;
+}
+
+.edit-button:hover {
+  background: #2563eb;
+}
+
+.delete-button {
+  background: #ef4444;
+  color: white;
+}
+
+.delete-button:hover {
+  background: #dc2626;
+}
+
 .primary-button {
   background: #e5e7eb;
   color: #374151;

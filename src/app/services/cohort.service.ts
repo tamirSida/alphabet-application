@@ -6,6 +6,7 @@ import {
   doc, 
   getDoc,
   updateDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -55,10 +56,17 @@ export class CohortService {
       collection(this.firebaseService.firestore, 'cohorts')
     );
     
-    return querySnapshot.docs.map(doc => ({
-      cohortId: doc.id,
-      ...doc.data()
-    } as Cohort));
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        cohortId: doc.id,
+        ...data,
+        applicationStartDate: data['applicationStartDate']?.toDate ? data['applicationStartDate'].toDate() : new Date(data['applicationStartDate']),
+        applicationEndDate: data['applicationEndDate']?.toDate ? data['applicationEndDate'].toDate() : new Date(data['applicationEndDate']),
+        cohortStartDate: data['cohortStartDate']?.toDate ? data['cohortStartDate'].toDate() : new Date(data['cohortStartDate']),
+        cohortEndDate: data['cohortEndDate']?.toDate ? data['cohortEndDate'].toDate() : new Date(data['cohortEndDate'])
+      } as Cohort;
+    });
   }
 
   async getCohort(cohortId: string): Promise<Cohort | null> {
@@ -66,9 +74,14 @@ export class CohortService {
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
+      const data = docSnap.data();
       return {
         cohortId: docSnap.id,
-        ...docSnap.data()
+        ...data,
+        applicationStartDate: data['applicationStartDate']?.toDate ? data['applicationStartDate'].toDate() : new Date(data['applicationStartDate']),
+        applicationEndDate: data['applicationEndDate']?.toDate ? data['applicationEndDate'].toDate() : new Date(data['applicationEndDate']),
+        cohortStartDate: data['cohortStartDate']?.toDate ? data['cohortStartDate'].toDate() : new Date(data['cohortStartDate']),
+        cohortEndDate: data['cohortEndDate']?.toDate ? data['cohortEndDate'].toDate() : new Date(data['cohortEndDate'])
       } as Cohort;
     }
     return null;
@@ -89,10 +102,15 @@ export class CohortService {
       return null;
     }
 
-    const doc = querySnapshot.docs[0];
+    const docData = querySnapshot.docs[0];
+    const data = docData.data();
     return {
-      cohortId: doc.id,
-      ...doc.data()
+      cohortId: docData.id,
+      ...data,
+      applicationStartDate: data['applicationStartDate']?.toDate ? data['applicationStartDate'].toDate() : new Date(data['applicationStartDate']),
+      applicationEndDate: data['applicationEndDate']?.toDate ? data['applicationEndDate'].toDate() : new Date(data['applicationEndDate']),
+      cohortStartDate: data['cohortStartDate']?.toDate ? data['cohortStartDate'].toDate() : new Date(data['cohortStartDate']),
+      cohortEndDate: data['cohortEndDate']?.toDate ? data['cohortEndDate'].toDate() : new Date(data['cohortEndDate'])
     } as Cohort;
   }
 
@@ -109,16 +127,31 @@ export class CohortService {
       return null;
     }
 
-    const doc = querySnapshot.docs[0];
+    const docData = querySnapshot.docs[0];
+    const data = docData.data();
     return {
-      cohortId: doc.id,
-      ...doc.data()
+      cohortId: docData.id,
+      ...data,
+      applicationStartDate: data['applicationStartDate']?.toDate ? data['applicationStartDate'].toDate() : new Date(data['applicationStartDate']),
+      applicationEndDate: data['applicationEndDate']?.toDate ? data['applicationEndDate'].toDate() : new Date(data['applicationEndDate']),
+      cohortStartDate: data['cohortStartDate']?.toDate ? data['cohortStartDate'].toDate() : new Date(data['cohortStartDate']),
+      cohortEndDate: data['cohortEndDate']?.toDate ? data['cohortEndDate'].toDate() : new Date(data['cohortEndDate'])
     } as Cohort;
   }
 
   async updateCohortStatus(cohortId: string, status: Cohort['status']): Promise<void> {
     const cohortRef = doc(this.firebaseService.firestore, 'cohorts', cohortId);
     await updateDoc(cohortRef, { status });
+  }
+
+  async updateCohort(cohortId: string, updates: Partial<Omit<Cohort, 'cohortId' | 'status'>>): Promise<void> {
+    const cohortRef = doc(this.firebaseService.firestore, 'cohorts', cohortId);
+    await updateDoc(cohortRef, updates);
+  }
+
+  async deleteCohort(cohortId: string): Promise<void> {
+    const cohortRef = doc(this.firebaseService.firestore, 'cohorts', cohortId);
+    await deleteDoc(cohortRef);
   }
 
   async checkApplicationPeriodOverlap(startDate: Date, endDate: Date, excludeCohortId?: string): Promise<boolean> {
