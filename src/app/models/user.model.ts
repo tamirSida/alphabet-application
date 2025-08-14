@@ -1,5 +1,6 @@
 export interface User {
   uid: string;
+  userId: string;
   email: string;
   phone?: string;
   operatorId: string;
@@ -14,4 +15,5 @@ export interface CreateUserRequest {
   email: string;
   phone?: string;
   password: string;
+  role?: 'applicant' | 'admin';
 }

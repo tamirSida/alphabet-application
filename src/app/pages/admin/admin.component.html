@@ -27,6 +27,13 @@
       <i class="fas fa-users"></i>
       Cohort Management
     </button>
+    <button 
+      class="nav-button"
+      [class.active]="currentView() === 'admin'"
+      (click)="switchView('admin')">
+      <i class="fas fa-user-shield"></i>
+      Admin Management
+    </button>
   </nav>
 
   <main class="admin-main">
@@ -118,18 +125,96 @@
             </div>
           }
         </div>
-      } @else {
+      } @else if (currentView() === 'cohorts') {
         <div class="cohorts-view">
           <div class="view-header">
             <h2>
               <i class="fas fa-users"></i>
               Cohort Management
             </h2>
-            <button class="primary-button" disabled>
+            <button class="primary-button" (click)="toggleCohortForm()">
               <i class="fas fa-plus"></i>
               Create Cohort
             </button>
           </div>
+
+          @if (success()) {
+            <div class="alert alert-success">
+              <i class="fas fa-check-circle"></i>
+              {{ success() }}
+            </div>
+          }
+
+          @if (showCohortForm()) {
+            <div class="form-container">
+              <form [formGroup]="cohortForm" (ngSubmit)="createCohort()" class="create-form">
+                <h3>Create New Cohort</h3>
+                
+                <div class="form-group">
+                  <label for="cohort-number">Cohort Number</label>
+                  <input
+                    type="text"
+                    id="cohort-number"
+                    formControlName="number"
+                    placeholder="e.g., Cohort 1"
+                    class="form-input"
+                  />
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="app-start">Application Start Date</label>
+                    <input
+                      type="date"
+                      id="app-start"
+                      formControlName="applicationStartDate"
+                      class="form-input"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="app-end">Application End Date</label>
+                    <input
+                      type="date"
+                      id="app-end"
+                      formControlName="applicationEndDate"
+                      class="form-input"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="cohort-start">Cohort Start Date</label>
+                    <input
+                      type="date"
+                      id="cohort-start"
+                      formControlName="cohortStartDate"
+                      class="form-input"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="cohort-end">Cohort End Date</label>
+                    <input
+                      type="date"
+                      id="cohort-end"
+                      formControlName="cohortEndDate"
+                      class="form-input"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="secondary-button" (click)="toggleCohortForm()">
+                    Cancel
+                  </button>
+                  <button type="submit" class="primary-button" [disabled]="cohortForm.invalid">
+                    <i class="fas fa-plus"></i>
+                    Create Cohort
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
 
           @if (cohorts().length === 0) {
             <div class="empty-state">
@@ -164,6 +249,101 @@
                       <i class="fas fa-edit"></i>
                       Edit
                     </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="admin-management-view">
+          <div class="view-header">
+            <h2>
+              <i class="fas fa-user-shield"></i>
+              Admin Management
+            </h2>
+            <button class="primary-button" (click)="toggleAdminForm()">
+              <i class="fas fa-user-plus"></i>
+              Create Admin
+            </button>
+          </div>
+
+          @if (success()) {
+            <div class="alert alert-success">
+              <i class="fas fa-check-circle"></i>
+              {{ success() }}
+            </div>
+          }
+
+          @if (showAdminForm()) {
+            <div class="form-container">
+              <form [formGroup]="adminForm" (ngSubmit)="createAdmin()" class="create-form">
+                <h3>Create New Admin</h3>
+                
+                <div class="form-group">
+                  <label for="admin-email">Email</label>
+                  <input
+                    type="email"
+                    id="admin-email"
+                    formControlName="email"
+                    placeholder="admin@example.com"
+                    class="form-input"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="admin-password">Password</label>
+                  <input
+                    type="password"
+                    id="admin-password"
+                    formControlName="password"
+                    placeholder="Minimum 6 characters"
+                    class="form-input"
+                  />
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="secondary-button" (click)="toggleAdminForm()">
+                    Cancel
+                  </button>
+                  <button type="submit" class="primary-button" [disabled]="adminForm.invalid">
+                    <i class="fas fa-user-plus"></i>
+                    Create Admin
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
+
+          @if (admins().length === 0) {
+            <div class="empty-state">
+              <i class="fas fa-user-slash"></i>
+              <h3>No Admins Found</h3>
+              <p>Create additional admin accounts to manage the system.</p>
+            </div>
+          } @else {
+            <div class="admins-grid">
+              @for (admin of admins(); track admin.userId) {
+                <div class="admin-card">
+                  <div class="admin-header">
+                    <div class="admin-info">
+                      <h3>{{ admin.email }}</h3>
+                      <p class="operator-id">
+                        <i class="fas fa-id-card"></i>
+                        {{ admin.operatorId }}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div class="admin-details">
+                    <div class="detail-item">
+                      <strong>Created:</strong> {{ admin.createdAt | date:'short' }}
+                    </div>
+                    @if (admin.phone) {
+                      <div class="detail-item">
+                        <strong>Phone:</strong> {{ admin.phone }}
+                      </div>
+                    }
                   </div>
                 </div>
               }

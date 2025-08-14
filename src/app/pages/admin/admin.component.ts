@@ -1,5 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService, UserService, ApplicationService, CohortService } from '../../services';
 import { User, Application, Cohort } from '../../models';
@@ -7,24 +8,45 @@ import { User, Application, Cohort } from '../../models';
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.css']
 })
 export class AdminComponent implements OnInit {
-  currentView = signal<'applications' | 'cohorts'>('applications');
+  currentView = signal<'applications' | 'cohorts' | 'admin'>('applications');
   applications = signal<(Application & { user?: User, cohort?: Cohort })[]>([]);
   cohorts = signal<Cohort[]>([]);
+  admins = signal<User[]>([]);
   isLoading = signal(true);
   error = signal<string | null>(null);
+  success = signal<string | null>(null);
+
+  cohortForm: FormGroup;
+  adminForm: FormGroup;
+  showCohortForm = signal(false);
+  showAdminForm = signal(false);
 
   constructor(
     public authService: AuthService,
     private userService: UserService,
     private applicationService: ApplicationService,
     private cohortService: CohortService,
-    private router: Router
-  ) {}
+    private router: Router,
+    private fb: FormBuilder
+  ) {
+    this.cohortForm = this.fb.group({
+      number: ['', Validators.required],
+      applicationStartDate: ['', Validators.required],
+      applicationEndDate: ['', Validators.required],
+      cohortStartDate: ['', Validators.required],
+      cohortEndDate: ['', Validators.required]
+    });
+
+    this.adminForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]]
+    });
+  }
 
   async ngOnInit() {
     if (!this.authService.isAuthenticated || !this.authService.isAdmin) {
@@ -40,8 +62,10 @@ export class AdminComponent implements OnInit {
     try {
       if (this.currentView() === 'applications') {
         await this.loadApplications();
-      } else {
+      } else if (this.currentView() === 'cohorts') {
         await this.loadCohorts();
+      } else if (this.currentView() === 'admin') {
+        await this.loadAdmins();
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -74,9 +98,18 @@ export class AdminComponent implements OnInit {
     this.cohorts.set(cohorts);
   }
 
-  async switchView(view: 'applications' | 'cohorts') {
+  private async loadAdmins() {
+    const admins = await this.userService.getAllAdmins();
+    this.admins.set(admins);
+  }
+
+  async switchView(view: 'applications' | 'cohorts' | 'admin') {
     this.currentView.set(view);
     this.isLoading.set(true);
+    this.error.set(null);
+    this.success.set(null);
+    this.showCohortForm.set(false);
+    this.showAdminForm.set(false);
     await this.loadData();
     this.isLoading.set(false);
   }
@@ -98,6 +131,62 @@ export class AdminComponent implements OnInit {
     } catch (error) {
       console.error('Error signing out:', error);
     }
+  }
+
+  async createCohort() {
+    if (this.cohortForm.invalid) return;
+
+    try {
+      const formData = this.cohortForm.value;
+      await this.cohortService.createCohort({
+        number: formData.number,
+        applicationStartDate: new Date(formData.applicationStartDate),
+        applicationEndDate: new Date(formData.applicationEndDate),
+        cohortStartDate: new Date(formData.cohortStartDate),
+        cohortEndDate: new Date(formData.cohortEndDate)
+      });
+
+      this.success.set('Cohort created successfully!');
+      this.showCohortForm.set(false);
+      this.cohortForm.reset();
+      await this.loadCohorts();
+    } catch (error: any) {
+      this.error.set(error.message || 'Failed to create cohort.');
+    }
+  }
+
+  async createAdmin() {
+    if (this.adminForm.invalid) return;
+
+    try {
+      const formData = this.adminForm.value;
+      await this.userService.createUser({
+        email: formData.email,
+        password: formData.password,
+        role: 'admin'
+      });
+
+      this.success.set('Admin created successfully!');
+      this.showAdminForm.set(false);
+      this.adminForm.reset();
+      await this.loadAdmins();
+    } catch (error: any) {
+      this.error.set(error.message || 'Failed to create admin.');
+    }
+  }
+
+  toggleCohortForm() {
+    this.showCohortForm.update(val => !val);
+    this.showAdminForm.set(false);
+    this.error.set(null);
+    this.success.set(null);
+  }
+
+  toggleAdminForm() {
+    this.showAdminForm.update(val => !val);
+    this.showCohortForm.set(false);
+    this.error.set(null);
+    this.success.set(null);
   }
 
   getStatusClass(status: string): string {

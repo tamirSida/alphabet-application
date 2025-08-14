@@ -37,14 +37,16 @@ export class UserService {
     );
 
     const operatorId = this.generateOperatorId();
+    const role = request.role || 'applicant';
     const user: User = {
       uid: userCredential.user.uid,
+      userId: userCredential.user.uid,
       email: request.email,
       phone: request.phone,
       operatorId,
-      role: 'applicant',
-      isOperator: true,
-      status: 'not_submitted',
+      role,
+      isOperator: role === 'applicant',
+      status: role === 'applicant' ? 'not_submitted' : null,
       applicationId: null,
       createdAt: new Date()
     };
@@ -63,6 +65,7 @@ export class UserService {
     const operatorId = this.generateOperatorId();
     const user: User = {
       uid: userCredential.user.uid,
+      userId: userCredential.user.uid,
       email,
       operatorId,
       role: 'admin',
@@ -94,7 +97,11 @@ export class UserService {
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
-      return docSnap.data() as User;
+      const data = docSnap.data();
+      return {
+        ...data,
+        createdAt: data['createdAt']?.toDate ? data['createdAt'].toDate() : new Date(data['createdAt'])
+      } as User;
     }
     return null;
   }
@@ -120,5 +127,21 @@ export class UserService {
     
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => doc.data() as User);
+  }
+
+  async getAllAdmins(): Promise<User[]> {
+    const q = query(
+      collection(this.firebaseService.firestore, 'users'),
+      where('role', '==', 'admin')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        createdAt: data['createdAt']?.toDate ? data['createdAt'].toDate() : new Date(data['createdAt'])
+      } as User;
+    });
   }
 }
