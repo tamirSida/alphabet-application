@@ -38,6 +38,9 @@ export class LandingComponent implements OnInit {
       this.currentAcceptingCohort.set(currentCohort);
     } catch (error) {
       console.error('Error loading cohort info:', error);
+      // Set default values when Firestore is not accessible
+      this.nextCohort.set(null);
+      this.currentAcceptingCohort.set(null);
     }
   }
 

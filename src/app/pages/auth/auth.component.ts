@@ -59,8 +59,18 @@ export class AuthComponent {
       await this.userService.signIn(email, password);
       
       // Wait for auth state to update
-      setTimeout(() => {
-        if (this.authService.isAdmin) {
+      setTimeout(async () => {
+        await this.authService.refreshUserData();
+        
+        const userData = this.authService.userData();
+        
+        // If user data is null, the user document doesn't exist in Firestore
+        if (!userData) {
+          this.error.set('User account not found. Please contact an administrator.');
+          return;
+        }
+        
+        if (userData.role === 'admin') {
           this.router.navigate(['/admin']);
         } else {
           this.router.navigate(['/dashboard']);

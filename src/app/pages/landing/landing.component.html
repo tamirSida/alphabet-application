@@ -76,6 +76,15 @@
                 <i class="fas fa-user"></i>
                 Go to Dashboard
               </button>
+            } @else {
+              <p class="info-text">
+                <i class="fas fa-info-circle"></i>
+                Create your account now to be ready when cohorts are announced!
+              </p>
+              <button class="secondary-button" (click)="goToAuth()">
+                <i class="fas fa-user-plus"></i>
+                Create Account
+              </button>
             }
           </div>
         }
