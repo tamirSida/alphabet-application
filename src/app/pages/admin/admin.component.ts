@@ -15,11 +15,17 @@ import { User, Application, Cohort } from '../../models';
 export class AdminComponent implements OnInit {
   currentView = signal<'applications' | 'cohorts' | 'admin'>('applications');
   applications = signal<(Application & { user?: User, cohort?: Cohort })[]>([]);
+  filteredApplications = signal<(Application & { user?: User, cohort?: Cohort })[]>([]);
   cohorts = signal<Cohort[]>([]);
   admins = signal<User[]>([]);
   isLoading = signal(true);
   error = signal<string | null>(null);
   success = signal<string | null>(null);
+  
+  // Search and filter
+  searchTerm = signal('');
+  statusFilter = signal<string>('all');
+  selectedApplication = signal<(Application & { user?: User, cohort?: Cohort }) | null>(null);
 
   cohortForm: FormGroup;
   adminForm: FormGroup;
@@ -103,6 +109,50 @@ export class AdminComponent implements OnInit {
     }
 
     this.applications.set(enrichedApplications);
+    this.filterApplications();
+  }
+
+  private filterApplications() {
+    const apps = this.applications();
+    const search = this.searchTerm().toLowerCase();
+    const status = this.statusFilter();
+
+    let filtered = apps;
+
+    // Apply search filter
+    if (search) {
+      filtered = filtered.filter(app => 
+        app.user?.email?.toLowerCase().includes(search) ||
+        app.user?.operatorId?.toLowerCase().includes(search) ||
+        `${app.user?.email?.split('@')[0] || ''}`.toLowerCase().includes(search) ||
+        app.operatorId.toLowerCase().includes(search)
+      );
+    }
+
+    // Apply status filter
+    if (status !== 'all') {
+      filtered = filtered.filter(app => app.status === status);
+    }
+
+    this.filteredApplications.set(filtered);
+  }
+
+  updateSearch(term: string) {
+    this.searchTerm.set(term);
+    this.filterApplications();
+  }
+
+  updateStatusFilter(status: string) {
+    this.statusFilter.set(status);
+    this.filterApplications();
+  }
+
+  viewApplication(application: Application & { user?: User, cohort?: Cohort }) {
+    this.selectedApplication.set(application);
+  }
+
+  closeApplicationView() {
+    this.selectedApplication.set(null);
   }
 
   private async loadCohorts() {
@@ -129,7 +179,14 @@ export class AdminComponent implements OnInit {
   async updateApplicationStatus(applicationId: string, status: Application['status']) {
     try {
       await this.applicationService.updateApplicationStatus(applicationId, status);
+      
+      // Close detail view if open
+      if (this.selectedApplication()) {
+        this.selectedApplication.set(null);
+      }
+      
       await this.loadApplications();
+      this.success.set(`Application ${status} successfully!`);
     } catch (error) {
       console.error('Error updating application status:', error);
       this.error.set('Failed to update application status.');
