@@ -4,10 +4,12 @@ service cloud.firestore {
     // Users can read/write their own user document
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
-      // Admins can read all user documents
-      allow read: if request.auth != null && 
+      // Admins can read/write all user documents (including creating new ones)
+      allow read, write: if request.auth != null && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // Allow user creation during registration (when no auth user exists yet)
+      allow create: if request.auth != null;
     }
     
     // Applications - users can only access their own

@@ -30,53 +30,58 @@ export class UserService {
   }
 
   async createUser(request: CreateUserRequest): Promise<User> {
-    const userCredential = await createUserWithEmailAndPassword(
-      this.firebaseService.auth,
-      request.email,
-      request.password
-    );
+    let userCredential;
+    
+    try {
+      // First create the auth user
+      userCredential = await createUserWithEmailAndPassword(
+        this.firebaseService.auth,
+        request.email,
+        request.password
+      );
 
-    const operatorId = this.generateOperatorId();
-    const role = request.role || 'applicant';
-    const user: User = {
-      uid: userCredential.user.uid,
-      userId: userCredential.user.uid,
-      email: request.email,
-      phone: request.phone,
-      operatorId,
-      role,
-      isOperator: role === 'applicant',
-      status: role === 'applicant' ? 'not_submitted' : null,
-      applicationId: null,
-      createdAt: new Date()
-    };
+      const operatorId = this.generateOperatorId();
+      const role = request.role || 'applicant';
+      const user: User = {
+        uid: userCredential.user.uid,
+        userId: userCredential.user.uid,
+        email: request.email,
+        operatorId,
+        role,
+        isOperator: role === 'applicant',
+        status: role === 'applicant' ? 'not_submitted' : null,
+        applicationId: null,
+        createdAt: new Date()
+      };
 
-    await setDoc(doc(this.firebaseService.firestore, 'users', user.uid), user);
-    return user;
+      // Only add phone if it exists to avoid undefined values
+      if (request.phone) {
+        user.phone = request.phone;
+      }
+
+      try {
+        // Then create the Firestore document
+        await setDoc(doc(this.firebaseService.firestore, 'users', user.uid), user);
+        return user;
+      } catch (firestoreError) {
+        // If Firestore creation fails, delete the auth user
+        console.error('Firestore user creation failed, rolling back auth user:', firestoreError);
+        await userCredential.user.delete();
+        throw new Error('Failed to create user account. Please try again.');
+      }
+    } catch (authError: any) {
+      // If auth creation fails, throw the original error
+      console.error('Auth user creation failed:', authError);
+      throw authError;
+    }
   }
 
   async createAdmin(email: string, password: string): Promise<User> {
-    const userCredential = await createUserWithEmailAndPassword(
-      this.firebaseService.auth,
+    return this.createUser({
       email,
-      password
-    );
-
-    const operatorId = this.generateOperatorId();
-    const user: User = {
-      uid: userCredential.user.uid,
-      userId: userCredential.user.uid,
-      email,
-      operatorId,
-      role: 'admin',
-      isOperator: false,
-      status: null,
-      applicationId: null,
-      createdAt: new Date()
-    };
-
-    await setDoc(doc(this.firebaseService.firestore, 'users', user.uid), user);
-    return user;
+      password,
+      role: 'admin'
+    });
   }
 
   async signIn(email: string, password: string): Promise<FirebaseUser> {
