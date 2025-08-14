@@ -1,0 +1,140 @@
+<div class="super-admin-container">
+  <div class="super-admin-card">
+    <header class="super-admin-header">
+      <div class="security-icon">
+        <i class="fas fa-shield-alt"></i>
+      </div>
+      <h1>Super Admin Setup</h1>
+      <p>Create administrator accounts for the Alphabet Program CRM</p>
+      <div class="warning-notice">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>This is a one-time setup page. Use it to create admin accounts.</span>
+      </div>
+    </header>
+
+    @if (createdAdmin()) {
+      <div class="admin-created">
+        <div class="success-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <h2>Admin Account Created</h2>
+        <div class="admin-details">
+          <div class="detail-row">
+            <strong>Email:</strong> {{ createdAdmin()?.email }}
+          </div>
+          <div class="detail-row">
+            <strong>Operator ID:</strong> {{ createdAdmin()?.operatorId }}
+          </div>
+        </div>
+        <p class="save-notice">
+          <i class="fas fa-save"></i>
+          Please save these details securely. The admin can now sign in using these credentials.
+        </p>
+      </div>
+    }
+
+    @if (success()) {
+      <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i>
+        {{ success() }}
+      </div>
+    }
+
+    @if (error()) {
+      <div class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ error() }}
+      </div>
+    }
+
+    <form [formGroup]="adminForm" (ngSubmit)="onCreateAdmin()" class="admin-form">
+      <div class="form-group">
+        <label for="email">Admin Email</label>
+        <div class="input-group">
+          <i class="fas fa-envelope"></i>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            placeholder="Enter admin email address"
+            [class.error]="adminForm.get('email')?.touched && adminForm.get('email')?.errors"
+          />
+        </div>
+        @if (adminForm.get('email')?.touched && adminForm.get('email')?.errors) {
+          <div class="field-error">
+            @if (adminForm.get('email')?.errors?.['required']) {
+              Email is required
+            }
+            @if (adminForm.get('email')?.errors?.['email']) {
+              Please enter a valid email address
+            }
+          </div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            placeholder="Create a secure password"
+            [class.error]="adminForm.get('password')?.touched && adminForm.get('password')?.errors"
+          />
+        </div>
+        @if (adminForm.get('password')?.touched && adminForm.get('password')?.errors) {
+          <div class="field-error">
+            @if (adminForm.get('password')?.errors?.['required']) {
+              Password is required
+            }
+            @if (adminForm.get('password')?.errors?.['minlength']) {
+              Password must be at least 6 characters long
+            }
+          </div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input
+            type="password"
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            placeholder="Confirm the password"
+            [class.error]="adminForm.get('confirmPassword')?.touched && adminForm.get('confirmPassword')?.errors"
+          />
+        </div>
+        @if (adminForm.get('confirmPassword')?.touched && adminForm.get('confirmPassword')?.errors) {
+          <div class="field-error">
+            Confirm password is required
+          </div>
+        }
+      </div>
+
+      <button type="submit" class="create-admin-button" [disabled]="isLoading() || adminForm.invalid">
+        @if (isLoading()) {
+          <i class="fas fa-spinner fa-spin"></i>
+          Creating Admin Account...
+        } @else {
+          <i class="fas fa-user-shield"></i>
+          Create Admin Account
+        }
+      </button>
+    </form>
+
+    <div class="navigation-actions">
+      <button type="button" class="secondary-button" (click)="goToLogin()">
+        <i class="fas fa-sign-in-alt"></i>
+        Go to Login
+      </button>
+      <button type="button" class="secondary-button" (click)="goHome()">
+        <i class="fas fa-home"></i>
+        Go to Home
+      </button>
+    </div>
+  </div>
+</div>

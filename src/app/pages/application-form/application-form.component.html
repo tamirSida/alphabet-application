@@ -1,0 +1,169 @@
+<div class="application-container">
+  @if (isLoading()) {
+    <div class="loading">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Loading application form...</p>
+    </div>
+  } @else {
+    <div class="application-card">
+      <header class="application-header">
+        <button class="back-button" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i>
+          Back to Dashboard
+        </button>
+        <h1>Application Form</h1>
+        @if (currentCohort()) {
+          <div class="cohort-info">
+            <p><strong>Cohort:</strong> {{ currentCohort()?.number }}</p>
+            <p><strong>Deadline:</strong> {{ currentCohort()?.applicationEndDate | date:'fullDate' }}</p>
+          </div>
+        }
+      </header>
+
+      @if (success()) {
+        <div class="success-message">
+          <i class="fas fa-check-circle"></i>
+          <h2>Application Submitted Successfully!</h2>
+          <p>Thank you for your application. You will be redirected to your dashboard shortly.</p>
+        </div>
+      } @else if (error()) {
+        <div class="error-message">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>{{ error() }}</p>
+        </div>
+      } @else if (currentCohort()) {
+        <form [formGroup]="applicationForm" (ngSubmit)="onSubmit()" class="application-form">
+          <div class="form-section">
+            <h3>Personal Information</h3>
+            
+            <div class="form-group">
+              <label for="fullName">Full Name *</label>
+              <input
+                type="text"
+                id="fullName"
+                formControlName="fullName"
+                placeholder="Enter your full name"
+                [class.error]="applicationForm.get('fullName')?.touched && applicationForm.get('fullName')?.errors"
+              />
+              @if (applicationForm.get('fullName')?.touched && applicationForm.get('fullName')?.errors) {
+                <div class="field-error">Full name is required</div>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="age">Age *</label>
+              <input
+                type="number"
+                id="age"
+                formControlName="age"
+                placeholder="Enter your age"
+                min="18"
+                [class.error]="applicationForm.get('age')?.touched && applicationForm.get('age')?.errors"
+              />
+              @if (applicationForm.get('age')?.touched && applicationForm.get('age')?.errors) {
+                <div class="field-error">
+                  @if (applicationForm.get('age')?.errors?.['required']) {
+                    Age is required
+                  }
+                  @if (applicationForm.get('age')?.errors?.['min']) {
+                    Must be at least 18 years old
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Background & Experience</h3>
+            
+            <div class="form-group">
+              <label for="experience">Previous Experience *</label>
+              <textarea
+                id="experience"
+                formControlName="experience"
+                placeholder="Describe your relevant experience and background"
+                rows="4"
+                [class.error]="applicationForm.get('experience')?.touched && applicationForm.get('experience')?.errors"
+              ></textarea>
+              @if (applicationForm.get('experience')?.touched && applicationForm.get('experience')?.errors) {
+                <div class="field-error">Experience description is required</div>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="motivation">Why do you want to join the Alphabet Program? *</label>
+              <textarea
+                id="motivation"
+                formControlName="motivation"
+                placeholder="Tell us about your motivation and what you hope to achieve (minimum 50 characters)"
+                rows="4"
+                [class.error]="applicationForm.get('motivation')?.touched && applicationForm.get('motivation')?.errors"
+              ></textarea>
+              @if (applicationForm.get('motivation')?.touched && applicationForm.get('motivation')?.errors) {
+                <div class="field-error">
+                  @if (applicationForm.get('motivation')?.errors?.['required']) {
+                    Motivation is required
+                  }
+                  @if (applicationForm.get('motivation')?.errors?.['minlength']) {
+                    Please provide at least 50 characters
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="goals">What are your goals after completing the program? *</label>
+              <textarea
+                id="goals"
+                formControlName="goals"
+                placeholder="Describe your career goals and how this program fits into your plans (minimum 50 characters)"
+                rows="4"
+                [class.error]="applicationForm.get('goals')?.touched && applicationForm.get('goals')?.errors"
+              ></textarea>
+              @if (applicationForm.get('goals')?.touched && applicationForm.get('goals')?.errors) {
+                <div class="field-error">
+                  @if (applicationForm.get('goals')?.errors?.['required']) {
+                    Goals are required
+                  }
+                  @if (applicationForm.get('goals')?.errors?.['minlength']) {
+                    Please provide at least 50 characters
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Availability</h3>
+            
+            <div class="form-group">
+              <label for="availability">Time Commitment & Availability *</label>
+              <textarea
+                id="availability"
+                formControlName="availability"
+                placeholder="Describe your availability and time commitment for the program"
+                rows="3"
+                [class.error]="applicationForm.get('availability')?.touched && applicationForm.get('availability')?.errors"
+              ></textarea>
+              @if (applicationForm.get('availability')?.touched && applicationForm.get('availability')?.errors) {
+                <div class="field-error">Availability information is required</div>
+              }
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="submit-button" [disabled]="isSubmitting() || applicationForm.invalid">
+              @if (isSubmitting()) {
+                <i class="fas fa-spinner fa-spin"></i>
+                Submitting Application...
+              } @else {
+                <i class="fas fa-paper-plane"></i>
+                Submit Application
+              }
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  }
+</div>

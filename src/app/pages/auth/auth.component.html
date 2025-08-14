@@ -1,0 +1,205 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <header class="auth-header">
+      <button class="back-button" (click)="goBack()">
+        <i class="fas fa-arrow-left"></i>
+        Back
+      </button>
+      <h1>{{ isLogin() ? 'Sign In' : 'Create Account' }}</h1>
+      <p>{{ isLogin() ? 'Welcome back to the Alphabet Program' : 'Join the Alphabet Program' }}</p>
+    </header>
+
+    @if (generatedOperatorId()) {
+      <div class="operator-id-display">
+        <div class="operator-id-card">
+          <i class="fas fa-id-card"></i>
+          <h3>Your Operator ID</h3>
+          <div class="operator-id">{{ generatedOperatorId() }}</div>
+          <p class="operator-id-note">
+            <i class="fas fa-exclamation-triangle"></i>
+            Please save this ID - you'll need it for your application!
+          </p>
+        </div>
+      </div>
+    }
+
+    @if (success()) {
+      <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i>
+        {{ success() }}
+      </div>
+    }
+
+    @if (error()) {
+      <div class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ error() }}
+      </div>
+    }
+
+    @if (isLogin()) {
+      <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="auth-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              placeholder="Enter your email"
+              [class.error]="loginForm.get('email')?.touched && loginForm.get('email')?.errors"
+            />
+          </div>
+          @if (loginForm.get('email')?.touched && loginForm.get('email')?.errors) {
+            <div class="field-error">
+              @if (loginForm.get('email')?.errors?.['required']) {
+                Email is required
+              }
+              @if (loginForm.get('email')?.errors?.['email']) {
+                Please enter a valid email
+              }
+            </div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              placeholder="Enter your password"
+              [class.error]="loginForm.get('password')?.touched && loginForm.get('password')?.errors"
+            />
+          </div>
+          @if (loginForm.get('password')?.touched && loginForm.get('password')?.errors) {
+            <div class="field-error">
+              @if (loginForm.get('password')?.errors?.['required']) {
+                Password is required
+              }
+              @if (loginForm.get('password')?.errors?.['minlength']) {
+                Password must be at least 6 characters
+              }
+            </div>
+          }
+        </div>
+
+        <button type="submit" class="submit-button" [disabled]="isLoading() || loginForm.invalid">
+          @if (isLoading()) {
+            <i class="fas fa-spinner fa-spin"></i>
+            Signing In...
+          } @else {
+            <i class="fas fa-sign-in-alt"></i>
+            Sign In
+          }
+        </button>
+      </form>
+    } @else {
+      <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="auth-form">
+        <div class="form-group">
+          <label for="register-email">Email</label>
+          <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input
+              type="email"
+              id="register-email"
+              formControlName="email"
+              placeholder="Enter your email"
+              [class.error]="registerForm.get('email')?.touched && registerForm.get('email')?.errors"
+            />
+          </div>
+          @if (registerForm.get('email')?.touched && registerForm.get('email')?.errors) {
+            <div class="field-error">
+              @if (registerForm.get('email')?.errors?.['required']) {
+                Email is required
+              }
+              @if (registerForm.get('email')?.errors?.['email']) {
+                Please enter a valid email
+              }
+            </div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number (Optional)</label>
+          <div class="input-group">
+            <i class="fas fa-phone"></i>
+            <input
+              type="tel"
+              id="phone"
+              formControlName="phone"
+              placeholder="Enter your phone number"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="register-password">Password</label>
+          <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input
+              type="password"
+              id="register-password"
+              formControlName="password"
+              placeholder="Create a password"
+              [class.error]="registerForm.get('password')?.touched && registerForm.get('password')?.errors"
+            />
+          </div>
+          @if (registerForm.get('password')?.touched && registerForm.get('password')?.errors) {
+            <div class="field-error">
+              @if (registerForm.get('password')?.errors?.['required']) {
+                Password is required
+              }
+              @if (registerForm.get('password')?.errors?.['minlength']) {
+                Password must be at least 6 characters
+              }
+            </div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="confirm-password">Confirm Password</label>
+          <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input
+              type="password"
+              id="confirm-password"
+              formControlName="confirmPassword"
+              placeholder="Confirm your password"
+              [class.error]="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.errors"
+            />
+          </div>
+          @if (registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.errors) {
+            <div class="field-error">
+              Confirm password is required
+            </div>
+          }
+        </div>
+
+        <button type="submit" class="submit-button" [disabled]="isLoading() || registerForm.invalid">
+          @if (isLoading()) {
+            <i class="fas fa-spinner fa-spin"></i>
+            Creating Account...
+          } @else {
+            <i class="fas fa-user-plus"></i>
+            Create Account
+          }
+        </button>
+      </form>
+    }
+
+    @if (!generatedOperatorId()) {
+      <div class="auth-toggle">
+        <p>
+          {{ isLogin() ? "Don't have an account?" : "Already have an account?" }}
+          <button type="button" class="toggle-button" (click)="toggleMode()">
+            {{ isLogin() ? 'Create Account' : 'Sign In' }}
+          </button>
+        </p>
+      </div>
+    }
+  </div>
+</div>

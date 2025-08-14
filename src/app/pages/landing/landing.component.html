@@ -1,0 +1,89 @@
+<div class="landing-container">
+  <header class="header">
+    <h1 class="title">Alphabet Program</h1>
+    <p class="subtitle">Transform your future with our comprehensive development program</p>
+  </header>
+
+  <main class="main-content">
+    @if (isLoading()) {
+      <div class="loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading cohort information...</p>
+      </div>
+    } @else {
+      <div class="cohort-info-card">
+        @if (hasOpenApplications) {
+          <div class="open-applications">
+            <i class="fas fa-door-open status-icon"></i>
+            <h2>Applications Now Open!</h2>
+            <div class="cohort-details">
+              <p><strong>Cohort:</strong> {{ currentAcceptingCohort()?.number }}</p>
+              <p><strong>Application Deadline:</strong> 
+                {{ currentAcceptingCohort()?.applicationEndDate | date:'fullDate' }}
+              </p>
+              <p><strong>Program Start:</strong> 
+                {{ currentAcceptingCohort()?.cohortStartDate | date:'fullDate' }}
+              </p>
+            </div>
+            @if (isAuthenticated) {
+              <button class="primary-button" (click)="goToDashboard()">
+                <i class="fas fa-user"></i>
+                Go to Dashboard
+              </button>
+            } @else {
+              <button class="primary-button" (click)="goToAuth()">
+                <i class="fas fa-user-plus"></i>
+                Sign Up / Sign In
+              </button>
+            }
+          </div>
+        } @else if (showNextCohortInfo) {
+          <div class="upcoming-cohort">
+            <i class="fas fa-calendar-alt status-icon"></i>
+            <h2>Next Cohort</h2>
+            <div class="cohort-details">
+              <p><strong>Cohort:</strong> {{ nextCohort()?.number }}</p>
+              <p><strong>Applications Open:</strong> 
+                {{ nextCohort()?.applicationStartDate | date:'fullDate' }}
+              </p>
+              <p><strong>Program Start:</strong> 
+                {{ nextCohort()?.cohortStartDate | date:'fullDate' }}
+              </p>
+            </div>
+            @if (isAuthenticated) {
+              <button class="secondary-button" (click)="goToDashboard()">
+                <i class="fas fa-user"></i>
+                Go to Dashboard
+              </button>
+            } @else {
+              <p class="info-text">
+                <i class="fas fa-info-circle"></i>
+                Create your account now to be ready when applications open!
+              </p>
+              <button class="secondary-button" (click)="goToAuth()">
+                <i class="fas fa-user-plus"></i>
+                Create Account
+              </button>
+            }
+          </div>
+        } @else if (noUpcomingCohorts) {
+          <div class="no-upcoming">
+            <i class="fas fa-calendar-times status-icon"></i>
+            <h2>No Upcoming Signups</h2>
+            <p>There are currently no upcoming cohorts scheduled. Please check back later for updates.</p>
+            @if (isAuthenticated) {
+              <button class="secondary-button" (click)="goToDashboard()">
+                <i class="fas fa-user"></i>
+                Go to Dashboard
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2024 Alphabet Program. All rights reserved.</p>
+  </footer>
+</div>
