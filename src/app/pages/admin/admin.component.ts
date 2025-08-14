@@ -157,13 +157,14 @@ export class AdminComponent implements OnInit {
       
       if (this.editingCohort()) {
         // Update existing cohort
+        const cohortClasses = this.convertFormClassesToCohortClasses(formData.classes);
         await this.cohortService.updateCohort(this.editingCohort()!.cohortId, {
           number: formData.number,
           applicationStartDate: appStartDateTime,
           applicationEndDate: appEndDateTime,
           cohortStartDate: new Date(formData.cohortStartDate),
-          cohortEndDate: new Date(formData.cohortEndDate)
-          // Note: For now, we don't update classes. In the future, this could be enhanced.
+          cohortEndDate: new Date(formData.cohortEndDate),
+          classes: cohortClasses
         });
         this.success.set('Cohort updated successfully!');
       } else {
@@ -224,6 +225,14 @@ export class AdminComponent implements OnInit {
   }
 
   private resetCohortFormDefaults() {
+    // Clear existing classes
+    while (this.classesArray.length !== 0) {
+      this.classesArray.removeAt(0);
+    }
+    
+    // Add one default class
+    this.addNewClass();
+    
     this.cohortForm.patchValue({
       applicationStartTime: '09:00',
       applicationEndTime: '23:59'
@@ -244,6 +253,49 @@ export class AdminComponent implements OnInit {
     const appEndTime = cohort.applicationEndDate.toTimeString().slice(0, 5);
     const cohortStartDate = cohort.cohortStartDate.toISOString().split('T')[0];
     const cohortEndDate = cohort.cohortEndDate.toISOString().split('T')[0];
+    
+    // Clear existing classes
+    while (this.classesArray.length !== 0) {
+      this.classesArray.removeAt(0);
+    }
+    
+    // Populate classes from cohort data
+    if (cohort.classes && cohort.classes.length > 0) {
+      cohort.classes.forEach(cohortClass => {
+        const classFormGroup = this.createClassFormGroup();
+        
+        // Set basic class info
+        classFormGroup.patchValue({
+          name: cohortClass.name,
+          capacity: cohortClass.capacity
+        });
+        
+        // Set weekdays and times from weeklySchedule
+        const weekdaysGroup = classFormGroup.get('weekdays') as FormGroup;
+        const timesGroup = classFormGroup.get('times') as FormGroup;
+        
+        // Reset all weekdays to false first
+        Object.keys(weekdaysGroup.controls).forEach(day => {
+          weekdaysGroup.get(day)?.setValue(false);
+        });
+        
+        // Set selected weekdays and their times
+        cohortClass.weeklySchedule.forEach(schedule => {
+          weekdaysGroup.get(schedule.day)?.setValue(true);
+          
+          const dayTimeGroup = timesGroup.get(schedule.day) as FormGroup;
+          dayTimeGroup.patchValue({
+            startTime: schedule.startTime,
+            endTime: schedule.endTime
+          });
+        });
+        
+        this.classesArray.push(classFormGroup);
+      });
+    } else {
+      // If no classes exist, add one default class
+      this.addNewClass();
+    }
     
     this.cohortForm.patchValue({
       number: cohort.number,
@@ -320,17 +372,32 @@ export class AdminComponent implements OnInit {
   }
 
   onWeekdayChange(classIndex: number, day: string, checked: boolean) {
-    const weekdaysGroup = this.classesArray.at(classIndex).get('weekdays') as FormGroup;
+    const classControl = this.classesArray.at(classIndex);
+    if (!classControl) return;
+    
+    const weekdaysGroup = classControl.get('weekdays') as FormGroup;
+    if (!weekdaysGroup) return;
+    
     weekdaysGroup.get(day)?.setValue(checked);
   }
 
   isWeekdaySelected(classIndex: number, day: string): boolean {
-    const weekdaysGroup = this.classesArray.at(classIndex).get('weekdays') as FormGroup;
+    const classControl = this.classesArray.at(classIndex);
+    if (!classControl) return false;
+    
+    const weekdaysGroup = classControl.get('weekdays') as FormGroup;
+    if (!weekdaysGroup) return false;
+    
     return weekdaysGroup.get(day)?.value || false;
   }
 
   getSelectedWeekdays(classIndex: number): string[] {
-    const weekdaysGroup = this.classesArray.at(classIndex).get('weekdays') as FormGroup;
+    const classControl = this.classesArray.at(classIndex);
+    if (!classControl) return [];
+    
+    const weekdaysGroup = classControl.get('weekdays') as FormGroup;
+    if (!weekdaysGroup) return [];
+    
     return Object.keys(weekdaysGroup.controls).filter(day => weekdaysGroup.get(day)?.value);
   }
 

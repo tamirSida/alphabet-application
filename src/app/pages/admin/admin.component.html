@@ -235,8 +235,8 @@
                   </div>
 
                   <div formArrayName="classes" class="classes-list">
-                    @for (classControl of classesArray.controls; track $index) {
-                      <div [formGroupName]="$index" class="class-item">
+                    @for (classControl of classesArray.controls; track classIndex; let classIndex = $index) {
+                      <div [formGroupName]="classIndex" class="class-item">
                         <div class="class-header">
                           <div class="class-basic-info">
                             <div class="form-group">
@@ -262,7 +262,7 @@
                             <button 
                               type="button" 
                               class="remove-class-button"
-                              (click)="removeClass($index)">
+                              (click)="removeClass(classIndex)">
                               <i class="fas fa-trash"></i>
                             </button>
                           }
@@ -276,10 +276,10 @@
                               <div class="weekday-item">
                                 <input 
                                   type="checkbox"
-                                  [id]="'weekday-' + $index + '-' + day"
+                                  [id]="'weekday-' + classIndex + '-' + day"
                                   [formControlName]="day"
-                                  (change)="onWeekdayChange($index, day, $any($event.target).checked)">
-                                <label [for]="'weekday-' + $index + '-' + day" class="weekday-label">
+                                  (change)="onWeekdayChange(classIndex, day, $any($event.target).checked)">
+                                <label [for]="'weekday-' + classIndex + '-' + day" class="weekday-label">
                                   {{ day.substring(0, 3) }}
                                 </label>
                               </div>
@@ -291,7 +291,7 @@
                         <div class="times-section" formGroupName="times">
                           <label class="section-label">Class Times</label>
                           <div class="times-grid">
-                            @for (day of getSelectedWeekdays($index); track day) {
+                            @for (day of getSelectedWeekdays(classIndex); track day) {
                               <div class="time-row" [formGroupName]="day">
                                 <div class="day-name">{{ day }}</div>
                                 <div class="time-inputs">
@@ -309,7 +309,7 @@
                             }
                           </div>
                           
-                          @if (getSelectedWeekdays($index).length === 0) {
+                          @if (getSelectedWeekdays(classIndex).length === 0) {
                             <div class="no-days-selected">
                               <i class="fas fa-info-circle"></i>
                               Select weekdays above to set class times
