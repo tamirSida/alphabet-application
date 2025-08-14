@@ -694,6 +694,18 @@
   font-weight: 600;
 }
 
+/* Personal Qualities Section */
+.qualities-intro {
+  margin-bottom: 2rem;
+}
+
+.qualities-intro p {
+  color: #cbd5e1;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
 /* Personal Qualities Rating (0-10 scale) */
 .rating-slider {
   margin-bottom: 1rem;
