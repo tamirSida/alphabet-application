@@ -65,7 +65,7 @@
               <h3>Quick Actions</h3>
               <div class="application-actions">
                 
-                <!-- Accept/Reject Toggles -->
+                <!-- Accept/Reject/Delete Toggles -->
                 <div class="action-group">
                   @if (selectedApplication()?.status === 'accepted') {
                     <button 
@@ -98,6 +98,14 @@
                       Reject Application
                     </button>
                   }
+                  
+                  <button 
+                    class="action-button"
+                    (click)="deleteApplication(selectedApplication()!.applicationId)"
+                    style="background: #dc2626; color: white;">
+                    <i class="fas fa-trash"></i>
+                    Delete Application
+                  </button>
                 </div>
                 
                 <!-- Class Management -->
@@ -428,6 +436,19 @@
                 <span class="stat-item">
                   Filtered: {{ filteredApplications().length }}
                 </span>
+                @if (canPublishResults()) {
+                  <button 
+                    class="primary-button"
+                    (click)="publishResults()"
+                    style="background: #059669; color: white;">
+                    <i class="fas fa-paper-plane"></i>
+                    Publish Results to All Applicants
+                  </button>
+                } @else if (applications().length > 0) {
+                  <span class="stat-item" style="background: #fbbf24; color: #92400e;">
+                    ⚠️ All applications must be accepted or rejected to publish
+                  </span>
+                }
               </div>
             </div>
 
@@ -599,6 +620,15 @@
                                 <small>{{ application.assignedClass }}</small>
                               </button>
                             }
+                            
+                            <!-- Delete Button -->
+                            <button 
+                              class="table-action-btn"
+                              (click)="deleteApplication(application.applicationId)"
+                              title="Delete Application"
+                              style="background: #dc2626; color: white;">
+                              <i class="fas fa-trash"></i>
+                            </button>
                           </div>
                         </td>
                       </tr>

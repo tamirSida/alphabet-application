@@ -120,7 +120,15 @@ export class UserService {
     const userRef = doc(this.firebaseService.firestore, 'users', uid);
     await updateDoc(userRef, { 
       applicationId,
-      status: 'submitted'
+      status: 'under_review'  // Auto-change to under review on submission
+    });
+  }
+
+  async unlinkApplication(uid: string): Promise<void> {
+    const userRef = doc(this.firebaseService.firestore, 'users', uid);
+    await updateDoc(userRef, { 
+      applicationId: null,
+      status: 'not_submitted'
     });
   }
 

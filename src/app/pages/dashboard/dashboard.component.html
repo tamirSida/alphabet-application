@@ -50,7 +50,7 @@
                   <p>No applications are currently being accepted. Check back later for upcoming cohorts.</p>
                 }
               </div>
-            } @else if (user()?.status === 'submitted') {
+            } @else if (user()?.status === 'submitted' || user()?.status === 'under_review') {
               <div class="status-description">
                 <p>Your application has been submitted and is currently under review.</p>
                 @if (application()) {
@@ -60,20 +60,11 @@
               </div>
             } @else if (user()?.status === 'accepted') {
               <div class="status-description">
-                <p>Congratulations! You have been accepted into the program.</p>
-                @if (cohort()) {
-                  <p><strong>Cohort:</strong> {{ cohort()?.number }}</p>
-                  <p><strong>Program Start:</strong> {{ cohort()?.cohortStartDate | date:'fullDate' }}</p>
-                }
+                <pre class="status-message">{{ getAcceptedMessage() }}</pre>
               </div>
             } @else if (user()?.status === 'rejected') {
               <div class="status-description">
-                <p>Unfortunately, you were not selected for this round.</p>
-                @if (currentAcceptingCohort()) {
-                  <p>However, applications are open for a new cohort. You're welcome to apply again!</p>
-                } @else {
-                  <p>Keep an eye out for future application periods.</p>
-                }
+                <pre class="status-message">{{ getRejectedMessage() }}</pre>
               </div>
             }
           </div>

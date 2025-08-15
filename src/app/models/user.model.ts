@@ -6,7 +6,7 @@ export interface User {
   operatorId: string;
   role: 'applicant' | 'admin';
   isOperator: boolean;
-  status: 'not_submitted' | 'submitted' | 'accepted' | 'rejected' | null;
+  status: 'not_submitted' | 'submitted' | 'under_review' | 'accepted' | 'rejected' | null;
   applicationId: string | null;
   createdAt: Date;
 }

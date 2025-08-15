@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService, ApplicationService, CohortService, UserService } from '../../services';
+import { MessageTemplateService } from '../../services/message-template.service';
 import { Application, Cohort, User } from '../../models';
 
 @Component({
@@ -24,6 +25,7 @@ export class DashboardComponent implements OnInit {
     private applicationService: ApplicationService,
     private cohortService: CohortService,
     private userService: UserService,
+    private messageTemplateService: MessageTemplateService,
     private router: Router
   ) {}
 
@@ -101,7 +103,10 @@ export class DashboardComponent implements OnInit {
         this.statusDisplay.set({ text: 'Not Submitted', class: 'status-not-submitted', icon: 'fas fa-clock' });
         break;
       case 'submitted':
-        this.statusDisplay.set({ text: 'Submitted - Awaiting Review', class: 'status-submitted', icon: 'fas fa-hourglass-half' });
+        this.statusDisplay.set({ text: 'Application Submitted and Under Review', class: 'status-submitted', icon: 'fas fa-hourglass-half' });
+        break;
+      case 'under_review':
+        this.statusDisplay.set({ text: 'Application Submitted and Under Review', class: 'status-submitted', icon: 'fas fa-hourglass-half' });
         break;
       case 'accepted':
         this.statusDisplay.set({ text: 'Accepted', class: 'status-accepted', icon: 'fas fa-check-circle' });
@@ -125,5 +130,51 @@ export class DashboardComponent implements OnInit {
 
   get canReapply() {
     return this.user()?.status === 'rejected' && !!this.currentAcceptingCohort();
+  }
+
+  getAcceptedMessage(): string {
+    const user = this.user();
+    const application = this.application();
+    const cohort = this.cohort();
+    
+    if (!user || !application || !cohort) return '';
+    
+    // Find the assigned class details
+    const assignedClass = cohort.classes?.find(c => c.name === application.assignedClass);
+    
+    // Format class schedule
+    let classDays = 'TBD';
+    let classSchedule = 'TBD';
+    
+    if (assignedClass && assignedClass.weeklySchedule.length > 0) {
+      classDays = assignedClass.weeklySchedule.map(s => s.day).join(', ');
+      const times = assignedClass.weeklySchedule.map(s => `${s.startTime}-${s.endTime}`);
+      classSchedule = Array.from(new Set(times)).join(', ');
+    }
+    
+    return this.messageTemplateService.getAcceptedMessage({
+      firstName: application.formData.personalInformation.firstName,
+      lastName: application.formData.personalInformation.lastName,
+      className: application.assignedClass || 'TBD',
+      classDays,
+      classSchedule,
+      applicationId: application.applicationId,
+      operatorId: user.operatorId
+    });
+  }
+
+  getRejectedMessage(): string {
+    const user = this.user();
+    const application = this.application();
+    
+    if (!user || !application) return '';
+    
+    return this.messageTemplateService.getRejectedMessage({
+      firstName: application.formData.personalInformation.firstName,
+      lastName: application.formData.personalInformation.lastName,
+      applicationId: application.applicationId,
+      operatorId: user.operatorId,
+      reviewDate: application.reviewedAt ? application.reviewedAt.toLocaleDateString() : 'TBD'
+    });
   }
 }

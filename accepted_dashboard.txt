@@ -1,0 +1,24 @@
+🎉 Congratulations! Your Application Has Been Accepted! 🎉
+
+Dear {firstName} {lastName},
+
+We are thrilled to inform you that your application for the Alphabet Program has been ACCEPTED! Welcome to {className}!
+
+📅 CLASS SCHEDULE:
+Your class will be conducted on: {classDays}
+Class times: {classSchedule}
+
+🚀 NEXT STEPS:
+1. You will receive detailed onboarding information via email within 48 hours
+2. Please confirm your attendance by replying to the upcoming email
+3. Prepare for an exciting journey of learning and growth!
+
+We're excited to have you join our program and look forward to seeing you achieve great things.
+
+Best regards,
+The Alphabet Program Team
+
+---
+Application ID: {applicationId}
+Operator ID: {operatorId}
+Assigned Class: {className}

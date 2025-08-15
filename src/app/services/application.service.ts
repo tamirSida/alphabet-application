@@ -6,6 +6,7 @@ import {
   doc, 
   getDoc,
   updateDoc,
+  deleteDoc,
   query,
   where 
 } from 'firebase/firestore';
@@ -147,11 +148,35 @@ export class ApplicationService {
     }
     
     await updateDoc(applicationRef, updateData);
+    
+    // DON'T update user status here - only when results are published
+    // This keeps the applicant's dashboard showing "under_review" until admin publishes results
+  }
 
+  async deleteApplication(applicationId: string): Promise<void> {
     const application = await this.getApplication(applicationId);
-    if (application) {
-      const userStatus = status === 'accepted' ? 'accepted' : 
-                        status === 'rejected' ? 'rejected' : 'submitted';
+    if (!application) {
+      throw new Error('Application not found');
+    }
+
+    // Remove application reference from user
+    await this.userService.unlinkApplication(application.userId);
+    
+    // Delete the application document
+    const applicationRef = doc(this.firebaseService.firestore, 'applications', applicationId);
+    await deleteDoc(applicationRef);
+    
+    // Reset user status to not_submitted
+    await this.userService.updateUserStatus(application.userId, 'not_submitted');
+  }
+
+  async publishResults(): Promise<void> {
+    // Get all applications and sync user status
+    const applications = await this.getAllApplications();
+    
+    for (const application of applications) {
+      const userStatus = application.status === 'accepted' ? 'accepted' : 
+                        application.status === 'rejected' ? 'rejected' : 'submitted';
       await this.userService.updateUserStatus(application.userId, userStatus);
     }
   }

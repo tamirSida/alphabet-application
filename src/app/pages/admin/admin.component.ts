@@ -361,6 +361,73 @@ export class AdminComponent implements OnInit {
     }
   }
 
+  async deleteApplication(applicationId: string) {
+    const application = this.applications().find(app => app.applicationId === applicationId);
+    if (!application) return;
+    
+    const applicantName = `${application.formData.personalInformation.firstName} ${application.formData.personalInformation.lastName}`;
+    
+    if (!confirm(`Are you sure you want to DELETE ${applicantName}'s application? This action cannot be undone and will reset their account status.`)) {
+      return;
+    }
+    
+    try {
+      await this.applicationService.deleteApplication(applicationId);
+      
+      // Close detail view if open
+      if (this.selectedApplication()?.applicationId === applicationId) {
+        this.selectedApplication.set(null);
+      }
+      
+      await this.loadApplications();
+      this.success.set(`Application for ${applicantName} has been deleted successfully!`);
+    } catch (error) {
+      console.error('Error deleting application:', error);
+      this.error.set('Failed to delete application.');
+    }
+  }
+
+  async publishResults() {
+    const apps = this.applications();
+    
+    // Check if all applications are either accepted or rejected
+    const hasUnreviewedApps = apps.some(app => 
+      app.status !== 'accepted' && app.status !== 'rejected'
+    );
+    
+    if (hasUnreviewedApps) {
+      this.error.set('Cannot publish results. All applications must be either accepted or rejected first.');
+      return;
+    }
+    
+    if (apps.length === 0) {
+      this.error.set('No applications found to publish.');
+      return;
+    }
+    
+    const confirmMessage = `Are you sure you want to publish results to all ${apps.length} applicant(s)? This will update their dashboard status and cannot be undone.`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+    
+    try {
+      await this.applicationService.publishResults();
+      this.success.set(`Successfully published results to all ${apps.length} applicant(s)!`);
+    } catch (error) {
+      console.error('Error publishing results:', error);
+      this.error.set('Failed to publish results.');
+    }
+  }
+
+  canPublishResults(): boolean {
+    const apps = this.applications();
+    if (apps.length === 0) return false;
+    
+    // All applications must be either accepted or rejected
+    return apps.every(app => app.status === 'accepted' || app.status === 'rejected');
+  }
+
   async signOut() {
     try {
       await this.userService.signOut();
