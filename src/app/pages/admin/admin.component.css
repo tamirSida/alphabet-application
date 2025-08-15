@@ -322,8 +322,51 @@
 .application-actions,
 .cohort-actions {
   display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.action-group {
+  display: flex;
   gap: 0.75rem;
-  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.current-assignment {
+  margin-right: 1rem;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.class-badge {
+  background: #8b5cf6;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.status-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.review-date {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.action-button.active {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
 }
 
 .action-button {
@@ -889,6 +932,8 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  min-width: 200px;
+  flex-wrap: wrap;
 }
 
 .table-action-btn {
@@ -938,6 +983,31 @@
 
 .edit-btn:hover {
   background: #2563eb;
+}
+
+.class-btn {
+  background: #8b5cf6;
+  color: white;
+  min-width: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.class-btn:hover {
+  background: #7c3aed;
+}
+
+.class-btn small {
+  font-size: 0.7rem;
+  margin-top: 0.25rem;
+  font-weight: 600;
+}
+
+.table-action-btn.active {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  transform: scale(1.05);
 }
 
 /* Application Detail View */

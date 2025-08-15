@@ -236,13 +236,14 @@ export class AdminComponent implements OnInit {
       return;
     }
     
-    // Create options for class selection
+    // Create options for class selection, highlighting current assignment if any
     let classOptions = availableClasses.map((className, index) => 
-      `${index + 1}. ${className}`
+      `${index + 1}. ${className}${className === application.assignedClass ? ' (current)' : ''}`
     ).join('\n');
     
+    const actionText = application.status === 'accepted' ? 'reassign to a class' : 'assign to a class';
     const classSelection = prompt(
-      `Select a class to assign this application to:\n\n${classOptions}\n\nEnter the number (1-${availableClasses.length}):`
+      `${application.status === 'accepted' ? 'Reassign' : 'Accept and assign'} this application - select a class:\n\n${classOptions}\n\nEnter the number (1-${availableClasses.length}):`
     );
     
     if (classSelection === null) return; // User cancelled
@@ -264,7 +265,12 @@ export class AdminComponent implements OnInit {
       }
       
       await this.loadApplications();
-      this.success.set(`Application accepted and assigned to ${assignedClass}!`);
+      
+      if (application.status === 'accepted') {
+        this.success.set(`Application reassigned to ${assignedClass}!`);
+      } else {
+        this.success.set(`Application accepted and assigned to ${assignedClass}!`);
+      }
     } catch (error) {
       console.error('Error accepting application:', error);
       this.error.set('Failed to accept application.');
@@ -311,6 +317,26 @@ export class AdminComponent implements OnInit {
     } catch (error) {
       console.error('Error reassigning application:', error);
       this.error.set('Failed to reassign application.');
+    }
+  }
+
+  async toggleReject(application: Application & { user?: User, cohort?: Cohort }) {
+    // If currently rejected, move back to submitted status
+    if (application.status === 'rejected') {
+      try {
+        await this.applicationService.updateApplicationStatus(application.applicationId, 'submitted');
+        
+        // Close detail view if open
+        if (this.selectedApplication()) {
+          this.selectedApplication.set(null);
+        }
+        
+        await this.loadApplications();
+        this.success.set('Application returned to submitted status!');
+      } catch (error) {
+        console.error('Error unrejecting application:', error);
+        this.error.set('Failed to unreject application.');
+      }
     }
   }
 

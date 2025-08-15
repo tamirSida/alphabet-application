@@ -330,22 +330,72 @@
 
               <!-- Application Actions -->
               <div class="info-section">
-                <h3>Actions</h3>
+                <h3>Quick Actions</h3>
                 <div class="application-actions">
-                  @if (selectedApplication()?.status === 'submitted' || selectedApplication()?.status === 'under_review') {
-                    <button 
-                      class="action-button accept-button"
-                      (click)="updateApplicationStatus(selectedApplication()!.applicationId, 'accepted')">
-                      <i class="fas fa-check"></i>
-                      Accept Application
-                    </button>
-                    <button 
-                      class="action-button reject-button"
-                      (click)="updateApplicationStatus(selectedApplication()!.applicationId, 'rejected')">
-                      <i class="fas fa-times"></i>
-                      Reject Application
-                    </button>
+                  
+                  <!-- Accept/Reject Toggles -->
+                  <div class="action-group">
+                    @if (selectedApplication()?.status === 'accepted') {
+                      <button 
+                        class="action-button accept-button active"
+                        (click)="acceptApplication(selectedApplication()!)">
+                        <i class="fas fa-check"></i>
+                        Accepted - Reassign Class
+                      </button>
+                    } @else {
+                      <button 
+                        class="action-button accept-button"
+                        (click)="acceptApplication(selectedApplication()!)">
+                        <i class="fas fa-check"></i>
+                        Accept Application
+                      </button>
+                    }
+                    
+                    @if (selectedApplication()?.status === 'rejected') {
+                      <button 
+                        class="action-button reject-button active"
+                        (click)="toggleReject(selectedApplication()!)">
+                        <i class="fas fa-undo"></i>
+                        Unreject Application
+                      </button>
+                    } @else {
+                      <button 
+                        class="action-button reject-button"
+                        (click)="updateApplicationStatus(selectedApplication()!.applicationId, 'rejected')">
+                        <i class="fas fa-times"></i>
+                        Reject Application
+                      </button>
+                    }
+                  </div>
+                  
+                  <!-- Class Management -->
+                  @if (selectedApplication()?.status === 'accepted') {
+                    <div class="action-group">
+                      <div class="current-assignment">
+                        <strong>Current Assignment:</strong> 
+                        <span class="class-badge">{{ selectedApplication()?.assignedClass || 'Not assigned' }}</span>
+                      </div>
+                      <button 
+                        class="action-button edit-button"
+                        (click)="reassignClass(selectedApplication()!)">
+                        <i class="fas fa-exchange-alt"></i>
+                        Change Class Assignment
+                      </button>
+                    </div>
                   }
+                  
+                  <!-- Status Info -->
+                  <div class="status-info">
+                    <strong>Current Status:</strong> 
+                    <span [class]="'status-badge ' + getStatusClass(selectedApplication()?.status || '')">
+                      {{ selectedApplication()?.status | titlecase }}
+                    </span>
+                    @if (selectedApplication()?.reviewedAt) {
+                      <small class="review-date">
+                        Reviewed: {{ selectedApplication()?.reviewedAt | date:'short' }}
+                      </small>
+                    }
+                  </div>
                 </div>
               </div>
             </div>
@@ -486,31 +536,48 @@
                               title="View Details">
                               <i class="fas fa-eye"></i>
                             </button>
-                            @if (application.status === 'submitted' || application.status === 'under_review') {
+                            
+                            <!-- Accept/Reject Toggle -->
+                            @if (application.status === 'accepted') {
+                              <button 
+                                class="table-action-btn accept-btn active"
+                                (click)="acceptApplication(application)"
+                                title="Accepted - Click to reassign class">
+                                <i class="fas fa-check"></i>
+                              </button>
+                            } @else {
                               <button 
                                 class="table-action-btn accept-btn"
                                 (click)="acceptApplication(application)"
                                 title="Accept">
                                 <i class="fas fa-check"></i>
                               </button>
+                            }
+                            
+                            @if (application.status === 'rejected') {
+                              <button 
+                                class="table-action-btn reject-btn active"
+                                (click)="toggleReject(application)"
+                                title="Rejected - Click to unreject">
+                                <i class="fas fa-times"></i>
+                              </button>
+                            } @else {
                               <button 
                                 class="table-action-btn reject-btn"
                                 (click)="updateApplicationStatus(application.applicationId, 'rejected')"
                                 title="Reject">
                                 <i class="fas fa-times"></i>
                               </button>
-                            } @else if (application.status === 'accepted') {
+                            }
+                            
+                            <!-- Quick Class Assignment for Accepted Applications -->
+                            @if (application.status === 'accepted' && application.assignedClass) {
                               <button 
-                                class="table-action-btn edit-btn"
+                                class="table-action-btn class-btn"
                                 (click)="reassignClass(application)"
-                                title="Reassign Class">
-                                <i class="fas fa-edit"></i>
-                              </button>
-                              <button 
-                                class="table-action-btn reject-btn"
-                                (click)="updateApplicationStatus(application.applicationId, 'rejected')"
-                                title="Reject">
-                                <i class="fas fa-times"></i>
+                                title="Current: {{ application.assignedClass }} - Click to change">
+                                <i class="fas fa-users"></i>
+                                <small>{{ application.assignedClass }}</small>
                               </button>
                             }
                           </div>
