@@ -78,9 +78,15 @@
                   </div>
                   <div class="info-item">
                     <label>Status:</label>
-                    <span [class]="'status-badge ' + getStatusClass(selectedApplication()?.status || '')">
-                      {{ selectedApplication()?.status | titlecase }}
-                    </span>
+                    @if (selectedApplication()?.status === 'accepted' && selectedApplication()?.assignedClass) {
+                      <span class="status-badge status-accepted">
+                        Accepted: {{ selectedApplication()?.assignedClass }}
+                      </span>
+                    } @else {
+                      <span [class]="'status-badge ' + getStatusClass(selectedApplication()?.status || '')">
+                        {{ selectedApplication()?.status | titlecase }}
+                      </span>
+                    }
                   </div>
                 </div>
               </div>
@@ -387,9 +393,15 @@
                   <!-- Status Info -->
                   <div class="status-info">
                     <strong>Current Status:</strong> 
-                    <span [class]="'status-badge ' + getStatusClass(selectedApplication()?.status || '')">
-                      {{ selectedApplication()?.status | titlecase }}
-                    </span>
+                    @if (selectedApplication()?.status === 'accepted' && selectedApplication()?.assignedClass) {
+                      <span class="status-badge status-accepted">
+                        Accepted: {{ selectedApplication()?.assignedClass }}
+                      </span>
+                    } @else {
+                      <span [class]="'status-badge ' + getStatusClass(selectedApplication()?.status || '')">
+                        {{ selectedApplication()?.status | titlecase }}
+                      </span>
+                    }
                     @if (selectedApplication()?.reviewedAt) {
                       <small class="review-date">
                         Reviewed: {{ selectedApplication()?.reviewedAt | date:'short' }}
@@ -479,7 +491,7 @@
                   </thead>
                   <tbody>
                     @for (application of filteredApplications(); track application.applicationId) {
-                      <tr class="table-row" [class.has-flags]="application.flags?.englishProficiency || application.flags?.combatService">
+                      <tr class="table-row" [class.has-flags]="application.flags.englishProficiency || application.flags.combatService">
                         <td>
                           <div class="name-cell">
                             {{ application.formData.personalInformation.firstName || '' }} 
@@ -503,7 +515,7 @@
                         </td>
                         <td>
                           <div class="preferred-class-cell">
-                            {{ application.formData.serviceAvailability.selectedClasses?.join(', ') || 'Not specified' }}
+                            {{ application.formData.serviceAvailability.selectedClasses ? application.formData.serviceAvailability.selectedClasses.join(', ') : 'Not specified' }}
                           </div>
                         </td>
                         <td>
@@ -512,9 +524,15 @@
                           </div>
                         </td>
                         <td>
-                          <span [class]="'status-badge table-status ' + getStatusClass(application.status)">
-                            {{ application.status | titlecase }}
-                          </span>
+                          @if (application.status === 'accepted' && application.assignedClass) {
+                            <span class="status-badge table-status status-accepted">
+                              {{ application.assignedClass }}
+                            </span>
+                          } @else {
+                            <span [class]="'status-badge table-status ' + getStatusClass(application.status)">
+                              {{ application.status | titlecase }}
+                            </span>
+                          }
                         </td>
                         <td>
                           <div class="date-cell">
@@ -523,7 +541,7 @@
                         </td>
                         <td>
                           <div class="flags-cell">
-                            @if (application.flags?.englishProficiency || application.flags?.combatService) {
+                            @if (application.flags.englishProficiency || application.flags.combatService) {
                               <i class="fas fa-flag flag-icon" title="Has red flags"></i>
                             }
                           </div>
@@ -575,7 +593,7 @@
                               <button 
                                 class="table-action-btn class-btn"
                                 (click)="reassignClass(application)"
-                                title="Current: {{ application.assignedClass }} - Click to change">
+                                title="Currently assigned to {{ application.assignedClass }} - Click to reassign">
                                 <i class="fas fa-users"></i>
                                 <small>{{ application.assignedClass }}</small>
                               </button>
@@ -947,4 +965,43 @@
       }
     }
   </main>
+
+  <!-- Class Selection Modal -->
+  @if (showClassSelectionModal()) {
+    <div class="modal-overlay" (click)="closeClassSelectionModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ classSelectionModalTitle() }}</h3>
+          <button class="close-btn" (click)="closeClassSelectionModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <p>{{ classSelectionModalSubtitle() }}</p>
+          
+          <div class="class-selection-grid">
+            @for (className of availableClasses(); track className) {
+              <button 
+                class="class-option-btn"
+                [class.current-class]="className === pendingApplication()?.assignedClass"
+                (click)="selectClass(className)">
+                <i class="fas fa-users"></i>
+                <span>{{ className }}</span>
+                @if (className === pendingApplication()?.assignedClass) {
+                  <small>Current</small>
+                }
+              </button>
+            }
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button class="secondary-button" (click)="closeClassSelectionModal()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

@@ -29,6 +29,12 @@ export class AdminComponent implements OnInit {
   classFilter = signal<string>('all');
   selectedApplication = signal<(Application & { user?: User, cohort?: Cohort }) | null>(null);
   availableClasses = signal<string[]>([]);
+  
+  // Class selection modal
+  showClassSelectionModal = signal(false);
+  pendingApplication = signal<(Application & { user?: User, cohort?: Cohort }) | null>(null);
+  classSelectionModalTitle = signal('');
+  classSelectionModalSubtitle = signal('');
 
   cohortForm: FormGroup;
   adminForm: FormGroup;
@@ -122,21 +128,49 @@ export class AdminComponent implements OnInit {
   private loadAvailableClasses() {
     const allClasses = new Set<string>();
     
-    // Get classes from cohorts
+    // Get classes from cohorts (these should be clean names like "Class A", "Class B")
     this.cohorts().forEach(cohort => {
       cohort.classes?.forEach(cohortClass => {
-        allClasses.add(cohortClass.name);
+        if (cohortClass.name && this.isValidClassName(cohortClass.name)) {
+          allClasses.add(cohortClass.name);
+        }
       });
     });
     
-    // Get classes from application preferences
+    // Get classes from application preferences, but filter out auto-generated IDs
     this.applications().forEach(app => {
       app.formData.serviceAvailability.selectedClasses?.forEach(className => {
-        allClasses.add(className);
+        if (className && this.isValidClassName(className)) {
+          allClasses.add(className);
+        }
       });
+      
+      // Also include assigned classes
+      if (app.assignedClass && this.isValidClassName(app.assignedClass)) {
+        allClasses.add(app.assignedClass);
+      }
     });
     
+    // If no valid classes found, add some defaults
+    if (allClasses.size === 0) {
+      allClasses.add('Class A');
+      allClasses.add('Class B');
+      allClasses.add('Class C');
+    }
+    
     this.availableClasses.set(Array.from(allClasses).sort());
+  }
+
+  private isValidClassName(name: string): boolean {
+    // Filter out auto-generated Firebase IDs and invalid class names
+    if (!name || name.trim() === '') return false;
+    
+    // Auto-generated IDs are usually long strings with random characters
+    if (name.length > 20) return false;
+    if (name.includes('_') && name.length > 10) return false;
+    if (/^[a-zA-Z0-9]{10,}$/.test(name)) return false; // Pure alphanumeric strings longer than 10 chars
+    
+    return true;
   }
 
   private filterApplications() {
@@ -236,30 +270,42 @@ export class AdminComponent implements OnInit {
       return;
     }
     
-    // Create options for class selection, highlighting current assignment if any
-    let classOptions = availableClasses.map((className, index) => 
-      `${index + 1}. ${className}${className === application.assignedClass ? ' (current)' : ''}`
-    ).join('\n');
+    // Open class selection modal
+    this.pendingApplication.set(application);
     
-    const actionText = application.status === 'accepted' ? 'reassign to a class' : 'assign to a class';
-    const classSelection = prompt(
-      `${application.status === 'accepted' ? 'Reassign' : 'Accept and assign'} this application - select a class:\n\n${classOptions}\n\nEnter the number (1-${availableClasses.length}):`
-    );
-    
-    if (classSelection === null) return; // User cancelled
-    
-    const classIndex = parseInt(classSelection) - 1;
-    if (isNaN(classIndex) || classIndex < 0 || classIndex >= availableClasses.length) {
-      this.error.set('Invalid class selection.');
-      return;
+    if (application.status === 'accepted') {
+      this.classSelectionModalTitle.set('Reassign Class');
+      this.classSelectionModalSubtitle.set(`Reassign ${application.formData.personalInformation.firstName} ${application.formData.personalInformation.lastName} to a different class:`);
+    } else {
+      this.classSelectionModalTitle.set('Accept Application');
+      this.classSelectionModalSubtitle.set(`Accept ${application.formData.personalInformation.firstName} ${application.formData.personalInformation.lastName} and assign to a class:`);
     }
     
-    const assignedClass = availableClasses[classIndex];
-    
+    this.showClassSelectionModal.set(true);
+  }
+
+  async reassignClass(application: Application & { user?: User, cohort?: Cohort }) {
+    // Use the same modal as acceptApplication for consistency
+    this.acceptApplication(application);
+  }
+
+  // Modal management methods
+  closeClassSelectionModal() {
+    this.showClassSelectionModal.set(false);
+    this.pendingApplication.set(null);
+    this.classSelectionModalTitle.set('');
+    this.classSelectionModalSubtitle.set('');
+  }
+
+  async selectClass(className: string) {
+    const application = this.pendingApplication();
+    if (!application) return;
+
     try {
-      await this.applicationService.updateApplicationStatus(application.applicationId, 'accepted', assignedClass);
+      await this.applicationService.updateApplicationStatus(application.applicationId, 'accepted', className);
       
-      // Close detail view if open
+      // Close modal and detail view if open
+      this.closeClassSelectionModal();
       if (this.selectedApplication()) {
         this.selectedApplication.set(null);
       }
@@ -267,56 +313,14 @@ export class AdminComponent implements OnInit {
       await this.loadApplications();
       
       if (application.status === 'accepted') {
-        this.success.set(`Application reassigned to ${assignedClass}!`);
+        this.success.set(`Application reassigned to ${className}!`);
       } else {
-        this.success.set(`Application accepted and assigned to ${assignedClass}!`);
+        this.success.set(`Application accepted and assigned to ${className}!`);
       }
     } catch (error) {
-      console.error('Error accepting application:', error);
-      this.error.set('Failed to accept application.');
-    }
-  }
-
-  async reassignClass(application: Application & { user?: User, cohort?: Cohort }) {
-    const availableClasses = this.availableClasses();
-    
-    if (availableClasses.length === 0) {
-      this.error.set('No classes available for reassignment.');
-      return;
-    }
-    
-    // Create options for class selection
-    let classOptions = availableClasses.map((className, index) => 
-      `${index + 1}. ${className}${className === application.assignedClass ? ' (current)' : ''}`
-    ).join('\n');
-    
-    const classSelection = prompt(
-      `Reassign to a different class:\n\n${classOptions}\n\nEnter the number (1-${availableClasses.length}):`
-    );
-    
-    if (classSelection === null) return; // User cancelled
-    
-    const classIndex = parseInt(classSelection) - 1;
-    if (isNaN(classIndex) || classIndex < 0 || classIndex >= availableClasses.length) {
-      this.error.set('Invalid class selection.');
-      return;
-    }
-    
-    const assignedClass = availableClasses[classIndex];
-    
-    try {
-      await this.applicationService.updateApplicationStatus(application.applicationId, 'accepted', assignedClass);
-      
-      // Close detail view if open
-      if (this.selectedApplication()) {
-        this.selectedApplication.set(null);
-      }
-      
-      await this.loadApplications();
-      this.success.set(`Application reassigned to ${assignedClass}!`);
-    } catch (error) {
-      console.error('Error reassigning application:', error);
-      this.error.set('Failed to reassign application.');
+      console.error('Error updating application:', error);
+      this.error.set('Failed to update application.');
+      this.closeClassSelectionModal();
     }
   }
 
