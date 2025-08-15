@@ -811,6 +811,12 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+.filter-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 .filter-controls select {
   padding: 0.75rem 1rem;
   border: 1px solid #d1d5db;
@@ -923,6 +929,15 @@
 
 .reject-btn:hover {
   background: #dc2626;
+}
+
+.edit-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.edit-btn:hover {
+  background: #2563eb;
 }
 
 /* Application Detail View */
@@ -1041,6 +1056,21 @@
 
 .flag-item i {
   color: #ef4444;
+}
+
+.score-badge {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-left: 1rem;
+}
+
+.inline-flag {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
 }
 
 /* Mobile Responsiveness */

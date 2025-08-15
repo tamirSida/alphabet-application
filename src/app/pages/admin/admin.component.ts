@@ -25,7 +25,10 @@ export class AdminComponent implements OnInit {
   // Search and filter
   searchTerm = signal('');
   statusFilter = signal<string>('all');
+  countryFilter = signal<string>('all');
+  classFilter = signal<string>('all');
   selectedApplication = signal<(Application & { user?: User, cohort?: Cohort }) | null>(null);
+  availableClasses = signal<string[]>([]);
 
   cohortForm: FormGroup;
   adminForm: FormGroup;
@@ -92,6 +95,9 @@ export class AdminComponent implements OnInit {
   }
 
   private async loadApplications() {
+    // Load cohorts first to ensure we have class data
+    await this.loadCohorts();
+    
     const applications = await this.applicationService.getAllApplications();
     const enrichedApplications = [];
 
@@ -109,13 +115,36 @@ export class AdminComponent implements OnInit {
     }
 
     this.applications.set(enrichedApplications);
+    this.loadAvailableClasses();
     this.filterApplications();
+  }
+
+  private loadAvailableClasses() {
+    const allClasses = new Set<string>();
+    
+    // Get classes from cohorts
+    this.cohorts().forEach(cohort => {
+      cohort.classes?.forEach(cohortClass => {
+        allClasses.add(cohortClass.name);
+      });
+    });
+    
+    // Get classes from application preferences
+    this.applications().forEach(app => {
+      app.formData.serviceAvailability.selectedClasses?.forEach(className => {
+        allClasses.add(className);
+      });
+    });
+    
+    this.availableClasses.set(Array.from(allClasses).sort());
   }
 
   private filterApplications() {
     const apps = this.applications();
     const search = this.searchTerm().toLowerCase();
     const status = this.statusFilter();
+    const country = this.countryFilter();
+    const classFilter = this.classFilter();
 
     let filtered = apps;
 
@@ -134,6 +163,19 @@ export class AdminComponent implements OnInit {
       filtered = filtered.filter(app => app.status === status);
     }
 
+    // Apply country filter
+    if (country !== 'all') {
+      filtered = filtered.filter(app => app.formData.serviceAvailability.countryOfService === country);
+    }
+
+    // Apply class filter
+    if (classFilter !== 'all') {
+      filtered = filtered.filter(app => 
+        app.formData.serviceAvailability.selectedClasses?.includes(classFilter) ||
+        app.assignedClass === classFilter
+      );
+    }
+
     this.filteredApplications.set(filtered);
   }
 
@@ -144,6 +186,16 @@ export class AdminComponent implements OnInit {
 
   updateStatusFilter(status: string) {
     this.statusFilter.set(status);
+    this.filterApplications();
+  }
+
+  updateCountryFilter(country: string) {
+    this.countryFilter.set(country);
+    this.filterApplications();
+  }
+
+  updateClassFilter(classFilter: string) {
+    this.classFilter.set(classFilter);
     this.filterApplications();
   }
 
@@ -174,6 +226,92 @@ export class AdminComponent implements OnInit {
     this.showAdminForm.set(false);
     await this.loadData();
     this.isLoading.set(false);
+  }
+
+  async acceptApplication(application: Application & { user?: User, cohort?: Cohort }) {
+    const availableClasses = this.availableClasses();
+    
+    if (availableClasses.length === 0) {
+      this.error.set('No classes available for assignment.');
+      return;
+    }
+    
+    // Create options for class selection
+    let classOptions = availableClasses.map((className, index) => 
+      `${index + 1}. ${className}`
+    ).join('\n');
+    
+    const classSelection = prompt(
+      `Select a class to assign this application to:\n\n${classOptions}\n\nEnter the number (1-${availableClasses.length}):`
+    );
+    
+    if (classSelection === null) return; // User cancelled
+    
+    const classIndex = parseInt(classSelection) - 1;
+    if (isNaN(classIndex) || classIndex < 0 || classIndex >= availableClasses.length) {
+      this.error.set('Invalid class selection.');
+      return;
+    }
+    
+    const assignedClass = availableClasses[classIndex];
+    
+    try {
+      await this.applicationService.updateApplicationStatus(application.applicationId, 'accepted', assignedClass);
+      
+      // Close detail view if open
+      if (this.selectedApplication()) {
+        this.selectedApplication.set(null);
+      }
+      
+      await this.loadApplications();
+      this.success.set(`Application accepted and assigned to ${assignedClass}!`);
+    } catch (error) {
+      console.error('Error accepting application:', error);
+      this.error.set('Failed to accept application.');
+    }
+  }
+
+  async reassignClass(application: Application & { user?: User, cohort?: Cohort }) {
+    const availableClasses = this.availableClasses();
+    
+    if (availableClasses.length === 0) {
+      this.error.set('No classes available for reassignment.');
+      return;
+    }
+    
+    // Create options for class selection
+    let classOptions = availableClasses.map((className, index) => 
+      `${index + 1}. ${className}${className === application.assignedClass ? ' (current)' : ''}`
+    ).join('\n');
+    
+    const classSelection = prompt(
+      `Reassign to a different class:\n\n${classOptions}\n\nEnter the number (1-${availableClasses.length}):`
+    );
+    
+    if (classSelection === null) return; // User cancelled
+    
+    const classIndex = parseInt(classSelection) - 1;
+    if (isNaN(classIndex) || classIndex < 0 || classIndex >= availableClasses.length) {
+      this.error.set('Invalid class selection.');
+      return;
+    }
+    
+    const assignedClass = availableClasses[classIndex];
+    
+    try {
+      await this.applicationService.updateApplicationStatus(application.applicationId, 'accepted', assignedClass);
+      
+      // Close detail view if open
+      if (this.selectedApplication()) {
+        this.selectedApplication.set(null);
+      }
+      
+      await this.loadApplications();
+      this.success.set(`Application reassigned to ${assignedClass}!`);
+    } catch (error) {
+      console.error('Error reassigning application:', error);
+      this.error.set('Failed to reassign application.');
+    }
   }
 
   async updateApplicationStatus(applicationId: string, status: Application['status']) {
@@ -490,5 +628,62 @@ export class AdminComponent implements OnInit {
       default:
         return 'status-unknown';
     }
+  }
+
+  calculateSkillsScore(skills: any): { score: number; maxScore: number; percentage: number } {
+    if (!skills) return { score: 0, maxScore: 0, percentage: 0 };
+    
+    let totalScore = 0;
+    let maxScore = 0;
+    
+    // Add up all the standard skills (1-5 scale)
+    const standardSkills = ['aiDailyUse', 'programming', 'marketingSales', 'management', 'graphicDesign'];
+    
+    standardSkills.forEach(skill => {
+      if (skills[skill] !== undefined) {
+        totalScore += skills[skill];
+        maxScore += 5;
+      }
+    });
+    
+    // Add custom skill if present
+    if (skills.other && skills.other.rating !== undefined) {
+      totalScore += skills.other.rating;
+      maxScore += 5;
+    }
+    
+    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+    
+    return { score: totalScore, maxScore, percentage };
+  }
+
+  calculatePersonalQualitiesScore(personalQualities: any): { score: number; maxScore: number; percentage: number } {
+    if (!personalQualities) return { score: 0, maxScore: 0, percentage: 0 };
+    
+    let totalScore = 0;
+    let maxScore = 0;
+    
+    // All personal qualities are on 0-10 scale
+    const qualities = [
+      'proactivePersonality',
+      'persistenceHandleDifficulties', 
+      'performUnderStress',
+      'independence',
+      'teamwork',
+      'mentalFlexibility',
+      'passionForProjects',
+      'creativeThinking'
+    ];
+    
+    qualities.forEach(quality => {
+      if (personalQualities[quality] && personalQualities[quality].rating !== undefined) {
+        totalScore += personalQualities[quality].rating;
+        maxScore += 10;
+      }
+    });
+    
+    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+    
+    return { score: totalScore, maxScore, percentage };
   }
 }

@@ -106,6 +106,7 @@ export interface Application {
   status: 'submitted' | 'under_review' | 'accepted' | 'rejected';
   submittedAt: Date;
   reviewedAt?: Date;
+  assignedClass?: string;
   formData: ApplicationFormData;
   flags: ApplicationFlags;
 }

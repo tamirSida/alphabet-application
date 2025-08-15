@@ -115,7 +115,12 @@
                   </div>
                   <div class="info-item">
                     <label>English Proficiency:</label>
-                    <span>{{ selectedApplication()?.formData?.serviceAvailability?.englishProficiency }}</span>
+                    <span>
+                      {{ selectedApplication()?.formData?.serviceAvailability?.englishProficiency }}
+                      @if (selectedApplication()?.flags?.englishProficiency) {
+                        <i class="fas fa-flag flag-icon inline-flag" title="Red flag: Selected 'No' for IL service"></i>
+                      }
+                    </span>
                   </div>
                   <div class="info-item">
                     <label>Selected Cohort:</label>
@@ -138,7 +143,12 @@
                   </div>
                   <div class="info-item">
                     <label>Combat Service:</label>
-                    <span>{{ selectedApplication()?.formData?.experienceBackground?.combatService }}</span>
+                    <span>
+                      {{ selectedApplication()?.formData?.experienceBackground?.combatService }}
+                      @if (selectedApplication()?.flags?.combatService) {
+                        <i class="fas fa-flag flag-icon inline-flag" title="Red flag: Selected 'No'"></i>
+                      }
+                    </span>
                   </div>
                   <div class="info-item">
                     <label>Professional Experience:</label>
@@ -164,7 +174,14 @@
 
               <!-- Skills Assessment Section -->
               <div class="info-section">
-                <h3>Skills Assessment (1-5 Scale)</h3>
+                <h3>Skills Assessment (1-5 Scale)
+                  @if (selectedApplication()?.formData?.skills) {
+                    <span class="score-badge">
+                      {{ calculateSkillsScore(selectedApplication()?.formData?.skills).score }}/{{ calculateSkillsScore(selectedApplication()?.formData?.skills).maxScore }} 
+                      ({{ calculateSkillsScore(selectedApplication()?.formData?.skills).percentage }}%)
+                    </span>
+                  }
+                </h3>
                 <div class="info-grid">
                   <div class="info-item">
                     <label>AI Daily Use:</label>
@@ -197,7 +214,14 @@
 
               <!-- Personal Qualities Section -->
               <div class="info-section">
-                <h3>Personal Qualities (0-10 Scale)</h3>
+                <h3>Personal Qualities (0-10 Scale)
+                  @if (selectedApplication()?.formData?.personalQualities) {
+                    <span class="score-badge">
+                      {{ calculatePersonalQualitiesScore(selectedApplication()?.formData?.personalQualities).score }}/{{ calculatePersonalQualitiesScore(selectedApplication()?.formData?.personalQualities).maxScore }} 
+                      ({{ calculatePersonalQualitiesScore(selectedApplication()?.formData?.personalQualities).percentage }}%)
+                    </span>
+                  }
+                </h3>
                 <div class="info-grid">
                   <div class="info-item">
                     <label>Proactive Personality:</label>
@@ -363,6 +387,19 @@
                   <option value="accepted">Accepted</option>
                   <option value="rejected">Rejected</option>
                 </select>
+                
+                <select [value]="countryFilter()" (change)="updateCountryFilter($any($event.target).value)">
+                  <option value="all">All Countries</option>
+                  <option value="US">US</option>
+                  <option value="IL">IL</option>
+                </select>
+                
+                <select [value]="classFilter()" (change)="updateClassFilter($any($event.target).value)">
+                  <option value="all">All Classes</option>
+                  @for (classOption of availableClasses(); track classOption) {
+                    <option [value]="classOption">{{ classOption }}</option>
+                  }
+                </select>
               </div>
             </div>
 
@@ -381,7 +418,9 @@
                       <th>Name</th>
                       <th>Email</th>
                       <th>ID</th>
-                      <th>Cohort</th>
+                      <th>Country</th>
+                      <th>Preferred Class</th>
+                      <th>Assigned Class</th>
                       <th>Status</th>
                       <th>Submitted</th>
                       <th>Flags</th>
@@ -408,8 +447,18 @@
                           </div>
                         </td>
                         <td>
-                          <div class="cohort-cell">
-                            {{ application.cohort?.number || 'Unknown' }}
+                          <div class="country-cell">
+                            {{ application.formData.serviceAvailability.countryOfService }}
+                          </div>
+                        </td>
+                        <td>
+                          <div class="preferred-class-cell">
+                            {{ application.formData.serviceAvailability.selectedClasses?.join(', ') || 'Not specified' }}
+                          </div>
+                        </td>
+                        <td>
+                          <div class="assigned-class-cell">
+                            {{ application.assignedClass || '-' }}
                           </div>
                         </td>
                         <td>
@@ -440,9 +489,22 @@
                             @if (application.status === 'submitted' || application.status === 'under_review') {
                               <button 
                                 class="table-action-btn accept-btn"
-                                (click)="updateApplicationStatus(application.applicationId, 'accepted')"
+                                (click)="acceptApplication(application)"
                                 title="Accept">
                                 <i class="fas fa-check"></i>
+                              </button>
+                              <button 
+                                class="table-action-btn reject-btn"
+                                (click)="updateApplicationStatus(application.applicationId, 'rejected')"
+                                title="Reject">
+                                <i class="fas fa-times"></i>
+                              </button>
+                            } @else if (application.status === 'accepted') {
+                              <button 
+                                class="table-action-btn edit-btn"
+                                (click)="reassignClass(application)"
+                                title="Reassign Class">
+                                <i class="fas fa-edit"></i>
                               </button>
                               <button 
                                 class="table-action-btn reject-btn"

@@ -134,12 +134,16 @@ export class ApplicationService {
     });
   }
 
-  async updateApplicationStatus(applicationId: string, status: Application['status']): Promise<void> {
+  async updateApplicationStatus(applicationId: string, status: Application['status'], assignedClass?: string): Promise<void> {
     const applicationRef = doc(this.firebaseService.firestore, 'applications', applicationId);
     const updateData: any = { status };
     
     if (status === 'accepted' || status === 'rejected') {
       updateData.reviewedAt = new Date();
+    }
+    
+    if (assignedClass) {
+      updateData.assignedClass = assignedClass;
     }
     
     await updateDoc(applicationRef, updateData);
