@@ -59,6 +59,83 @@
               </button>
               <h2>Application Details</h2>
             </div>
+
+            <!-- Quick Actions - Moved to Top -->
+            <div class="info-section">
+              <h3>Quick Actions</h3>
+              <div class="application-actions">
+                
+                <!-- Accept/Reject Toggles -->
+                <div class="action-group">
+                  @if (selectedApplication()?.status === 'accepted') {
+                    <button 
+                      class="action-button accept-button active"
+                      (click)="acceptApplication(selectedApplication()!)">
+                      <i class="fas fa-check"></i>
+                      Accepted - Reassign Class
+                    </button>
+                  } @else {
+                    <button 
+                      class="action-button accept-button"
+                      (click)="acceptApplication(selectedApplication()!)">
+                      <i class="fas fa-check"></i>
+                      Accept Application
+                    </button>
+                  }
+                  
+                  @if (selectedApplication()?.status === 'rejected') {
+                    <button 
+                      class="action-button reject-button active"
+                      (click)="toggleReject(selectedApplication()!)">
+                      <i class="fas fa-undo"></i>
+                      Unreject Application
+                    </button>
+                  } @else {
+                    <button 
+                      class="action-button reject-button"
+                      (click)="updateApplicationStatus(selectedApplication()!.applicationId, 'rejected')">
+                      <i class="fas fa-times"></i>
+                      Reject Application
+                    </button>
+                  }
+                </div>
+                
+                <!-- Class Management -->
+                @if (selectedApplication()?.status === 'accepted') {
+                  <div class="action-group">
+                    <div class="current-assignment">
+                      <strong>Current Assignment:</strong> 
+                      <span class="class-badge">{{ selectedApplication()?.assignedClass || 'Not assigned' }}</span>
+                    </div>
+                    <button 
+                      class="action-button edit-button"
+                      (click)="reassignClass(selectedApplication()!)">
+                      <i class="fas fa-exchange-alt"></i>
+                      Change Class Assignment
+                    </button>
+                  </div>
+                }
+                
+                <!-- Status Info -->
+                <div class="status-info">
+                  <strong>Current Status:</strong> 
+                  @if (selectedApplication()?.status === 'accepted' && selectedApplication()?.assignedClass) {
+                    <span class="status-badge status-accepted">
+                      Accepted: {{ selectedApplication()?.assignedClass }}
+                    </span>
+                  } @else {
+                    <span [class]="'status-badge ' + getStatusClass(selectedApplication()?.status || '')">
+                      {{ selectedApplication()?.status | titlecase }}
+                    </span>
+                  }
+                  @if (selectedApplication()?.reviewedAt) {
+                    <small class="review-date">
+                      Reviewed: {{ selectedApplication()?.reviewedAt | date:'short' }}
+                    </small>
+                  }
+                </div>
+              </div>
+            </div>
             
             <div class="applicant-info">
               <div class="info-section">
@@ -334,82 +411,6 @@
                 </div>
               }
 
-              <!-- Application Actions -->
-              <div class="info-section">
-                <h3>Quick Actions</h3>
-                <div class="application-actions">
-                  
-                  <!-- Accept/Reject Toggles -->
-                  <div class="action-group">
-                    @if (selectedApplication()?.status === 'accepted') {
-                      <button 
-                        class="action-button accept-button active"
-                        (click)="acceptApplication(selectedApplication()!)">
-                        <i class="fas fa-check"></i>
-                        Accepted - Reassign Class
-                      </button>
-                    } @else {
-                      <button 
-                        class="action-button accept-button"
-                        (click)="acceptApplication(selectedApplication()!)">
-                        <i class="fas fa-check"></i>
-                        Accept Application
-                      </button>
-                    }
-                    
-                    @if (selectedApplication()?.status === 'rejected') {
-                      <button 
-                        class="action-button reject-button active"
-                        (click)="toggleReject(selectedApplication()!)">
-                        <i class="fas fa-undo"></i>
-                        Unreject Application
-                      </button>
-                    } @else {
-                      <button 
-                        class="action-button reject-button"
-                        (click)="updateApplicationStatus(selectedApplication()!.applicationId, 'rejected')">
-                        <i class="fas fa-times"></i>
-                        Reject Application
-                      </button>
-                    }
-                  </div>
-                  
-                  <!-- Class Management -->
-                  @if (selectedApplication()?.status === 'accepted') {
-                    <div class="action-group">
-                      <div class="current-assignment">
-                        <strong>Current Assignment:</strong> 
-                        <span class="class-badge">{{ selectedApplication()?.assignedClass || 'Not assigned' }}</span>
-                      </div>
-                      <button 
-                        class="action-button edit-button"
-                        (click)="reassignClass(selectedApplication()!)">
-                        <i class="fas fa-exchange-alt"></i>
-                        Change Class Assignment
-                      </button>
-                    </div>
-                  }
-                  
-                  <!-- Status Info -->
-                  <div class="status-info">
-                    <strong>Current Status:</strong> 
-                    @if (selectedApplication()?.status === 'accepted' && selectedApplication()?.assignedClass) {
-                      <span class="status-badge status-accepted">
-                        Accepted: {{ selectedApplication()?.assignedClass }}
-                      </span>
-                    } @else {
-                      <span [class]="'status-badge ' + getStatusClass(selectedApplication()?.status || '')">
-                        {{ selectedApplication()?.status | titlecase }}
-                      </span>
-                    }
-                    @if (selectedApplication()?.reviewedAt) {
-                      <small class="review-date">
-                        Reviewed: {{ selectedApplication()?.reviewedAt | date:'short' }}
-                      </small>
-                    }
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         } @else {

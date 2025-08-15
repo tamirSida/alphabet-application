@@ -75,8 +75,8 @@
 .applications-table th { background: #f8fafc; padding: 1rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; }
 .applications-table td { padding: 1rem; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
 .table-row:hover { background: #f8fafc; }
-.table-row.has-flags { background: rgba(255, 243, 199, 0.3); }
-.table-row.has-flags:hover { background: rgba(255, 243, 199, 0.5); }
+.table-row.has-flags { background: rgba(254, 226, 226, 0.4); }
+.table-row.has-flags:hover { background: rgba(254, 226, 226, 0.6); }
 
 /* Table Cells & Actions */
 .name-cell, .email-cell, .id-cell, .cohort-cell, .date-cell, .country-cell, .preferred-class-cell, .assigned-class-cell { font-size: 0.875rem; color: #374151; }

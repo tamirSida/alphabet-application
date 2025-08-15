@@ -37,7 +37,9 @@ A comprehensive CRM system for managing applications to the Alphabet Program, bu
    - userId, cohortId, operatorId: string
    - status: 'submitted' | 'under_review' | 'accepted' | 'rejected'
    - submittedAt, reviewedAt?: Date
-   - formData: ApplicationFormData (placeholder structure)
+   - assignedClass?: string (class assignment for accepted applications)
+   - formData: ApplicationFormData (comprehensive 9-section structure)
+   - flags: ApplicationFlags (auto-calculated red flags for admin screening)
 
 ## Firebase Configuration
 ```javascript
@@ -97,12 +99,16 @@ src/
 - Status tracking: not_submitted → submitted → accepted/rejected
 - Bijective user-application relationship
 
-### Admin Panel (CRM)
+### Enhanced Admin Panel (Professional CRM)
 - **Three-tab navigation**: Applications, Cohorts, Admin Management
-- **Applications Management**: View all applications with status badges, accept/reject functionality
-- **Cohort Management**: Create new cohorts with date validation and status tracking
-- **Admin Management**: Create new admin users, view existing admins
-- Real-time data loading and form validation
+- **Professional CRM Table Interface**: Replaced card view with comprehensive table layout
+- **Advanced Search & Filtering**: Search by name/email/ID + filters for status/country/class
+- **Class Assignment System**: Modal-based class selection with visual cards
+- **Red Flag Detection**: Automatic flagging with inline indicators and visual highlighting
+- **Smart Status Display**: Shows assigned class instead of generic "Accepted" status
+- **Quick Actions**: Accept/reject toggles with class assignment workflow
+- **Intelligent Scoring**: Automatic calculation of skills and personal qualities scores
+- **Real-time Updates**: Live data refresh and comprehensive error handling
 
 ### UI/UX & Design System
 - **Dark theme design language**: Consistent alpha-bet inspired color scheme
@@ -155,13 +161,61 @@ npm install
 - Firestore security rules implementation
 - Comprehensive error handling and validation
 
+## CRM Features (Applications Management)
+
+### Table Interface
+- **Professional Layout**: Name, Email, ID, Country, Preferred Class, Assigned Class, Status, Date, Flags, Actions
+- **Smart Status Display**: Shows assigned class (e.g., "Class A") instead of generic "Accepted"
+- **Visual Red Flags**: Reddish background highlighting for applications with issues
+- **Responsive Design**: Mobile-friendly table with proper overflow handling
+
+### Search & Filtering System
+- **Global Search**: Find by applicant name, email, or operator ID
+- **Status Filter**: All, Submitted, Under Review, Accepted, Rejected
+- **Country Filter**: All, US, IL
+- **Class Filter**: Dynamically populated with available classes (A, B, C, etc.)
+- **Real-time Results**: Instant filtering without page refresh
+
+### Class Assignment Workflow
+- **Modal Interface**: Beautiful card-based class selection (replaces primitive prompts)
+- **Smart Class Detection**: Filters out auto-generated Firebase IDs, shows only clean names
+- **Visual Feedback**: Current assignment highlighted, hover effects, animations
+- **Mandatory Assignment**: Cannot accept applications without class selection
+- **Easy Reassignment**: Click class button for quick reassignment
+
+### Red Flag System
+- **Automatic Detection**: English proficiency (IL + "No") and Combat service ("No")
+- **Visual Indicators**: Red flag icons in table + inline with problematic fields
+- **Row Highlighting**: Subtle red background for flagged applications
+- **Detailed View**: Dedicated flags section with explanations
+
+### Quick Actions
+- **Toggle Workflow**: Accept ↔ Reject with visual state indicators
+- **Smart Buttons**: "Accepted - Reassign Class" vs "Accept Application"
+- **Unreject Capability**: Return rejected applications to submitted status
+- **Class Management**: Quick reassignment from both table and detail views
+- **Top Positioning**: Actions moved to top of detail view for immediate access
+
+### Scoring System
+- **Skills Assessment**: Automatic calculation (n/m format + percentage)
+- **Personal Qualities**: Automatic calculation with examples display
+- **Dynamic Calculation**: Includes custom skills if present
+- **Visual Badges**: Score displays with professional styling
+
+### Application Detail View
+- **Comprehensive Display**: All 9 form sections with proper formatting
+- **Quick Actions Section**: Prominently positioned at top
+- **Smart Status Info**: Shows current assignment and review dates
+- **Professional Layout**: Organized sections with consistent styling
+- **Mobile Optimized**: Responsive design for all screen sizes
+
 🚧 **Future Enhancements**:
-- Application form field specification (currently placeholder)
 - Route guards for enhanced security
 - Email notifications for status changes
 - Data export functionality (CSV/Excel)
 - Advanced analytics and reporting
 - Bulk operations for admin actions
+- Class capacity management and waitlists
 
 ## Firebase Security Rules (Production)
 Current rules located in `/rules.txt`:
