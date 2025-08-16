@@ -823,9 +823,9 @@
         <button 
           type="button" 
           class="nav-button submit"
-          [disabled]="!applicationForm.valid || isLoading()"
+          [disabled]="!applicationForm.valid || isSubmitting()"
           (click)="submitApplication()">
-          @if (isLoading()) {
+          @if (isSubmitting()) {
             <i class="fas fa-spinner fa-spin"></i>
             Submitting...
           } @else {
@@ -848,6 +848,20 @@
       <div class="alert alert-error">
         <i class="fas fa-exclamation-triangle"></i>
         {{ error() }}
+      </div>
+    }
+
+    <!-- Submission Loading Overlay -->
+    @if (isSubmitting()) {
+      <div class="submission-overlay">
+        <div class="submission-content">
+          <i class="fas fa-paper-plane submission-icon"></i>
+          <h3>Submitting Your Application</h3>
+          <p>Please wait while we process your application...</p>
+          <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+          </div>
+        </div>
       </div>
     }
   }

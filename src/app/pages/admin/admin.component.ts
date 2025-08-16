@@ -28,6 +28,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   
   // Publish results state
   isPublishing = signal(false);
+  lastPublishTime = signal<Date | null>(null);
   
   // Search and filter
   searchTerm = signal('');
@@ -477,6 +478,9 @@ export class AdminComponent implements OnInit, OnDestroy {
     try {
       await this.applicationService.publishResults();
       
+      // Set last publish time
+      this.lastPublishTime.set(new Date());
+      
       // Show success with animation
       this.success.set(`🎉 Successfully published results to all ${apps.length} applicant(s)! 🎉`);
       
@@ -499,6 +503,24 @@ export class AdminComponent implements OnInit, OnDestroy {
     
     // All applications must be either accepted or rejected
     return apps.every(app => app.status === 'accepted' || app.status === 'rejected');
+  }
+
+  getLastPublishDisplay(): string {
+    const publishTime = this.lastPublishTime();
+    if (!publishTime) return '';
+    
+    const now = new Date();
+    const diffMs = now.getTime() - publishTime.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    
+    return publishTime.toLocaleDateString();
   }
 
   async signOut() {

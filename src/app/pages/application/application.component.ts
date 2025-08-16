@@ -16,6 +16,7 @@ export class ApplicationComponent implements OnInit {
   currentStep = signal(1);
   totalSteps = 9;
   isLoading = signal(true);
+  isSubmitting = signal(false);
   error = signal<string | null>(null);
   success = signal<string | null>(null);
   
@@ -314,7 +315,9 @@ export class ApplicationComponent implements OnInit {
       return;
     }
 
-    this.isLoading.set(true);
+    this.isSubmitting.set(true);
+    this.error.set(null);
+    
     try {
       const formData: ApplicationFormData = this.applicationForm.value;
       
@@ -336,7 +339,7 @@ export class ApplicationComponent implements OnInit {
     } catch (error: any) {
       this.error.set(error.message || 'Failed to submit application');
     } finally {
-      this.isLoading.set(false);
+      this.isSubmitting.set(false);
     }
   }
 

@@ -175,6 +175,27 @@
   }
 }
 
+/* Publish Status Indicator */
+.publish-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #d1fae5;
+  color: #065f46;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #a7f3d0;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+}
+
+.publish-status-indicator i {
+  color: #10b981;
+  font-size: 1rem;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
   .admin-header { padding: 1rem; }
