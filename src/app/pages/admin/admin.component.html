@@ -226,7 +226,7 @@
                   </div>
                   <div class="info-item">
                     <label>Selected Classes:</label>
-                    <span>{{ selectedApplication()?.formData?.serviceAvailability?.selectedClasses?.join(', ') || 'Not specified' }}</span>
+                    <span>{{ formatPreferredClasses(selectedApplication()!) }}</span>
                   </div>
                 </div>
               </div>
@@ -590,7 +590,7 @@
                         </td>
                         <td>
                           <div class="preferred-class-cell">
-                            {{ application.formData.serviceAvailability.selectedClasses ? application.formData.serviceAvailability.selectedClasses.join(', ') : 'Not specified' }}
+                            {{ formatPreferredClasses(application) }}
                           </div>
                         </td>
                         <td>

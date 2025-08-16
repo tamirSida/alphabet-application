@@ -655,6 +655,23 @@ export class AdminComponent implements OnInit, OnDestroy {
     return new Date(date).toLocaleDateString();
   }
 
+  getClassNamesByIds(classIds: string[], cohort: Cohort | undefined): string[] {
+    if (!classIds || !cohort) return [];
+    
+    return classIds.map(classId => {
+      const cohortClass = cohort.classes.find(c => c.classId === classId);
+      return cohortClass ? cohortClass.name : classId; // fallback to ID if not found
+    });
+  }
+
+  formatPreferredClasses(application: Application & { cohort?: Cohort }): string {
+    const selectedClasses = application.formData?.serviceAvailability?.selectedClasses;
+    if (!selectedClasses || selectedClasses.length === 0) return 'Not specified';
+    
+    const classNames = this.getClassNamesByIds(selectedClasses, application.cohort);
+    return classNames.join(', ');
+  }
+
   async signOut() {
     try {
       await this.userService.signOut();

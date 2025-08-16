@@ -31,6 +31,7 @@ A comprehensive CRM system for managing applications to the Alphabet Program, bu
    - applicationStartDate, applicationEndDate: Date
    - cohortStartDate, cohortEndDate: Date
    - status: 'upcoming' | 'accepting_applications' | 'closed' | 'in_progress' | 'completed' (auto-calculated)
+   - classes: CohortClass[] (array of class definitions with names and schedules)
 
 3. **applications**
    - applicationId (document ID)
@@ -40,6 +41,7 @@ A comprehensive CRM system for managing applications to the Alphabet Program, bu
    - assignedClass?: string (class assignment for accepted applications)
    - formData: ApplicationFormData (comprehensive 9-section structure)
    - flags: ApplicationFlags (auto-calculated red flags for admin screening)
+   - notes?: AdminNote (admin review notes with attribution and timestamps)
 
 ## Firebase Configuration
 ```javascript
@@ -155,8 +157,8 @@ npm install
 - User authentication and registration with rollback protection
 - Landing page with cohort information and dark theme
 - User dashboard with dynamic status message templates
-- Complete application form (9 comprehensive sections)
-- Professional admin CRM with advanced features
+- Complete application form (9 comprehensive sections) with enhanced loading UI
+- Professional admin CRM with advanced features and Gmail-style notes system
 - Cohort management system with creation and tracking
 - Admin management with user creation capabilities
 - Auto-refresh system for real-time updates
@@ -165,6 +167,7 @@ npm install
 - Mobile-responsive dark theme design
 - Firestore security rules implementation
 - Comprehensive error handling and validation
+- Enhanced UX with vertical text layout and readable class names
 
 ## CRM Features (Applications Management)
 
@@ -209,9 +212,10 @@ npm install
 
 ### Application Detail View
 - **Comprehensive Display**: All 9 form sections with proper formatting
-- **Quick Actions Section**: Prominently positioned at top
+- **Quick Actions Section**: Prominently positioned at top with Notes functionality
 - **Smart Status Info**: Shows current assignment and review dates
 - **Professional Layout**: Organized sections with consistent styling
+- **Vertical Text Layout**: Long-form text responses (military description, cover letter, personal qualities) displayed in full-width vertical cards for better readability
 - **Mobile Optimized**: Responsive design for all screen sizes
 
 ### Results Publication System
@@ -239,6 +243,23 @@ npm install
 - **Variable Replacement**: Auto-fills applicant names, class details, schedules, and IDs
 - **Professional Formatting**: Formatted message display with proper styling
 - **Class Schedule Integration**: Pulls real class days/times from cohort data
+
+### Admin Notes System (Gmail-style)
+- **Floating Popup Window**: Gmail-inspired notes interface that floats above application view
+- **Drag & Drop**: Moveable popup that can be repositioned anywhere on screen
+- **Resizable Interface**: Window can be resized with minimum dimensions maintained
+- **Admin Attribution**: Notes stamped with admin email address for accountability  
+- **Timestamp Tracking**: Creation and update times displayed for audit trail
+- **Collaborative Access**: All admins can view notes from any reviewer
+- **Professional Styling**: Purple theme with window controls (minimize/close)
+- **Non-blocking Workflow**: Take notes while browsing application without losing context
+
+### UI/UX Enhancements
+- **Enhanced Loading States**: Application submission now shows professional loading overlay with animations
+- **Improved Form Layout**: Long text fields displayed vertically with proper spacing and background styling
+- **Readable Class Names**: Preferred classes show "Class A, Class B" instead of Firebase document IDs
+- **Publication Status**: Admin interface shows persistent indicator when results have been published to applicants
+- **Professional Polish**: Consistent styling, hover effects, and visual feedback throughout
 
 🚧 **Future Enhancements**:
 - Route guards for enhanced security
