@@ -71,8 +71,7 @@ export interface ShortAnswer {
 
 // Section 7: Cover Letter
 export interface CoverLetter {
-  fileUrl: string; // Firebase Storage URL
-  fileName: string;
+  content: string; // max 300 words
 }
 
 // Section 8: Video Introduction
@@ -98,6 +97,13 @@ export interface ApplicationFormData {
   friends?: Friends;
 }
 
+export interface AdminNote {
+  content: string;
+  adminEmail: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Application {
   applicationId: string;
   userId: string;
@@ -109,6 +115,7 @@ export interface Application {
   assignedClass?: string;
   formData: ApplicationFormData;
   flags: ApplicationFlags;
+  notes?: AdminNote; // Notes added by admin reviewers with attribution
 }
 
 export interface CreateApplicationRequest {

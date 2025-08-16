@@ -12,7 +12,7 @@ import {
 } from 'firebase/firestore';
 import { FirebaseService } from './firebase.service';
 import { UserService } from './user.service';
-import { Application, CreateApplicationRequest } from '../models';
+import { Application, CreateApplicationRequest, AdminNote } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -179,5 +179,10 @@ export class ApplicationService {
                         application.status === 'rejected' ? 'rejected' : 'submitted';
       await this.userService.updateUserStatus(application.userId, userStatus);
     }
+  }
+
+  async updateApplicationNotes(applicationId: string, notes: AdminNote): Promise<void> {
+    const applicationRef = doc(this.firebaseService.firestore, 'applications', applicationId);
+    await updateDoc(applicationRef, { notes });
   }
 }

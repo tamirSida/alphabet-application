@@ -44,6 +44,14 @@ export class AdminComponent implements OnInit, OnDestroy {
   classSelectionModalTitle = signal('');
   classSelectionModalSubtitle = signal('');
 
+  // Notes functionality
+  showNotesPopup = signal(false);
+  notesContent = signal('');
+  isSavingNotes = signal(false);
+  notesPosition = signal({ x: 100, y: 100 });
+  isDragging = signal(false);
+  dragOffset = signal({ x: 0, y: 0 });
+
   cohortForm: FormGroup;
   adminForm: FormGroup;
   showCohortForm = signal(false);
@@ -94,10 +102,18 @@ export class AdminComponent implements OnInit, OnDestroy {
     
     // Start auto-refresh for applications view
     this.startAutoRefresh();
+    
+    // Add global mouse event listeners for popup dragging
+    document.addEventListener('mousemove', (e) => this.onMouseMove(e));
+    document.addEventListener('mouseup', () => this.onMouseUp());
   }
 
   ngOnDestroy() {
     this.stopAutoRefresh();
+    
+    // Clean up event listeners
+    document.removeEventListener('mousemove', (e) => this.onMouseMove(e));
+    document.removeEventListener('mouseup', () => this.onMouseUp());
   }
 
   private startAutoRefresh() {
@@ -521,6 +537,122 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
     
     return publishTime.toLocaleDateString();
+  }
+
+  // Notes functionality
+  openNotesPopup() {
+    const app = this.selectedApplication();
+    if (app) {
+      this.notesContent.set(app.notes?.content || '');
+      
+      // Position popup in center-right of screen
+      const x = window.innerWidth - 450;
+      const y = Math.max(100, (window.innerHeight - 400) / 2);
+      this.notesPosition.set({ x, y });
+      
+      this.showNotesPopup.set(true);
+    }
+  }
+
+  closeNotesPopup() {
+    this.showNotesPopup.set(false);
+    this.notesContent.set('');
+    this.isDragging.set(false);
+  }
+
+  onMouseDown(event: MouseEvent) {
+    this.isDragging.set(true);
+    const popup = event.currentTarget as HTMLElement;
+    const rect = popup.getBoundingClientRect();
+    this.dragOffset.set({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top
+    });
+    event.preventDefault();
+  }
+
+  onMouseMove(event: MouseEvent) {
+    if (!this.isDragging()) return;
+    
+    const newX = event.clientX - this.dragOffset().x;
+    const newY = event.clientY - this.dragOffset().y;
+    
+    // Keep popup within viewport bounds
+    const maxX = window.innerWidth - 400;
+    const maxY = window.innerHeight - 300;
+    
+    this.notesPosition.set({
+      x: Math.max(0, Math.min(maxX, newX)),
+      y: Math.max(0, Math.min(maxY, newY))
+    });
+  }
+
+  onMouseUp() {
+    this.isDragging.set(false);
+  }
+
+  async saveNotes() {
+    const app = this.selectedApplication();
+    if (!app) return;
+
+    this.isSavingNotes.set(true);
+    this.error.set(null);
+
+    try {
+      const currentUser = this.authService.currentUser();
+      if (!currentUser) throw new Error('No authenticated user');
+
+      const noteData = {
+        content: this.notesContent(),
+        adminEmail: currentUser.email || 'unknown',
+        createdAt: app.notes?.createdAt || new Date(),
+        updatedAt: new Date()
+      };
+
+      await this.applicationService.updateApplicationNotes(app.applicationId, noteData);
+      
+      // Update the local application data
+      const updatedApp = { ...app, notes: noteData };
+      this.selectedApplication.set(updatedApp);
+      
+      // Update the applications list
+      const apps = this.applications();
+      const appIndex = apps.findIndex(a => a.applicationId === app.applicationId);
+      if (appIndex !== -1) {
+        apps[appIndex] = updatedApp;
+        this.applications.set([...apps]);
+      }
+
+      this.success.set('Notes saved successfully!');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        this.success.set(null);
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error saving notes:', error);
+      this.error.set('Failed to save notes.');
+    } finally {
+      this.isSavingNotes.set(false);
+    }
+  }
+
+  formatTimestamp(date: Date | undefined): string {
+    if (!date) return '';
+    
+    const now = new Date();
+    const diffMs = now.getTime() - new Date(date).getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return new Date(date).toLocaleDateString();
   }
 
   async signOut() {

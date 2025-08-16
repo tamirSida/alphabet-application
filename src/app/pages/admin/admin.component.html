@@ -100,6 +100,13 @@
                   }
                   
                   <button 
+                    class="action-button notes-button"
+                    (click)="openNotesPopup()">
+                    <i class="fas fa-sticky-note"></i>
+                    Notes
+                  </button>
+                  
+                  <button 
                     class="action-button"
                     (click)="deleteApplication(selectedApplication()!.applicationId)"
                     style="background: #dc2626; color: white;">
@@ -227,11 +234,8 @@
               <!-- Experience & Background Section -->
               <div class="info-section">
                 <h3>Experience & Background</h3>
+                <!-- Short answer fields in grid -->
                 <div class="info-grid">
-                  <div class="info-item">
-                    <label>Military Service Description:</label>
-                    <span>{{ selectedApplication()?.formData?.experienceBackground?.militaryServiceDescription || 'Not specified' }}</span>
-                  </div>
                   <div class="info-item">
                     <label>Combat Service:</label>
                     <span>
@@ -242,26 +246,45 @@
                     </span>
                   </div>
                   <div class="info-item">
-                    <label>Professional Experience:</label>
-                    <span>{{ selectedApplication()?.formData?.experienceBackground?.professionalExperience || 'Not specified' }}</span>
-                  </div>
-                  <div class="info-item">
                     <label>Has Project Idea:</label>
                     <span>{{ selectedApplication()?.formData?.experienceBackground?.hasProjectIdea }}</span>
                   </div>
                 </div>
-                @if (selectedApplication()?.formData?.experienceBackground?.hasProjectIdea === 'Yes' && selectedApplication()?.formData?.experienceBackground?.projectIdea) {
-                  <div class="info-item" style="margin-top: 1rem;">
-                    <label>Project Idea:</label>
-                    <div style="white-space: pre-wrap;">
-                      <strong>Problem:</strong> {{ selectedApplication()?.formData?.experienceBackground?.projectIdea?.problemStatement }}<br>
-                      <strong>Idea:</strong> {{ selectedApplication()?.formData?.experienceBackground?.projectIdea?.ideaSummary }}<br>
-                      <strong>Solution:</strong> {{ selectedApplication()?.formData?.experienceBackground?.projectIdea?.solutionApproach }}<br>
-                      <strong>Market:</strong> {{ selectedApplication()?.formData?.experienceBackground?.projectIdea?.marketClients }}
-                    </div>
+                
+                <!-- Long text fields stacked vertically -->
+                <div class="info-item-vertical">
+                  <label>Military Service Description (75 words):</label>
+                  <span class="long-text-content">{{ selectedApplication()?.formData?.experienceBackground?.militaryServiceDescription || 'Not specified' }}</span>
+                </div>
+                
+                @if (selectedApplication()?.formData?.experienceBackground?.professionalExperience) {
+                  <div class="info-item-vertical">
+                    <label>Professional Experience (150 words):</label>
+                    <span class="long-text-content">{{ selectedApplication()?.formData?.experienceBackground?.professionalExperience }}</span>
                   </div>
                 }
               </div>
+              @if (selectedApplication()?.formData?.experienceBackground?.hasProjectIdea === 'Yes' && selectedApplication()?.formData?.experienceBackground?.projectIdea) {
+                <div class="info-section">
+                  <h3>Project Idea Details</h3>
+                  <div class="info-item-vertical">
+                    <label>Problem Statement:</label>
+                    <span class="long-text-content">{{ selectedApplication()?.formData?.experienceBackground?.projectIdea?.problemStatement }}</span>
+                  </div>
+                  <div class="info-item-vertical">
+                    <label>Idea Summary:</label>
+                    <span class="long-text-content">{{ selectedApplication()?.formData?.experienceBackground?.projectIdea?.ideaSummary }}</span>
+                  </div>
+                  <div class="info-item-vertical">
+                    <label>Solution Approach:</label>
+                    <span class="long-text-content">{{ selectedApplication()?.formData?.experienceBackground?.projectIdea?.solutionApproach }}</span>
+                  </div>
+                  <div class="info-item-vertical">
+                    <label>Market & Clients:</label>
+                    <span class="long-text-content">{{ selectedApplication()?.formData?.experienceBackground?.projectIdea?.marketClients }}</span>
+                  </div>
+                </div>
+              }
 
               <!-- Skills Assessment Section -->
               <div class="info-section">
@@ -313,47 +336,45 @@
                     </span>
                   }
                 </h3>
-                <div class="info-grid">
-                  <div class="info-item">
-                    <label>Proactive Personality:</label>
-                    <span>{{ selectedApplication()?.formData?.personalQualities?.proactivePersonality?.rating }}/10</span>
-                    <small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ selectedApplication()?.formData?.personalQualities?.proactivePersonality?.example }}</small>
-                  </div>
-                  <div class="info-item">
-                    <label>Persistence:</label>
-                    <span>{{ selectedApplication()?.formData?.personalQualities?.persistenceHandleDifficulties?.rating }}/10</span>
-                    <small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ selectedApplication()?.formData?.personalQualities?.persistenceHandleDifficulties?.example }}</small>
-                  </div>
-                  <div class="info-item">
-                    <label>Perform Under Stress:</label>
-                    <span>{{ selectedApplication()?.formData?.personalQualities?.performUnderStress?.rating }}/10</span>
-                    <small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ selectedApplication()?.formData?.personalQualities?.performUnderStress?.example }}</small>
-                  </div>
-                  <div class="info-item">
-                    <label>Independence:</label>
-                    <span>{{ selectedApplication()?.formData?.personalQualities?.independence?.rating }}/10</span>
-                    <small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ selectedApplication()?.formData?.personalQualities?.independence?.example }}</small>
-                  </div>
-                  <div class="info-item">
-                    <label>Teamwork:</label>
-                    <span>{{ selectedApplication()?.formData?.personalQualities?.teamwork?.rating }}/10</span>
-                    <small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ selectedApplication()?.formData?.personalQualities?.teamwork?.example }}</small>
-                  </div>
-                  <div class="info-item">
-                    <label>Mental Flexibility:</label>
-                    <span>{{ selectedApplication()?.formData?.personalQualities?.mentalFlexibility?.rating }}/10</span>
-                    <small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ selectedApplication()?.formData?.personalQualities?.mentalFlexibility?.example }}</small>
-                  </div>
-                  <div class="info-item">
-                    <label>Passion for Projects:</label>
-                    <span>{{ selectedApplication()?.formData?.personalQualities?.passionForProjects?.rating }}/10</span>
-                    <small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ selectedApplication()?.formData?.personalQualities?.passionForProjects?.example }}</small>
-                  </div>
-                  <div class="info-item">
-                    <label>Creative Thinking:</label>
-                    <span>{{ selectedApplication()?.formData?.personalQualities?.creativeThinking?.rating }}/10</span>
-                    <small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ selectedApplication()?.formData?.personalQualities?.creativeThinking?.example }}</small>
-                  </div>
+                
+                <div class="info-item-vertical">
+                  <label>Proactive Personality: {{ selectedApplication()?.formData?.personalQualities?.proactivePersonality?.rating }}/10</label>
+                  <span class="quality-example">{{ selectedApplication()?.formData?.personalQualities?.proactivePersonality?.example }}</span>
+                </div>
+                
+                <div class="info-item-vertical">
+                  <label>Persistence & Handle Difficulties: {{ selectedApplication()?.formData?.personalQualities?.persistenceHandleDifficulties?.rating }}/10</label>
+                  <span class="quality-example">{{ selectedApplication()?.formData?.personalQualities?.persistenceHandleDifficulties?.example }}</span>
+                </div>
+                
+                <div class="info-item-vertical">
+                  <label>Perform Under Stress: {{ selectedApplication()?.formData?.personalQualities?.performUnderStress?.rating }}/10</label>
+                  <span class="quality-example">{{ selectedApplication()?.formData?.personalQualities?.performUnderStress?.example }}</span>
+                </div>
+                
+                <div class="info-item-vertical">
+                  <label>Independence: {{ selectedApplication()?.formData?.personalQualities?.independence?.rating }}/10</label>
+                  <span class="quality-example">{{ selectedApplication()?.formData?.personalQualities?.independence?.example }}</span>
+                </div>
+                
+                <div class="info-item-vertical">
+                  <label>Teamwork: {{ selectedApplication()?.formData?.personalQualities?.teamwork?.rating }}/10</label>
+                  <span class="quality-example">{{ selectedApplication()?.formData?.personalQualities?.teamwork?.example }}</span>
+                </div>
+                
+                <div class="info-item-vertical">
+                  <label>Mental Flexibility: {{ selectedApplication()?.formData?.personalQualities?.mentalFlexibility?.rating }}/10</label>
+                  <span class="quality-example">{{ selectedApplication()?.formData?.personalQualities?.mentalFlexibility?.example }}</span>
+                </div>
+                
+                <div class="info-item-vertical">
+                  <label>Passion for Projects: {{ selectedApplication()?.formData?.personalQualities?.passionForProjects?.rating }}/10</label>
+                  <span class="quality-example">{{ selectedApplication()?.formData?.personalQualities?.passionForProjects?.example }}</span>
+                </div>
+                
+                <div class="info-item-vertical">
+                  <label>Creative Thinking: {{ selectedApplication()?.formData?.personalQualities?.creativeThinking?.rating }}/10</label>
+                  <span class="quality-example">{{ selectedApplication()?.formData?.personalQualities?.creativeThinking?.example }}</span>
                 </div>
               </div>
 
@@ -361,24 +382,20 @@
               @if (selectedApplication()?.formData?.shortAnswer?.failureDescription) {
                 <div class="info-section">
                   <h3>Short Answer</h3>
-                  <div class="info-item">
-                    <label>Describe a failure and what you learned:</label>
-                    <span style="white-space: pre-wrap;">{{ selectedApplication()?.formData?.shortAnswer?.failureDescription }}</span>
+                  <div class="info-item-vertical">
+                    <label>Describe a failure and what you learned (200 words):</label>
+                    <span class="long-text-content">{{ selectedApplication()?.formData?.shortAnswer?.failureDescription }}</span>
                   </div>
                 </div>
               }
 
               <!-- Cover Letter Section -->
-              @if (selectedApplication()?.formData?.coverLetter?.fileUrl) {
+              @if (selectedApplication()?.formData?.coverLetter?.content) {
                 <div class="info-section">
                   <h3>Cover Letter</h3>
-                  <div class="info-item">
-                    <label>Cover Letter File:</label>
-                    <span>
-                      <a [href]="selectedApplication()?.formData?.coverLetter?.fileUrl" target="_blank" rel="noopener noreferrer">
-                        {{ selectedApplication()?.formData?.coverLetter?.fileName || 'Download Cover Letter' }}
-                      </a>
-                    </span>
+                  <div class="info-item-vertical">
+                    <label>Cover Letter (300 words):</label>
+                    <span class="long-text-content">{{ selectedApplication()?.formData?.coverLetter?.content }}</span>
                   </div>
                 </div>
               }
@@ -415,6 +432,26 @@
                         <span>{{ selectedApplication()?.formData?.friends?.friend2StudentId }}</span>
                       </div>
                     }
+                  </div>
+                </div>
+              }
+
+              <!-- Notes Section -->
+              @if (selectedApplication()?.notes) {
+                <div class="info-section notes-display">
+                  <h3>Notes</h3>
+                  <div class="info-item-vertical">
+                    <div class="notes-header">
+                      <span class="notes-author">{{ selectedApplication()?.notes?.adminEmail }}</span>
+                      <span class="notes-timestamp">
+                        @if (selectedApplication()?.notes?.updatedAt !== selectedApplication()?.notes?.createdAt) {
+                          Updated {{ formatTimestamp(selectedApplication()?.notes?.updatedAt) }}
+                        } @else {
+                          Created {{ formatTimestamp(selectedApplication()?.notes?.createdAt) }}
+                        }
+                      </span>
+                    </div>
+                    <span class="admin-notes-content">{{ selectedApplication()?.notes?.content }}</span>
                   </div>
                 </div>
               }
@@ -1048,6 +1085,66 @@
             Cancel
           </button>
         </div>
+      </div>
+    </div>
+  }
+
+  <!-- Notes Floating Popup -->
+  @if (showNotesPopup()) {
+    <div class="notes-popup-window" 
+         [style.left.px]="notesPosition().x"
+         [style.top.px]="notesPosition().y"
+         [class.dragging]="isDragging()">
+      <div class="popup-header" (mousedown)="onMouseDown($event)">
+        <div class="popup-title">
+          <i class="fas fa-sticky-note"></i>
+          <span>Notes - {{ selectedApplication()?.formData?.personalInformation?.firstName }} {{ selectedApplication()?.formData?.personalInformation?.lastName }}</span>
+        </div>
+        <div class="popup-controls">
+          <button class="popup-minimize-btn" title="Minimize">
+            <i class="fas fa-minus"></i>
+          </button>
+          <button class="popup-close-btn" (click)="closeNotesPopup()" title="Close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="popup-body">
+        @if (selectedApplication()?.notes?.adminEmail) {
+          <div class="current-notes-info">
+            <small>By: {{ selectedApplication()?.notes?.adminEmail }} • {{ formatTimestamp(selectedApplication()?.notes?.updatedAt) }}</small>
+          </div>
+        }
+        
+        <textarea 
+          class="popup-notes-textarea"
+          rows="12"
+          placeholder="Add your review notes here..."
+          [value]="notesContent()"
+          (input)="notesContent.set($any($event.target).value)"
+          [disabled]="isSavingNotes()"></textarea>
+      </div>
+      
+      <div class="popup-footer">
+        <button 
+          class="popup-cancel-btn" 
+          (click)="closeNotesPopup()"
+          [disabled]="isSavingNotes()">
+          Cancel
+        </button>
+        <button 
+          class="popup-save-btn"
+          (click)="saveNotes()"
+          [disabled]="isSavingNotes()">
+          @if (isSavingNotes()) {
+            <i class="fas fa-spinner fa-spin"></i>
+            Saving...
+          } @else {
+            <i class="fas fa-save"></i>
+            Save
+          }
+        </button>
       </div>
     </div>
   }
