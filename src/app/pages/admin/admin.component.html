@@ -436,13 +436,21 @@
                 <span class="stat-item">
                   Filtered: {{ filteredApplications().length }}
                 </span>
-                @if (canPublishResults()) {
+                @if (canPublishResults() && !isPublishing()) {
                   <button 
                     class="primary-button"
                     (click)="publishResults()"
                     style="background: #059669; color: white;">
                     <i class="fas fa-paper-plane"></i>
                     Publish Results to All Applicants
+                  </button>
+                } @else if (isPublishing()) {
+                  <button 
+                    class="primary-button"
+                    disabled
+                    style="background: #6b7280; color: white; cursor: not-allowed;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Publishing Results...
                   </button>
                 } @else if (applications().length > 0) {
                   <span class="stat-item" style="background: #fbbf24; color: #92400e;">

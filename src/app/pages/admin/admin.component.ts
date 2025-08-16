@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,7 +12,7 @@ import { User, Application, Cohort } from '../../models';
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.css']
 })
-export class AdminComponent implements OnInit {
+export class AdminComponent implements OnInit, OnDestroy {
   currentView = signal<'applications' | 'cohorts' | 'admin'>('applications');
   applications = signal<(Application & { user?: User, cohort?: Cohort })[]>([]);
   filteredApplications = signal<(Application & { user?: User, cohort?: Cohort })[]>([]);
@@ -21,6 +21,13 @@ export class AdminComponent implements OnInit {
   isLoading = signal(true);
   error = signal<string | null>(null);
   success = signal<string | null>(null);
+  
+  // Auto-refresh properties
+  private refreshInterval: any;
+  private lastApplicationCount = 0;
+  
+  // Publish results state
+  isPublishing = signal(false);
   
   // Search and filter
   searchTerm = signal('');
@@ -83,6 +90,55 @@ export class AdminComponent implements OnInit {
 
     await this.loadData();
     this.isLoading.set(false);
+    
+    // Start auto-refresh for applications view
+    this.startAutoRefresh();
+  }
+
+  ngOnDestroy() {
+    this.stopAutoRefresh();
+  }
+
+  private startAutoRefresh() {
+    this.stopAutoRefresh(); // Clear any existing interval
+    
+    // Only auto-refresh when viewing applications
+    if (this.currentView() === 'applications') {
+      this.refreshInterval = setInterval(async () => {
+        await this.checkForNewApplications();
+      }, 30000); // Check every 30 seconds
+    }
+  }
+
+  private stopAutoRefresh() {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+    }
+  }
+
+  private async checkForNewApplications() {
+    if (this.currentView() !== 'applications') return;
+    
+    try {
+      const applications = await this.applicationService.getAllApplications();
+      
+      if (applications.length > this.lastApplicationCount) {
+        // New application(s) detected
+        await this.loadApplications();
+        this.success.set(`${applications.length - this.lastApplicationCount} new application(s) received!`);
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          this.success.set(null);
+        }, 5000);
+      }
+      
+      this.lastApplicationCount = applications.length;
+    } catch (error) {
+      // Silently handle errors in background refresh
+      console.log('Auto-refresh check failed:', error);
+    }
   }
 
   private async loadData() {
@@ -121,6 +177,7 @@ export class AdminComponent implements OnInit {
     }
 
     this.applications.set(enrichedApplications);
+    this.lastApplicationCount = enrichedApplications.length; // Track count for auto-refresh
     this.loadAvailableClasses();
     this.filterApplications();
   }
@@ -260,6 +317,9 @@ export class AdminComponent implements OnInit {
     this.showAdminForm.set(false);
     await this.loadData();
     this.isLoading.set(false);
+    
+    // Restart auto-refresh for new view
+    this.startAutoRefresh();
   }
 
   async acceptApplication(application: Application & { user?: User, cohort?: Cohort }) {
@@ -411,12 +471,25 @@ export class AdminComponent implements OnInit {
       return;
     }
     
+    this.isPublishing.set(true);
+    this.error.set(null);
+    
     try {
       await this.applicationService.publishResults();
-      this.success.set(`Successfully published results to all ${apps.length} applicant(s)!`);
+      
+      // Show success with animation
+      this.success.set(`🎉 Successfully published results to all ${apps.length} applicant(s)! 🎉`);
+      
+      // Auto-clear success message after 8 seconds
+      setTimeout(() => {
+        this.success.set(null);
+      }, 8000);
+      
     } catch (error) {
       console.error('Error publishing results:', error);
       this.error.set('Failed to publish results.');
+    } finally {
+      this.isPublishing.set(false);
     }
   }
 

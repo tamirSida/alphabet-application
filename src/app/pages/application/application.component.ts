@@ -328,7 +328,7 @@ export class ApplicationComponent implements OnInit {
         request
       );
 
-      this.success.set('Application submitted successfully!');
+      this.success.set('Application submitted successfully! Redirecting to dashboard...');
       setTimeout(() => {
         this.router.navigate(['/dashboard']);
       }, 2000);
