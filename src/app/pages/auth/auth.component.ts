@@ -124,13 +124,12 @@ export class AuthComponent implements OnInit {
       const internationalPhone = this.convertToInternationalFormat(phone, region);
       const user = await this.userService.createUser({ firstName, lastName, email, phone: internationalPhone, password });
       
-      this.generatedOperatorId.set(user.operatorId);
-      this.success.set('Account created successfully! Please save your Operator ID.');
+      this.success.set('Account created successfully! Redirecting...');
       
-      // Auto redirect after showing operator ID
+      // Immediate redirect
       setTimeout(() => {
         this.router.navigate(['/dashboard']);
-      }, 3000);
+      }, 1000);
 
     } catch (error: any) {
       this.error.set(this.getErrorMessage(error));
