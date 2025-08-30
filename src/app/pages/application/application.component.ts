@@ -33,6 +33,10 @@ export class ApplicationComponent implements OnInit {
   // Drag and drop state
   isDragOver = signal(false);
   
+  // Validation popup state
+  showValidationPopup = signal(false);
+  validationErrors = signal<string>('');
+  
   // Progress computation
   progress = computed(() => (this.currentStep() / this.totalSteps) * 100);
   
@@ -345,11 +349,17 @@ export class ApplicationComponent implements OnInit {
     }
   }
 
+  // Show validation issues popup
+  showValidationIssues() {
+    const errors = this.getValidationErrors();
+    this.validationErrors.set(errors);
+    this.showValidationPopup.set(true);
+  }
+
   // Submit application
   async submitApplication() {
     if (!this.applicationForm.valid) {
-      const validationErrors = this.getValidationErrors();
-      this.error.set(validationErrors);
+      this.error.set('Please fix all validation errors before submitting.');
       return;
     }
 
@@ -739,6 +749,198 @@ export class ApplicationComponent implements OnInit {
     return `Please fix the following issues:\n\n${errors.join('\n')}`;
   }
 
+  // Get validation issues as structured list for better UI
+  getValidationIssuesList(): Array<{step: number, title: string, description: string, icon: string}> {
+    const issues: Array<{step: number, title: string, description: string, icon: string}> = [];
+    
+    // Check Personal Information (Step 1)
+    const personalInfo = this.applicationForm.get('personalInformation');
+    if (personalInfo?.invalid) {
+      let personalIssues: string[] = [];
+      if (personalInfo.get('firstName')?.hasError('required')) personalIssues.push('First Name');
+      if (personalInfo.get('lastName')?.hasError('required')) personalIssues.push('Last Name');
+      if (personalInfo.get('email')?.hasError('required')) personalIssues.push('Email');
+      if (personalInfo.get('email')?.hasError('email')) personalIssues.push('Valid Email Address');
+      
+      if (personalIssues.length > 0) {
+        issues.push({
+          step: 1,
+          title: 'Personal Information',
+          description: `Missing: ${personalIssues.join(', ')}`,
+          icon: 'fas fa-user-circle'
+        });
+      }
+    }
+
+    // Check Service & Availability (Step 2)
+    const serviceAvail = this.applicationForm.get('serviceAvailability');
+    if (serviceAvail?.invalid) {
+      let serviceIssues: string[] = [];
+      if (serviceAvail.get('countryOfService')?.hasError('required')) serviceIssues.push('Country of Service');
+      if (serviceAvail.get('englishProficiency')?.hasError('required')) serviceIssues.push('English Proficiency');
+      
+      const unavailableClasses = serviceAvail.get('unavailableClasses')?.value || [];
+      const hasEmptyReasons = unavailableClasses.some((item: any) => !item.reason || item.reason.trim() === '');
+      if (hasEmptyReasons) serviceIssues.push('Unavailable class reasons');
+      
+      const hasOverLimitReasons = unavailableClasses.some((item: any) => this.getWordCount(item.reason) > 80);
+      if (hasOverLimitReasons) serviceIssues.push('Reason length (80 words max)');
+      
+      if (serviceIssues.length > 0) {
+        issues.push({
+          step: 2,
+          title: 'Service & Availability',
+          description: `Missing: ${serviceIssues.join(', ')}`,
+          icon: 'fas fa-globe'
+        });
+      }
+    }
+
+    // Check Experience & Background (Step 3)
+    const experience = this.applicationForm.get('experienceBackground');
+    if (experience?.invalid) {
+      let expIssues: string[] = [];
+      if (experience.get('combatService')?.hasError('required')) expIssues.push('Combat Service');
+      if (experience.get('militaryServiceDescription')?.hasError('required')) expIssues.push('Military Description');
+      if (experience.get('militaryServiceDescription')?.hasError('wordCount')) expIssues.push('Military Description (75 words max)');
+      if (experience.get('proofOfService')?.hasError('required')) expIssues.push('Proof of Service Files');
+      if (experience.get('hasProjectIdea')?.hasError('required')) expIssues.push('Project Idea Selection');
+      
+      // Check project idea if "Yes" was selected
+      const hasProjectIdea = experience.get('hasProjectIdea')?.value;
+      if (hasProjectIdea === 'Yes') {
+        const projectDesc = experience.get('projectIdea.description');
+        if (projectDesc?.hasError('required')) expIssues.push('Project Description');
+        if (projectDesc?.hasError('wordCount')) expIssues.push('Project Description (200 words max)');
+      }
+      
+      if (experience.get('professionalExperience')?.hasError('wordCount')) {
+        expIssues.push('Professional Experience (150 words max)');
+      }
+      
+      if (expIssues.length > 0) {
+        issues.push({
+          step: 3,
+          title: 'Experience & Background',
+          description: `Issues: ${expIssues.join(', ')}`,
+          icon: 'fas fa-briefcase'
+        });
+      }
+    }
+
+    // Check Skills (Step 4)
+    const skills = this.applicationForm.get('skills');
+    if (skills?.invalid) {
+      let skillIssues: string[] = [];
+      const skillNames = ['AI Daily Use', 'Programming', 'Marketing & Sales', 'Leadership', 'Public Speaking'];
+      const skillKeys = ['aiDailyUse', 'programming', 'marketingSales', 'management', 'publicSpeaking'];
+      
+      skillKeys.forEach((key, index) => {
+        if (skills.get(key)?.hasError('required')) {
+          skillIssues.push(skillNames[index]);
+        }
+      });
+      
+      // Check custom skill
+      const otherSkill = skills.get('other');
+      if (otherSkill?.get('skill')?.value && otherSkill?.get('rating')?.hasError('required')) {
+        skillIssues.push('Custom Skill Rating');
+      }
+      
+      if (skillIssues.length > 0) {
+        issues.push({
+          step: 4,
+          title: 'Skills Assessment',
+          description: `Missing ratings: ${skillIssues.join(', ')}`,
+          icon: 'fas fa-star'
+        });
+      }
+    }
+
+    // Check Personal Qualities (Step 5)
+    const qualities = this.applicationForm.get('personalQualities');
+    if (qualities?.invalid) {
+      let qualityIssues: string[] = [];
+      const qualityNames = {
+        proactivePersonality: 'Proactive Personality',
+        persistenceHandleDifficulties: 'Persistence',
+        performUnderStress: 'Perform Under Stress',
+        independence: 'Independence',
+        teamwork: 'Teamwork',
+        mentalFlexibility: 'Mental Flexibility',
+        passionForProjects: 'Passion for Projects',
+        creativeThinking: 'Creative Thinking'
+      };
+      
+      Object.entries(qualityNames).forEach(([key, name]) => {
+        const qualityGroup = qualities.get(key);
+        if (qualityGroup?.get('rating')?.hasError('required') || qualityGroup?.get('example')?.hasError('required')) {
+          qualityIssues.push(name);
+        }
+      });
+      
+      if (qualityIssues.length > 0) {
+        issues.push({
+          step: 5,
+          title: 'Personal Qualities',
+          description: `Complete: ${qualityIssues.join(', ')}`,
+          icon: 'fas fa-heart'
+        });
+      }
+    }
+
+    // Check Short Answer (Step 6)
+    const shortAnswer = this.applicationForm.get('shortAnswer');
+    if (shortAnswer?.invalid) {
+      let shortIssues: string[] = [];
+      if (shortAnswer.get('failureDescription')?.hasError('required')) {
+        shortIssues.push('Failure description required');
+      }
+      if (shortAnswer.get('failureDescription')?.hasError('wordCount')) {
+        shortIssues.push('Failure description (200 words max)');
+      }
+      
+      if (shortIssues.length > 0) {
+        issues.push({
+          step: 6,
+          title: 'Short Answer',
+          description: shortIssues.join(', '),
+          icon: 'fas fa-edit'
+        });
+      }
+    }
+
+    // Check Video Introduction (Step 7)
+    const video = this.applicationForm.get('videoIntroduction');
+    if (video?.invalid) {
+      issues.push({
+        step: 7,
+        title: 'Video Introduction',
+        description: 'Video URL is required',
+        icon: 'fas fa-video'
+      });
+    }
+
+    // Check Additional Information (Step 8)
+    const coverLetter = this.applicationForm.get('coverLetter');
+    if (coverLetter?.get('content')?.hasError('wordCount')) {
+      issues.push({
+        step: 8,
+        title: 'Additional Information',
+        description: 'Content exceeds 300 words',
+        icon: 'fas fa-file-text'
+      });
+    }
+
+    return issues;
+  }
+
+  // Navigate to specific step when clicking validation issue
+  goToIssueStep(step: number) {
+    this.goToStep(step);
+    this.closeValidationPopup();
+  }
+
   // Detect user's locale to determine date format preference
   private detectDateFormat() {
     const locale = navigator.language || 'en-US';
@@ -861,5 +1063,26 @@ export class ApplicationComponent implements OnInit {
       };
       this.onFileSelected(syntheticEvent, fieldPath);
     }
+  }
+
+  // Validation popup methods
+  closeValidationPopup() {
+    this.showValidationPopup.set(false);
+    this.validationErrors.set('');
+  }
+
+  goToFirstInvalidStep() {
+    // Find the first invalid step and navigate to it
+    for (let step = 1; step <= this.totalSteps; step++) {
+      this.currentStep.set(step);
+      if (!this.isCurrentStepValid()) {
+        this.closeValidationPopup();
+        return;
+      }
+    }
+    
+    // If no specific step is invalid, go to step 1
+    this.currentStep.set(1);
+    this.closeValidationPopup();
   }
 }

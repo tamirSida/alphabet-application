@@ -978,6 +978,15 @@
           <i class="fas fa-chevron-right"></i>
         </button>
       } @else {
+        @if (!applicationForm.valid && !isSubmitting()) {
+          <button
+            type="button"
+            class="nav-button check-issues"
+            (click)="showValidationIssues()">
+            <i class="fas fa-exclamation-triangle"></i>
+            Click to See What's Wrong
+          </button>
+        }
         <button
           type="button"
           class="nav-button submit"
@@ -1018,6 +1027,51 @@
           <p>Please wait while we process your application...</p>
           <div class="loading-spinner">
             <i class="fas fa-spinner fa-spin"></i>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Validation Errors Popup -->
+    @if (showValidationPopup()) {
+      <div class="modal-overlay" (click)="closeValidationPopup()">
+        <div class="modal-content validation-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3><i class="fas fa-exclamation-triangle"></i> Application Incomplete</h3>
+            <button class="close-btn" (click)="closeValidationPopup()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          
+          <div class="modal-body">
+            <p>Your application cannot be submitted yet. Please fix the following issues:</p>
+            <div class="validation-issues-list">
+              @for (issue of getValidationIssuesList(); track $index) {
+                <div class="validation-issue-item" (click)="goToIssueStep(issue.step)">
+                  <div class="issue-icon">
+                    <i [class]="issue.icon"></i>
+                  </div>
+                  <div class="issue-content">
+                    <div class="issue-title">{{ issue.title }}</div>
+                    <div class="issue-description">{{ issue.description }}</div>
+                    <div class="issue-step">Go to: {{ getStepTitle(issue.step) }}</div>
+                  </div>
+                  <div class="issue-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button class="secondary-button" (click)="closeValidationPopup()">
+              Close
+            </button>
+            <button class="primary-button" (click)="goToFirstInvalidStep()">
+              <i class="fas fa-arrow-right"></i>
+              Go to First Issue
+            </button>
           </div>
         </div>
       </div>
