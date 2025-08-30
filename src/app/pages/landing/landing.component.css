@@ -1,3 +1,17 @@
+@font-face {
+  font-family: 'Gunplay';
+  src: url('/fonts/gunplay/gunplay rg.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Gunplay3D';
+  src: url('/fonts/gunplay/gunplay 3d.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .landing-container {
   min-height: 100vh;
   display: flex;
@@ -8,10 +22,40 @@
 }
 
 .header {
+  position: relative;
   text-align: center;
   padding: 2rem 1rem;
   background: #1e40af;
   backdrop-filter: blur(10px);
+}
+
+.header-top {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo {
+  height: 40px;
+  width: auto;
+}
+
+.version-text {
+  font-family: 'Gunplay', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color: white;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.header-main {
+  margin-top: 0;
 }
 
 .title {
@@ -19,13 +63,15 @@
   font-weight: 700;
   margin: 0 0 0.5rem 0;
   color: white;
+  font-family: 'Gunplay', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .subtitle {
   font-size: 1.2rem;
   color: white;
   margin: 0;
-  font-weight: 300;
+  font-weight: normal;
+  font-family: 'Gunplay', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .main-content {
@@ -79,6 +125,7 @@
   font-size: 1.8rem;
   margin: 0 0 1.5rem 0;
   font-weight: 600;
+  font-family: 'Gunplay', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .cohort-details {

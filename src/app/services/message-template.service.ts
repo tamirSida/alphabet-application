@@ -8,7 +8,7 @@ export class MessageTemplateService {
 
 Dear {firstName} {lastName},
 
-We are thrilled to inform you that your application for the Alphabet Program has been ACCEPTED! Welcome to {className}!
+We are thrilled to inform you that your application for the Alpha-Bet Program has been ACCEPTED! Welcome to {className}!
 
 📅 CLASS SCHEDULE:
 Your class will be conducted on: {classDays}
@@ -22,7 +22,7 @@ Class times: {classSchedule}
 We're excited to have you join our program and look forward to seeing you achieve great things.
 
 Best regards,
-The Alphabet Program Team
+The Alpha-Bet Program Team
 
 ---
 Application ID: {applicationId}
@@ -33,7 +33,7 @@ Assigned Class: {className}`;
 
 Dear {firstName} {lastName},
 
-Thank you for your interest in the Alphabet Program and for taking the time to submit your application.
+Thank you for your interest in the Alpha-Bet Program and for taking the time to submit your application.
 
 After careful review of all applications, we regret to inform you that we are unable to offer you a place in the current cohort. This decision was extremely difficult given the high quality of applications we received.
 
@@ -46,7 +46,7 @@ Please know that this decision does not reflect your potential or capabilities. 
 We appreciate your understanding and wish you all the best in your future endeavors.
 
 Best regards,
-The Alphabet Program Admissions Team
+The Alpha-Bet Program Admissions Team
 
 ---
 Application ID: {applicationId}
