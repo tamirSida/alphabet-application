@@ -163,6 +163,7 @@
   gap: 0.5rem;
   width: 100%;
   justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .primary-button:hover {
@@ -172,9 +173,9 @@
 }
 
 .secondary-button {
-  background: #f5f5f5;
-  color: #171717;
-  border: 1px solid #e5e5e5;
+  background: #1e40af;
+  color: white;
+  border: none;
   padding: 1rem 2rem;
   border-radius: 8px;
   font-size: 1rem;
@@ -189,9 +190,9 @@
 }
 
 .secondary-button:hover {
-  background: #e5e5e5;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #1d4ed8;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(30, 64, 175, 0.4);
 }
 
 .info-text {
@@ -242,17 +243,17 @@
 
 /* Create Account Button - Solid Style */
 .auth-buttons .secondary-button {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  background: #1e40af;
   color: white;
-  border: 2px solid #1e293b;
-  box-shadow: 0 4px 15px rgba(30, 41, 59, 0.3);
+  border: 2px solid #1e40af;
+  box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
 }
 
 .auth-buttons .secondary-button:hover {
-  background: linear-gradient(135deg, #334155 0%, #475569 100%);
+  background: #1d4ed8;
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(30, 41, 59, 0.4);
-  border-color: #334155;
+  box-shadow: 0 8px 25px rgba(30, 64, 175, 0.4);
+  border-color: #1d4ed8;
 }
 
 /* Sign In Button - Outline Style with Same Color */

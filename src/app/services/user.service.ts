@@ -54,7 +54,13 @@ export class UserService {
         createdAt: new Date()
       };
 
-      // Only add phone if it exists to avoid undefined values
+      // Only add optional fields if they exist to avoid undefined values
+      if (request.firstName) {
+        user.firstName = request.firstName;
+      }
+      if (request.lastName) {
+        user.lastName = request.lastName;
+      }
       if (request.phone) {
         user.phone = request.phone;
       }

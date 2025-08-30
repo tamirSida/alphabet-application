@@ -36,6 +36,8 @@ export class AuthComponent implements OnInit {
     });
 
     this.registerForm = this.fb.group({
+      firstName: ['', [Validators.required]],
+      lastName: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
       region: ['US', [Validators.required]],
       phone: ['', [Validators.required]],
@@ -118,9 +120,9 @@ export class AuthComponent implements OnInit {
     this.success.set(null);
 
     try {
-      const { email, phone, password, region } = this.registerForm.value;
+      const { firstName, lastName, email, phone, password, region } = this.registerForm.value;
       const internationalPhone = this.convertToInternationalFormat(phone, region);
-      const user = await this.userService.createUser({ email, phone: internationalPhone, password });
+      const user = await this.userService.createUser({ firstName, lastName, email, phone: internationalPhone, password });
       
       this.generatedOperatorId.set(user.operatorId);
       this.success.set('Account created successfully! Please save your Operator ID.');

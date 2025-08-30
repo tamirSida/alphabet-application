@@ -1,6 +1,8 @@
 export interface User {
   uid: string;
   userId: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   phone?: string;
   operatorId: string;
@@ -12,6 +14,8 @@ export interface User {
 }
 
 export interface CreateUserRequest {
+  firstName?: string;
+  lastName?: string;
   email: string;
   phone?: string;
   password: string;

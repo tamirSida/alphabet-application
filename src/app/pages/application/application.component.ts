@@ -210,8 +210,8 @@ export class ApplicationComponent implements OnInit {
         this.applicationForm.patchValue({
           personalInformation: {
             studentId: userData.operatorId,
-            firstName: '', 
-            lastName: '', 
+            firstName: userData.firstName || '', 
+            lastName: userData.lastName || '', 
             telephone: userData.phone || '',
             email: userData.email
           }
