@@ -1027,4 +1027,21 @@ export class AdminComponent implements OnInit, OnDestroy {
     
     return { score: totalScore, maxScore, percentage };
   }
+
+  formatCohortStatus(status: string): string {
+    switch (status) {
+      case 'accepting_applications':
+        return 'Accepting Applications';
+      case 'in_progress':
+        return 'In Progress';
+      case 'upcoming':
+        return 'Upcoming';
+      case 'closed':
+        return 'Closed';
+      case 'completed':
+        return 'Completed';
+      default:
+        return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+  }
 }

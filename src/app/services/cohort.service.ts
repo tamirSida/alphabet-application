@@ -21,19 +21,29 @@ import { Cohort, CreateCohortRequest } from '../models';
 export class CohortService {
   constructor(private firebaseService: FirebaseService) {}
 
-  async createCohort(request: CreateCohortRequest): Promise<Cohort> {
+  private calculateCohortStatus(applicationStartDate: Date, applicationEndDate: Date, cohortStartDate: Date, cohortEndDate: Date): Cohort['status'] {
     const now = new Date();
-    let status: Cohort['status'] = 'upcoming';
     
-    if (now >= request.applicationStartDate && now <= request.applicationEndDate) {
-      status = 'accepting_applications';
-    } else if (now > request.applicationEndDate && now < request.cohortStartDate) {
-      status = 'closed';
-    } else if (now >= request.cohortStartDate && now <= request.cohortEndDate) {
-      status = 'in_progress';
-    } else if (now > request.cohortEndDate) {
-      status = 'completed';
+    if (now >= applicationStartDate && now <= applicationEndDate) {
+      return 'accepting_applications';
+    } else if (now > applicationEndDate && now < cohortStartDate) {
+      return 'closed';
+    } else if (now >= cohortStartDate && now <= cohortEndDate) {
+      return 'in_progress';
+    } else if (now > cohortEndDate) {
+      return 'completed';
     }
+    
+    return 'upcoming';
+  }
+
+  async createCohort(request: CreateCohortRequest): Promise<Cohort> {
+    const status = this.calculateCohortStatus(
+      request.applicationStartDate,
+      request.applicationEndDate,
+      request.cohortStartDate,
+      request.cohortEndDate
+    );
 
     const cohortData = {
       ...request,
@@ -72,13 +82,22 @@ export class CohortService {
         enrolled: cls.enrolled || 0
       }));
       
+      const applicationStartDate = data['applicationStartDate']?.toDate ? data['applicationStartDate'].toDate() : new Date(data['applicationStartDate']);
+      const applicationEndDate = data['applicationEndDate']?.toDate ? data['applicationEndDate'].toDate() : new Date(data['applicationEndDate']);
+      const cohortStartDate = data['cohortStartDate']?.toDate ? data['cohortStartDate'].toDate() : new Date(data['cohortStartDate']);
+      const cohortEndDate = data['cohortEndDate']?.toDate ? data['cohortEndDate'].toDate() : new Date(data['cohortEndDate']);
+      
+      // Calculate current status based on dates
+      const currentStatus = this.calculateCohortStatus(applicationStartDate, applicationEndDate, cohortStartDate, cohortEndDate);
+      
       return {
         cohortId: doc.id,
         ...data,
-        applicationStartDate: data['applicationStartDate']?.toDate ? data['applicationStartDate'].toDate() : new Date(data['applicationStartDate']),
-        applicationEndDate: data['applicationEndDate']?.toDate ? data['applicationEndDate'].toDate() : new Date(data['applicationEndDate']),
-        cohortStartDate: data['cohortStartDate']?.toDate ? data['cohortStartDate'].toDate() : new Date(data['cohortStartDate']),
-        cohortEndDate: data['cohortEndDate']?.toDate ? data['cohortEndDate'].toDate() : new Date(data['cohortEndDate']),
+        applicationStartDate,
+        applicationEndDate,
+        cohortStartDate,
+        cohortEndDate,
+        status: currentStatus,
         classes: classes
       } as Cohort;
     });
@@ -96,13 +115,22 @@ export class CohortService {
         enrolled: cls.enrolled || 0
       }));
       
+      const applicationStartDate = data['applicationStartDate']?.toDate ? data['applicationStartDate'].toDate() : new Date(data['applicationStartDate']);
+      const applicationEndDate = data['applicationEndDate']?.toDate ? data['applicationEndDate'].toDate() : new Date(data['applicationEndDate']);
+      const cohortStartDate = data['cohortStartDate']?.toDate ? data['cohortStartDate'].toDate() : new Date(data['cohortStartDate']);
+      const cohortEndDate = data['cohortEndDate']?.toDate ? data['cohortEndDate'].toDate() : new Date(data['cohortEndDate']);
+      
+      // Calculate current status based on dates
+      const currentStatus = this.calculateCohortStatus(applicationStartDate, applicationEndDate, cohortStartDate, cohortEndDate);
+      
       return {
         cohortId: docSnap.id,
         ...data,
-        applicationStartDate: data['applicationStartDate']?.toDate ? data['applicationStartDate'].toDate() : new Date(data['applicationStartDate']),
-        applicationEndDate: data['applicationEndDate']?.toDate ? data['applicationEndDate'].toDate() : new Date(data['applicationEndDate']),
-        cohortStartDate: data['cohortStartDate']?.toDate ? data['cohortStartDate'].toDate() : new Date(data['cohortStartDate']),
-        cohortEndDate: data['cohortEndDate']?.toDate ? data['cohortEndDate'].toDate() : new Date(data['cohortEndDate']),
+        applicationStartDate,
+        applicationEndDate,
+        cohortStartDate,
+        cohortEndDate,
+        status: currentStatus,
         classes: classes
       } as Cohort;
     }

@@ -921,7 +921,7 @@
                   <div class="cohort-header">
                     <h3>{{ cohort.number }}</h3>
                     <div [class]="'status-badge cohort-' + cohort.status">
-                      {{ cohort.status | titlecase }}
+                      {{ formatCohortStatus(cohort.status) }}
                     </div>
                   </div>
 
