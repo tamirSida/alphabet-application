@@ -216,14 +216,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const months = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30));
-    const weeks = Math.floor((diffMs % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60 * 24 * 7));
-    const days = Math.floor((diffMs % (1000 * 60 * 60 * 24 * 7)) / (1000 * 60 * 60 * 24));
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
-    this.timeRemaining.set({ months, weeks, days, hours, minutes, seconds });
+    this.timeRemaining.set({ months: 0, weeks: 0, days, hours, minutes, seconds });
   }
 
   getTimeRemaining() {
