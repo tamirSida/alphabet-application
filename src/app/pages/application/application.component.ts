@@ -27,6 +27,9 @@ export class ApplicationComponent implements OnInit {
   // Progress computation
   progress = computed(() => (this.currentStep() / this.totalSteps) * 100);
   
+  // Date format based on locale
+  dateFormat = signal<'mm/dd' | 'dd/mm'>('mm/dd');
+  
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
@@ -41,6 +44,9 @@ export class ApplicationComponent implements OnInit {
   }
 
   async ngOnInit() {
+    // Detect locale for date format
+    this.detectDateFormat();
+    
     // Wait for auth to load
     while (this.authService.isLoading()) {
       await new Promise(resolve => setTimeout(resolve, 50));
@@ -437,5 +443,22 @@ export class ApplicationComponent implements OnInit {
       fileUrl: '',
       fileName: ''
     });
+  }
+
+  // Detect user's locale to determine date format preference
+  private detectDateFormat() {
+    const locale = navigator.language || 'en-US';
+    
+    // US/CA use MM/DD, most other English-speaking countries use DD/MM
+    if (locale.startsWith('en-US') || locale.startsWith('en-CA')) {
+      this.dateFormat.set('mm/dd');
+    } else {
+      this.dateFormat.set('dd/mm');
+    }
+  }
+
+  // Get placeholder text for date inputs
+  getDatePlaceholder(): string {
+    return this.dateFormat() === 'mm/dd' ? 'mm/dd/yyyy' : 'dd/mm/yyyy';
   }
 }

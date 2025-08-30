@@ -21,8 +21,8 @@
     <!-- Progress Bar -->
     <div class="progress-container">
       <div class="progress-bar">
-        <div 
-          class="progress-fill" 
+        <div
+          class="progress-fill"
           [style.width.%]="progress()">
         </div>
       </div>
@@ -38,7 +38,7 @@
       <h2>{{ getStepTitle(currentStep()) }}</h2>
       <div class="step-dots">
         @for (step of [1,2,3,4,5,6,7,8,9]; track step) {
-          <div 
+          <div
             class="step-dot"
             [class.active]="currentStep() === step"
             [class.completed]="currentStep() > step"
@@ -55,15 +55,15 @@
 
     <!-- Form Content -->
     <form [formGroup]="applicationForm" class="application-form">
-      
+
       <!-- Section 1: Personal Information -->
       @if (currentStep() === 1) {
         <div class="form-section" formGroupName="personalInformation">
           <div class="form-group">
             <label>Student ID</label>
-            <input 
-              type="text" 
-              formControlName="studentId" 
+            <input
+              type="text"
+              formControlName="studentId"
               readonly
               class="form-input readonly">
             <small class="form-help">Auto-generated and cannot be changed</small>
@@ -72,17 +72,17 @@
           <div class="form-row">
             <div class="form-group">
               <label>First Name *</label>
-              <input 
-                type="text" 
-                formControlName="firstName" 
+              <input
+                type="text"
+                formControlName="firstName"
                 class="form-input"
                 placeholder="Enter your first name">
             </div>
             <div class="form-group">
               <label>Last Name *</label>
-              <input 
-                type="text" 
-                formControlName="lastName" 
+              <input
+                type="text"
+                formControlName="lastName"
                 class="form-input"
                 placeholder="Enter your last name">
             </div>
@@ -90,18 +90,18 @@
 
           <div class="form-group">
             <label>Telephone Number</label>
-            <input 
-              type="tel" 
-              formControlName="telephone" 
+            <input
+              type="tel"
+              formControlName="telephone"
               class="form-input"
               placeholder="Optional">
           </div>
 
           <div class="form-group">
             <label>Email Address *</label>
-            <input 
-              type="email" 
-              formControlName="email" 
+            <input
+              type="email"
+              formControlName="email"
               readonly
               class="form-input readonly">
             <small class="form-help">This is your registered email</small>
@@ -121,10 +121,10 @@
             <label>Country of Service *</label>
             <div class="radio-group">
               <div class="radio-option">
-                <input 
-                  type="radio" 
-                  id="country-us" 
-                  formControlName="countryOfService" 
+                <input
+                  type="radio"
+                  id="country-us"
+                  formControlName="countryOfService"
                   value="US">
                 <label for="country-us">
                   <span class="radio-circle"></span>
@@ -132,10 +132,10 @@
                 </label>
               </div>
               <div class="radio-option">
-                <input 
-                  type="radio" 
-                  id="country-il" 
-                  formControlName="countryOfService" 
+                <input
+                  type="radio"
+                  id="country-il"
+                  formControlName="countryOfService"
                   value="IL">
                 <label for="country-il">
                   <span class="radio-circle"></span>
@@ -151,10 +151,10 @@
               <p class="field-description">This program is conducted entirely in English. Are you comfortable with this?</p>
               <div class="radio-group">
                 <div class="radio-option">
-                  <input 
-                    type="radio" 
-                    id="english-yes" 
-                    formControlName="englishProficiency" 
+                  <input
+                    type="radio"
+                    id="english-yes"
+                    formControlName="englishProficiency"
                     value="Yes">
                   <label for="english-yes">
                     <span class="radio-circle"></span>
@@ -162,10 +162,10 @@
                   </label>
                 </div>
                 <div class="radio-option">
-                  <input 
-                    type="radio" 
-                    id="english-no" 
-                    formControlName="englishProficiency" 
+                  <input
+                    type="radio"
+                    id="english-no"
+                    formControlName="englishProficiency"
                     value="No">
                   <label for="english-no">
                     <span class="radio-circle"></span>
@@ -181,7 +181,7 @@
             <p class="field-description">Select the classes you're available for (you can select both):</p>
             <div class="class-options">
               @for (cohortClass of cohort()?.classes || []; track cohortClass.classId) {
-                <div 
+                <div
                   class="class-option"
                   [class.selected]="isClassSelected(cohortClass.classId)"
                   (click)="toggleClassSelection(cohortClass.classId)">
@@ -218,10 +218,10 @@
             <p class="field-description">Were you a combat soldier or did you serve in a combat role?</p>
             <div class="radio-group">
               <div class="radio-option">
-                <input 
-                  type="radio" 
-                  id="combat-yes" 
-                  formControlName="combatService" 
+                <input
+                  type="radio"
+                  id="combat-yes"
+                  formControlName="combatService"
                   value="Yes">
                 <label for="combat-yes">
                   <span class="radio-circle"></span>
@@ -229,10 +229,10 @@
                 </label>
               </div>
               <div class="radio-option">
-                <input 
-                  type="radio" 
-                  id="combat-no" 
-                  formControlName="combatService" 
+                <input
+                  type="radio"
+                  id="combat-no"
+                  formControlName="combatService"
                   value="No">
                 <label for="combat-no">
                   <span class="radio-circle"></span>
@@ -245,23 +245,25 @@
           <div class="form-row">
             <div class="form-group">
               <label>Military Draft Date</label>
-              <input 
-                type="date" 
-                formControlName="militaryDraftDate" 
-                class="form-input">
+              <input
+                type="date"
+                formControlName="militaryDraftDate"
+                class="form-input"
+                [placeholder]="getDatePlaceholder()">
             </div>
             <div class="form-group">
               <label>Military Release Date</label>
-              <input 
-                type="date" 
-                formControlName="militaryReleaseDate" 
-                class="form-input">
+              <input
+                type="date"
+                formControlName="militaryReleaseDate"
+                class="form-input"
+                [placeholder]="getDatePlaceholder()">
             </div>
           </div>
 
           <div class="form-group">
             <label>Military Service Description *</label>
-            <textarea 
+            <textarea
               formControlName="militaryServiceDescription"
               class="form-textarea"
               rows="4"
@@ -275,12 +277,12 @@
           <div class="form-group" formGroupName="proofOfService">
             <label>Proof of Military Service</label>
             <p class="field-description">Upload a document proving your military service (PDF, JPG, JPEG, PNG accepted)</p>
-            
+
             @if (!applicationForm.get('experienceBackground.proofOfService.fileName')?.value) {
               <div class="file-upload-area" (click)="fileInput.click()">
-                <input 
+                <input
                   #fileInput
-                  type="file" 
+                  type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
                   style="display: none;"
                   (change)="onFileSelected($event, 'experienceBackground.proofOfService')">
@@ -294,9 +296,9 @@
               <div class="uploaded-file">
                 <i class="fas fa-file-alt"></i>
                 <span>{{ applicationForm.get('experienceBackground.proofOfService.fileName')?.value }}</span>
-                <button 
-                  type="button" 
-                  class="remove-file" 
+                <button
+                  type="button"
+                  class="remove-file"
                   (click)="removeFile('experienceBackground.proofOfService')">
                   <i class="fas fa-times"></i>
                 </button>
@@ -306,7 +308,7 @@
 
           <div class="form-group">
             <label>Professional Experience</label>
-            <textarea 
+            <textarea
               formControlName="professionalExperience"
               class="form-textarea"
               rows="4"
@@ -322,10 +324,10 @@
             <p class="field-description">This is not a prerequisite. If you don't have an idea yet, that's perfectly fine - learning to develop ideas is part of the program!</p>
             <div class="radio-group">
               <div class="radio-option">
-                <input 
-                  type="radio" 
-                  id="idea-yes" 
-                  formControlName="hasProjectIdea" 
+                <input
+                  type="radio"
+                  id="idea-yes"
+                  formControlName="hasProjectIdea"
                   value="Yes">
                 <label for="idea-yes">
                   <span class="radio-circle"></span>
@@ -333,14 +335,14 @@
                 </label>
               </div>
               <div class="radio-option">
-                <input 
-                  type="radio" 
-                  id="idea-no" 
-                  formControlName="hasProjectIdea" 
+                <input
+                  type="radio"
+                  id="idea-no"
+                  formControlName="hasProjectIdea"
                   value="No">
                 <label for="idea-no">
                   <span class="radio-circle"></span>
-                  <span class="radio-text">No, I want to learn how to develop ideas</span>
+                  <span class="radio-text">No, I don't have one yet</span>
                 </label>
               </div>
             </div>
@@ -349,10 +351,10 @@
           @if (applicationForm.get('experienceBackground.hasProjectIdea')?.value === 'Yes') {
             <div class="project-idea-section" formGroupName="projectIdea">
               <h3>Tell us about your project idea</h3>
-              
+
               <div class="form-group">
                 <label>Problem Statement *</label>
-                <textarea 
+                <textarea
                   formControlName="problemStatement"
                   class="form-textarea"
                   rows="3"
@@ -361,7 +363,7 @@
 
               <div class="form-group">
                 <label>Idea Summary *</label>
-                <textarea 
+                <textarea
                   formControlName="ideaSummary"
                   class="form-textarea"
                   rows="3"
@@ -370,7 +372,7 @@
 
               <div class="form-group">
                 <label>Solution Approach *</label>
-                <textarea 
+                <textarea
                   formControlName="solutionApproach"
                   class="form-textarea"
                   rows="3"
@@ -379,7 +381,7 @@
 
               <div class="form-group">
                 <label>Market & Clients *</label>
-                <textarea 
+                <textarea
                   formControlName="marketClients"
                   class="form-textarea"
                   rows="3"
@@ -401,7 +403,7 @@
             <label>AI – Daily use of LLM tools (e.g., ChatGPT) *</label>
             <div class="rating-scale-5">
               @for (rating of [1,2,3,4,5]; track rating) {
-                <div 
+                <div
                   class="rating-option"
                   [class.selected]="applicationForm.get('skills.aiDailyUse')?.value === rating"
                   (click)="applicationForm.get('skills.aiDailyUse')?.setValue(rating)">
@@ -424,7 +426,7 @@
             <label>Programming *</label>
             <div class="rating-scale-5">
               @for (rating of [1,2,3,4,5]; track rating) {
-                <div 
+                <div
                   class="rating-option"
                   [class.selected]="applicationForm.get('skills.programming')?.value === rating"
                   (click)="applicationForm.get('skills.programming')?.setValue(rating)">
@@ -447,7 +449,7 @@
             <label>Marketing & Sales *</label>
             <div class="rating-scale-5">
               @for (rating of [1,2,3,4,5]; track rating) {
-                <div 
+                <div
                   class="rating-option"
                   [class.selected]="applicationForm.get('skills.marketingSales')?.value === rating"
                   (click)="applicationForm.get('skills.marketingSales')?.setValue(rating)">
@@ -470,7 +472,7 @@
             <label>Management *</label>
             <div class="rating-scale-5">
               @for (rating of [1,2,3,4,5]; track rating) {
-                <div 
+                <div
                   class="rating-option"
                   [class.selected]="applicationForm.get('skills.management')?.value === rating"
                   (click)="applicationForm.get('skills.management')?.setValue(rating)">
@@ -493,7 +495,7 @@
             <label>Graphic Design *</label>
             <div class="rating-scale-5">
               @for (rating of [1,2,3,4,5]; track rating) {
-                <div 
+                <div
                   class="rating-option"
                   [class.selected]="applicationForm.get('skills.graphicDesign')?.value === rating"
                   (click)="applicationForm.get('skills.graphicDesign')?.setValue(rating)">
@@ -515,19 +517,19 @@
           <div class="other-skill-section" formGroupName="other">
             <div class="form-group">
               <label>Other Skill (Optional)</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 formControlName="skill"
                 class="form-input"
                 placeholder="Specify another skill...">
             </div>
-            
+
             @if (applicationForm.get('skills.other.skill')?.value) {
               <div class="skill-item">
                 <label>{{ applicationForm.get('skills.other.skill')?.value }} Rating</label>
                 <div class="rating-scale-5">
                   @for (rating of [1,2,3,4,5]; track rating) {
-                    <div 
+                    <div
                       class="rating-option"
                       [class.selected]="applicationForm.get('skills.other.rating')?.value === rating"
                       (click)="applicationForm.get('skills.other.rating')?.setValue(rating)">
@@ -560,10 +562,10 @@
           <div class="quality-item" formGroupName="proactivePersonality">
             <label>Proactive Personality *</label>
             <div class="rating-slider">
-              <input 
-                type="range" 
-                min="0" 
-                max="10" 
+              <input
+                type="range"
+                min="0"
+                max="10"
                 step="1"
                 formControlName="rating"
                 class="slider">
@@ -573,7 +575,7 @@
                 <span>10</span>
               </div>
             </div>
-            <textarea 
+            <textarea
               formControlName="example"
               class="form-textarea"
               rows="3"
@@ -583,10 +585,10 @@
           <div class="quality-item" formGroupName="persistenceHandleDifficulties">
             <label>Persistence & Ability to Handle Difficulties *</label>
             <div class="rating-slider">
-              <input 
-                type="range" 
-                min="0" 
-                max="10" 
+              <input
+                type="range"
+                min="0"
+                max="10"
                 step="1"
                 formControlName="rating"
                 class="slider">
@@ -596,7 +598,7 @@
                 <span>10</span>
               </div>
             </div>
-            <textarea 
+            <textarea
               formControlName="example"
               class="form-textarea"
               rows="3"
@@ -606,10 +608,10 @@
           <div class="quality-item" formGroupName="performUnderStress">
             <label>Ability to Perform Under Stress *</label>
             <div class="rating-slider">
-              <input 
-                type="range" 
-                min="0" 
-                max="10" 
+              <input
+                type="range"
+                min="0"
+                max="10"
                 step="1"
                 formControlName="rating"
                 class="slider">
@@ -619,7 +621,7 @@
                 <span>10</span>
               </div>
             </div>
-            <textarea 
+            <textarea
               formControlName="example"
               class="form-textarea"
               rows="3"
@@ -629,10 +631,10 @@
           <div class="quality-item" formGroupName="independence">
             <label>Independence *</label>
             <div class="rating-slider">
-              <input 
-                type="range" 
-                min="0" 
-                max="10" 
+              <input
+                type="range"
+                min="0"
+                max="10"
                 step="1"
                 formControlName="rating"
                 class="slider">
@@ -642,7 +644,7 @@
                 <span>10</span>
               </div>
             </div>
-            <textarea 
+            <textarea
               formControlName="example"
               class="form-textarea"
               rows="3"
@@ -652,10 +654,10 @@
           <div class="quality-item" formGroupName="teamwork">
             <label>Teamwork *</label>
             <div class="rating-slider">
-              <input 
-                type="range" 
-                min="0" 
-                max="10" 
+              <input
+                type="range"
+                min="0"
+                max="10"
                 step="1"
                 formControlName="rating"
                 class="slider">
@@ -665,7 +667,7 @@
                 <span>10</span>
               </div>
             </div>
-            <textarea 
+            <textarea
               formControlName="example"
               class="form-textarea"
               rows="3"
@@ -675,10 +677,10 @@
           <div class="quality-item" formGroupName="mentalFlexibility">
             <label>Mental Flexibility *</label>
             <div class="rating-slider">
-              <input 
-                type="range" 
-                min="0" 
-                max="10" 
+              <input
+                type="range"
+                min="0"
+                max="10"
                 step="1"
                 formControlName="rating"
                 class="slider">
@@ -688,7 +690,7 @@
                 <span>10</span>
               </div>
             </div>
-            <textarea 
+            <textarea
               formControlName="example"
               class="form-textarea"
               rows="3"
@@ -698,10 +700,10 @@
           <div class="quality-item" formGroupName="passionForProjects">
             <label>Passion for Projects You Lead *</label>
             <div class="rating-slider">
-              <input 
-                type="range" 
-                min="0" 
-                max="10" 
+              <input
+                type="range"
+                min="0"
+                max="10"
                 step="1"
                 formControlName="rating"
                 class="slider">
@@ -711,7 +713,7 @@
                 <span>10</span>
               </div>
             </div>
-            <textarea 
+            <textarea
               formControlName="example"
               class="form-textarea"
               rows="3"
@@ -721,10 +723,10 @@
           <div class="quality-item" formGroupName="creativeThinking">
             <label>Creative Thinking *</label>
             <div class="rating-slider">
-              <input 
-                type="range" 
-                min="0" 
-                max="10" 
+              <input
+                type="range"
+                min="0"
+                max="10"
                 step="1"
                 formControlName="rating"
                 class="slider">
@@ -734,7 +736,7 @@
                 <span>10</span>
               </div>
             </div>
-            <textarea 
+            <textarea
               formControlName="example"
               class="form-textarea"
               rows="3"
@@ -749,7 +751,7 @@
           <div class="form-group">
             <label>Describe a Failure *</label>
             <p class="field-description">Tell us about a time you failed - what happened and what you learned from it. (Maximum 200 words)</p>
-            <textarea 
+            <textarea
               formControlName="failureDescription"
               class="form-textarea"
               rows="6"
@@ -768,7 +770,7 @@
           <div class="form-group">
             <label>Cover Letter *</label>
             <p class="field-description">Write a 300-word cover letter explaining why you should be accepted to the program.</p>
-            <textarea 
+            <textarea
               formControlName="content"
               class="form-textarea"
               rows="12"
@@ -786,13 +788,13 @@
           <div class="form-group">
             <label>Video Introduction *</label>
             <p class="field-description">Create a 30-60 second video introducing yourself and explaining why you should be accepted to the program. Upload to YouTube (set to Unlisted) or another platform and paste the link below.</p>
-            
-            <input 
-              type="url" 
+
+            <input
+              type="url"
               formControlName="videoUrl"
               class="form-input"
               placeholder="https://youtube.com/watch?v=...">
-            
+
             <div class="video-help">
               <i class="fas fa-info-circle"></i>
               <div>
@@ -822,8 +824,8 @@
 
           <div class="form-group">
             <label>Friend #1 Student ID</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               formControlName="friend1StudentId"
               class="form-input"
               placeholder="####-###-### (9 digits)"
@@ -834,8 +836,8 @@
 
           <div class="form-group">
             <label>Friend #2 Student ID</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               formControlName="friend2StudentId"
               class="form-input"
               placeholder="####-###-### (9 digits)"
@@ -850,7 +852,7 @@
           </div>
         </div>
       }
-      
+
     </form>
 
     <!-- Navigation -->
@@ -861,12 +863,12 @@
           Previous
         </button>
       }
-      
+
       <div class="nav-spacer"></div>
-      
+
       @if (currentStep() < totalSteps) {
-        <button 
-          type="button" 
+        <button
+          type="button"
           class="nav-button next"
           [disabled]="!isCurrentStepValid()"
           (click)="nextStep()">
@@ -874,8 +876,8 @@
           <i class="fas fa-chevron-right"></i>
         </button>
       } @else {
-        <button 
-          type="button" 
+        <button
+          type="button"
           class="nav-button submit"
           [disabled]="!applicationForm.valid || isSubmitting()"
           (click)="submitApplication()">
