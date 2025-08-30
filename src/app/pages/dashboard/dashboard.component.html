@@ -6,6 +6,15 @@
     </div>
   } @else {
     <header class="dashboard-header">
+      <div class="header-top">
+        <div class="logo-section">
+          <img src="/images/logo.png" alt="Alpha-Bet Logo" class="logo">
+          <div class="version-text">
+            Version Bravo<br>
+            Alpha-Bet
+          </div>
+        </div>
+      </div>
       <div class="header-content">
         <div class="user-info">
           <h1>Welcome back</h1>
@@ -118,25 +127,6 @@
           }
         </div>
 
-        <!-- Program Information -->
-        <div class="info-section">
-          <h2>About the Alpha-Bet Program</h2>
-          <p>The Alpha-Bet Program is designed to transform your future through comprehensive development and learning opportunities.</p>
-          
-          @if (cohort()) {
-            <div class="cohort-timeline">
-              <h3>{{ cohort()?.number }} Timeline</h3>
-              <div class="timeline-item">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Application Period: {{ cohort()?.applicationStartDate | date:'shortDate' }} - {{ cohort()?.applicationEndDate | date:'shortDate' }}</span>
-              </div>
-              <div class="timeline-item">
-                <i class="fas fa-play-circle"></i>
-                <span>Program Duration: {{ cohort()?.cohortStartDate | date:'shortDate' }} - {{ cohort()?.cohortEndDate | date:'shortDate' }}</span>
-              </div>
-            </div>
-          }
-        </div>
       }
     </main>
   }

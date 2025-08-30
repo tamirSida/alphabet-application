@@ -1,6 +1,13 @@
+@font-face {
+  font-family: 'Gunplay';
+  src: url('/fonts/gunplay/gunplay rg.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .dashboard-container {
   min-height: 100vh;
-  background: linear-gradient(to bottom right, #111827, #1f2937, #000000);
+  background: white;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
@@ -19,9 +26,35 @@
 }
 
 .dashboard-header {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  position: relative;
+  background: #1e40af;
   color: white;
   padding: 2rem;
+}
+
+.header-top {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo {
+  height: 40px;
+  width: auto;
+}
+
+.version-text {
+  font-family: 'Gunplay', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color: white;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  text-align: left;
 }
 
 .header-content {
@@ -30,12 +63,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: 3rem; /* Add space for logo section */
 }
 
 .user-info h1 {
   margin: 0 0 0.5rem 0;
   font-size: 2rem;
   font-weight: 600;
+  font-family: 'Gunplay', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .user-info p {
@@ -116,6 +151,7 @@
   color: #1f2937;
   font-size: 1.5rem;
   font-weight: 600;
+  font-family: 'Gunplay', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .status-badge {
@@ -200,6 +236,7 @@
   color: #1f2937;
   font-size: 1.3rem;
   font-weight: 600;
+  font-family: 'Gunplay', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .action-card p {
@@ -261,6 +298,7 @@
   color: #1f2937;
   font-size: 1.5rem;
   font-weight: 600;
+  font-family: 'Gunplay', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .info-section p {
@@ -295,10 +333,25 @@
     padding: 1.5rem 1rem;
   }
   
+  .header-top {
+    position: static;
+    margin-bottom: 2rem;
+  }
+  
+  .logo-section {
+    justify-content: center;
+  }
+  
   .header-content {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 1rem;
+    margin-top: 0;
+    text-align: center;
+  }
+  
+  .user-info {
+    text-align: center;
   }
   
   .user-info h1 {
