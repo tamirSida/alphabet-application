@@ -615,3 +615,47 @@
   color: #374151;
   font-style: italic;
 }
+
+.missing-data {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Uploaded Files Display */
+.uploaded-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.uploaded-file-display {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f0f9ff;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #1e40af;
+}
+
+.uploaded-file-display i.fa-file-alt {
+  color: #1e40af;
+  font-size: 1.2rem;
+}
+
+.uploaded-file-display a {
+  flex: 1;
+  color: #1e40af;
+  text-decoration: none;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.uploaded-file-display a:hover {
+  text-decoration: underline;
+}
+
+.uploaded-file-display i.fa-external-link-alt {
+  color: #6b7280;
+  font-size: 0.9rem;
+}

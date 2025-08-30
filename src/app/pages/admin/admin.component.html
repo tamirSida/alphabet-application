@@ -242,6 +242,29 @@
                     </div>
                   }
                 </div>
+
+                <!-- Proof of Service Files -->
+                @if (selectedApplication()?.formData?.experienceBackground?.proofOfService?.length) {
+                  <div class="info-item-vertical">
+                    <label>Proof of Military Service:</label>
+                    <div class="uploaded-files-list">
+                      @for (file of selectedApplication()?.formData?.experienceBackground?.proofOfService; track $index) {
+                        <div class="uploaded-file-display">
+                          <i class="fas fa-file-alt"></i>
+                          <a [href]="file.fileUrl" target="_blank" rel="noopener noreferrer">
+                            {{ file.fileName }}
+                          </a>
+                          <i class="fas fa-external-link-alt"></i>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                } @else {
+                  <div class="info-item-vertical">
+                    <label>Proof of Military Service:</label>
+                    <span class="long-text-content missing-data">No files uploaded</span>
+                  </div>
+                }
               </div>
 
               <!-- Experience & Background Section -->
@@ -269,6 +292,7 @@
                   <label>Military Service Description (75 words):</label>
                   <span class="long-text-content">{{ selectedApplication()?.formData?.experienceBackground?.militaryServiceDescription || 'Not specified' }}</span>
                 </div>
+
                 
                 @if (selectedApplication()?.formData?.experienceBackground?.professionalExperience) {
                   <div class="info-item-vertical">
