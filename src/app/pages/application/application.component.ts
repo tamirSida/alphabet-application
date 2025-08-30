@@ -30,6 +30,9 @@ export class ApplicationComponent implements OnInit {
   friend1Name = signal<string>('');
   friend2Name = signal<string>('');
   
+  // Drag and drop state
+  isDragOver = signal(false);
+  
   // Progress computation
   progress = computed(() => (this.currentStep() / this.totalSteps) * 100);
   
@@ -91,10 +94,7 @@ export class ApplicationComponent implements OnInit {
         militaryDraftDate: [''],
         militaryReleaseDate: [''],
         militaryServiceDescription: ['', [Validators.required, this.wordCountValidator(75)]],
-        proofOfService: this.fb.group({
-          fileUrl: [''],
-          fileName: ['']
-        }),
+        proofOfService: this.fb.array([], [Validators.required, Validators.minLength(1), Validators.maxLength(2)]),
         professionalExperience: ['', this.wordCountValidator(150)],
         hasProjectIdea: ['', Validators.required],
         projectIdea: this.fb.group({
@@ -429,62 +429,78 @@ export class ApplicationComponent implements OnInit {
 
   // File upload handling
   async onFileSelected(event: any, fieldPath: string) {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      this.error.set('File size must be less than 5MB');
+    // Check if we're at the limit for this field
+    const proofArray = this.getProofOfServiceArray();
+    if (proofArray.length >= 2) {
+      this.error.set('Maximum 2 files allowed');
       return;
     }
 
-    // Validate file type
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-    if (!allowedTypes.includes(file.type)) {
-      this.error.set('Only PDF, JPG, JPEG, and PNG files are allowed');
-      return;
-    }
-
-    try {
-      this.isLoading.set(true);
+    for (let i = 0; i < Math.min(files.length, 2 - proofArray.length); i++) {
+      const file = files[i];
       
-      // Upload to Firebase Storage
-      const timestamp = Date.now();
-      const userId = this.authService.currentUser()?.uid;
-      const fileName = `${timestamp}_${file.name}`;
-      const filePath = `proofs-of-service/${userId}/${fileName}`;
-      
-      // Create storage reference and upload
-      const storageRef = ref(this.firebaseService.storage, filePath);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      
-      // Update the nested form path
-      const pathParts = fieldPath.split('.');
-      const formGroup = this.applicationForm.get(pathParts.slice(0, -1).join('.'));
-      formGroup?.patchValue({
-        fileUrl: downloadURL,
-        fileName: file.name
-      });
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        this.error.set(`File ${file.name} is too large. Maximum 5MB per file.`);
+        continue;
+      }
 
-      this.success.set('File uploaded successfully!');
-      setTimeout(() => this.success.set(null), 3000);
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        this.error.set(`File ${file.name} is not supported. Only PDF, JPG, JPEG, and PNG files are allowed.`);
+        continue;
+      }
 
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      this.error.set('Failed to upload file. Please try again.');
-    } finally {
-      this.isLoading.set(false);
+      try {
+        this.isLoading.set(true);
+        
+        // Upload to Firebase Storage
+        const timestamp = Date.now();
+        const userId = this.authService.currentUser()?.uid;
+        const fileName = `${timestamp}_${file.name}`;
+        const filePath = `proofs-of-service/${userId}/${fileName}`;
+        
+        // Create storage reference and upload
+        const storageRef = ref(this.firebaseService.storage, filePath);
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        
+        // Add to form array
+        proofArray.push(this.fb.group({
+          fileUrl: downloadURL,
+          fileName: file.name
+        }));
+
+        this.success.set(`File ${file.name} uploaded successfully!`);
+        setTimeout(() => this.success.set(null), 3000);
+
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        this.error.set(`Failed to upload ${file.name}. Please try again.`);
+      } finally {
+        this.isLoading.set(false);
+      }
     }
   }
 
-  removeFile(fieldPath: string) {
-    const pathParts = fieldPath.split('.');
-    const formGroup = this.applicationForm.get(pathParts.slice(0, -1).join('.'));
-    formGroup?.patchValue({
-      fileUrl: '',
-      fileName: ''
-    });
+  // Get proof of service FormArray
+  getProofOfServiceArray(): FormArray {
+    return this.applicationForm.get('experienceBackground.proofOfService') as FormArray;
+  }
+
+  // Remove file from array
+  removeFile(index: number) {
+    const proofArray = this.getProofOfServiceArray();
+    proofArray.removeAt(index);
+  }
+
+  // Check if we can add more files
+  canAddMoreFiles(): boolean {
+    return this.getProofOfServiceArray().length < 2;
   }
 
   // Detect user's locale to determine date format preference
@@ -578,6 +594,36 @@ export class ApplicationComponent implements OnInit {
       this.validateFriendId(value, friendNumber);
     } else {
       this.resetFriendValidation(friendNumber);
+    }
+  }
+
+  // Drag and drop event handlers
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver.set(true);
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver.set(false);
+  }
+
+  onFileDrop(event: DragEvent, fieldPath: string) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver.set(false);
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      // Create a synthetic event for the existing file handler
+      const syntheticEvent = {
+        target: {
+          files: files
+        }
+      };
+      this.onFileSelected(syntheticEvent, fieldPath);
     }
   }
 }

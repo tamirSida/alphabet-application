@@ -290,35 +290,56 @@
             </div>
           </div>
 
-          <div class="form-group" formGroupName="proofOfService">
-            <label>Proof of Military Service</label>
-            <p class="field-description">Upload a document proving your military service (PDF, JPG, JPEG, PNG accepted)</p>
+          <div class="form-group">
+            <label>Proof of Military Service *</label>
+            <p class="field-description">Upload 1-2 documents proving your military service (PDF, JPG, JPEG, PNG accepted)</p>
 
-            @if (!applicationForm.get('experienceBackground.proofOfService.fileName')?.value) {
-              <div class="file-upload-area" (click)="fileInput.click()">
+            <!-- Show uploaded files -->
+            @for (fileControl of getProofOfServiceArray().controls; track $index) {
+              <div class="uploaded-file">
+                <i class="fas fa-file-alt"></i>
+                <span>{{ fileControl.get('fileName')?.value }}</span>
+                <button
+                  type="button"
+                  class="remove-file"
+                  (click)="removeFile($index)">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            }
+
+            <!-- Upload area (show if we can add more files) -->
+            @if (canAddMoreFiles()) {
+              <div 
+                class="file-upload-area" 
+                [class.drag-over]="isDragOver"
+                (click)="fileInput.click()"
+                (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)"
+                (drop)="onFileDrop($event, 'experienceBackground.proofOfService')">
                 <input
                   #fileInput
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
+                  multiple
                   style="display: none;"
                   (change)="onFileSelected($event, 'experienceBackground.proofOfService')">
                 <div class="upload-placeholder">
                   <i class="fas fa-cloud-upload-alt"></i>
-                  <p>Click to upload proof of service</p>
-                  <small>PDF, JPG, JPEG, PNG (max 5MB)</small>
+                  <p>
+                    @if (getProofOfServiceArray().length === 0) {
+                      Click to upload or drag & drop proof of service
+                    } @else {
+                      Add another file ({{ getProofOfServiceArray().length }}/2)
+                    }
+                  </p>
+                  <small>PDF, JPG, JPEG, PNG (max 5MB each)</small>
                 </div>
               </div>
-            } @else {
-              <div class="uploaded-file">
-                <i class="fas fa-file-alt"></i>
-                <span>{{ applicationForm.get('experienceBackground.proofOfService.fileName')?.value }}</span>
-                <button
-                  type="button"
-                  class="remove-file"
-                  (click)="removeFile('experienceBackground.proofOfService')">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
+            }
+
+            @if (getProofOfServiceArray().length === 0) {
+              <small class="form-help error">At least one proof of service document is required</small>
             }
           </div>
 

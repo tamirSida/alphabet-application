@@ -23,10 +23,19 @@ export interface ServiceAvailability {
   }[]; // Array of classes user cannot attend with reasons
 }
 
+// File upload interface
+export interface UploadedFile {
+  fileUrl: string;
+  fileName: string;
+}
+
 // Section 3: Experience & Background
 export interface ExperienceBackground {
   combatService: 'Yes' | 'No';
+  militaryDraftDate?: string;
+  militaryReleaseDate?: string;
   militaryServiceDescription: string; // max 75 words
+  proofOfService: UploadedFile[]; // Required, max 2 files
   professionalExperience?: string; // max 150 words, optional
   hasProjectIdea: 'Yes' | 'No'; // New question to address feedback
   projectIdea?: {

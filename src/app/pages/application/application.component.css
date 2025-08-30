@@ -1015,6 +1015,13 @@
   background: #f0f9ff;
 }
 
+.file-upload-area.drag-over {
+  border-color: #1e40af;
+  background: #dbeafe;
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(30, 64, 175, 0.2);
+}
+
 .upload-placeholder i {
   font-size: 3rem;
   color: #1e40af;
@@ -1249,6 +1256,15 @@
 .form-input.input-invalid:focus {
   border-color: #dc2626;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-help.error {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.uploaded-file {
+  margin-bottom: 0.5rem;
 }
 
 /* Desktop */
