@@ -24,6 +24,12 @@ export class ApplicationComponent implements OnInit {
   cohort = signal<Cohort | null>(null);
   applicationForm!: FormGroup;
   
+  // Friend validation
+  friend1ValidationState = signal<'idle' | 'loading' | 'valid' | 'invalid'>('idle');
+  friend2ValidationState = signal<'idle' | 'loading' | 'valid' | 'invalid'>('idle');
+  friend1Name = signal<string>('');
+  friend2Name = signal<string>('');
+  
   // Progress computation
   progress = computed(() => (this.currentStep() / this.totalSteps) * 100);
   
@@ -352,6 +358,25 @@ export class ApplicationComponent implements OnInit {
     try {
       const formData: ApplicationFormData = this.applicationForm.value;
       
+      // Validate friend IDs if provided
+      const friendIds = [
+        formData.friends?.friend1StudentId,
+        formData.friends?.friend2StudentId
+      ].filter(id => id && id.trim() !== '');
+
+      if (friendIds.length > 0) {
+        // Simple format validation - actual user existence will be checked by admin
+        for (const friendId of friendIds) {
+          if (friendId) {
+            const formattedId = friendId.replace(/\D/g, '');
+            if (formattedId.length !== 9) {
+              this.error.set(`Invalid friend ID format: ${friendId}. Please use ####-###-### format.`);
+              return;
+            }
+          }
+        }
+      }
+      
       const request: CreateApplicationRequest = {
         cohortId: this.cohort()!.cohortId,
         formData
@@ -477,5 +502,82 @@ export class ApplicationComponent implements OnInit {
   // Get placeholder text for date inputs
   getDatePlaceholder(): string {
     return this.dateFormat() === 'mm/dd' ? 'mm/dd/yyyy' : 'dd/mm/yyyy';
+  }
+
+  // Validate friend student ID and fetch name
+  async validateFriendId(studentId: string, friendNumber: 1 | 2) {
+    if (!studentId || studentId.length < 9) {
+      this.resetFriendValidation(friendNumber);
+      return;
+    }
+
+    // Extract digits only for database lookup
+    const digitsOnly = studentId.replace(/\D/g, '');
+    if (digitsOnly.length !== 9) {
+      this.setFriendValidation(friendNumber, 'invalid', '');
+      return;
+    }
+
+    // Set loading state
+    this.setFriendValidation(friendNumber, 'loading', '');
+
+    try {
+      // Search for user by operator ID (using digits only)
+      const user = await this.userService.getUserByOperatorId(digitsOnly);
+      
+      if (user) {
+        // Show name if available, otherwise show email
+        const displayName = (user.firstName && user.lastName) 
+          ? `${user.firstName} ${user.lastName}`
+          : user.email;
+        this.setFriendValidation(friendNumber, 'valid', displayName);
+      } else {
+        this.setFriendValidation(friendNumber, 'invalid', '');
+      }
+    } catch (error) {
+      console.error('Error validating friend ID:', error);
+      this.setFriendValidation(friendNumber, 'invalid', '');
+    }
+  }
+
+  private setFriendValidation(friendNumber: 1 | 2, state: 'idle' | 'loading' | 'valid' | 'invalid', name: string) {
+    if (friendNumber === 1) {
+      this.friend1ValidationState.set(state);
+      this.friend1Name.set(name);
+    } else {
+      this.friend2ValidationState.set(state);
+      this.friend2Name.set(name);
+    }
+  }
+
+  private resetFriendValidation(friendNumber: 1 | 2) {
+    this.setFriendValidation(friendNumber, 'idle', '');
+  }
+
+  // Format student ID as user types
+  formatStudentId(event: any, friendNumber: 1 | 2) {
+    const input = event.target;
+    let value = input.value.replace(/\D/g, ''); // Remove non-digits
+    
+    // Add dashes: ####-###-###
+    if (value.length >= 4) {
+      value = value.substring(0, 4) + '-' + value.substring(4);
+    }
+    if (value.length >= 8) {
+      value = value.substring(0, 8) + '-' + value.substring(8, 11);
+    }
+    
+    input.value = value;
+    
+    // Update form control
+    const controlName = friendNumber === 1 ? 'friend1StudentId' : 'friend2StudentId';
+    this.applicationForm.get(`friends.${controlName}`)?.setValue(value);
+    
+    // Validate if complete
+    if (value.length === 11) {
+      this.validateFriendId(value, friendNumber);
+    } else {
+      this.resetFriendValidation(friendNumber);
+    }
   }
 }

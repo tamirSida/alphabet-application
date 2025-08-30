@@ -855,10 +855,37 @@
               type="text"
               formControlName="friend1StudentId"
               class="form-input"
+              [class.input-valid]="friend1ValidationState() === 'valid'"
+              [class.input-invalid]="friend1ValidationState() === 'invalid'"
               placeholder="####-###-### (9 digits)"
               pattern="[0-9]{4}-[0-9]{3}-[0-9]{3}"
-              maxlength="11">
-            <small class="form-help">Format: ####-###-###</small>
+              maxlength="11"
+              (input)="formatStudentId($event, 1)">
+            
+            @if (friend1ValidationState() === 'loading') {
+              <div class="validation-message loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Validating...</span>
+              </div>
+            }
+            
+            @if (friend1ValidationState() === 'valid') {
+              <div class="validation-message valid">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ friend1Name() }}</span>
+              </div>
+            }
+            
+            @if (friend1ValidationState() === 'invalid') {
+              <div class="validation-message invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Invalid ID - make sure this user has signed up</span>
+              </div>
+            }
+            
+            @if (friend1ValidationState() === 'idle') {
+              <small class="form-help">Format: ####-###-###</small>
+            }
           </div>
 
           <div class="form-group">
@@ -867,10 +894,37 @@
               type="text"
               formControlName="friend2StudentId"
               class="form-input"
+              [class.input-valid]="friend2ValidationState() === 'valid'"
+              [class.input-invalid]="friend2ValidationState() === 'invalid'"
               placeholder="####-###-### (9 digits)"
               pattern="[0-9]{4}-[0-9]{3}-[0-9]{3}"
-              maxlength="11">
-            <small class="form-help">Format: ####-###-###</small>
+              maxlength="11"
+              (input)="formatStudentId($event, 2)">
+            
+            @if (friend2ValidationState() === 'loading') {
+              <div class="validation-message loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Validating...</span>
+              </div>
+            }
+            
+            @if (friend2ValidationState() === 'valid') {
+              <div class="validation-message valid">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ friend2Name() }}</span>
+              </div>
+            }
+            
+            @if (friend2ValidationState() === 'invalid') {
+              <div class="validation-message invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Invalid ID - make sure this user has signed up</span>
+              </div>
+            }
+            
+            @if (friend2ValidationState() === 'idle') {
+              <small class="form-help">Format: ####-###-###</small>
+            }
           </div>
 
           <div class="friends-note">

@@ -185,4 +185,32 @@ export class ApplicationService {
     const applicationRef = doc(this.firebaseService.firestore, 'applications', applicationId);
     await updateDoc(applicationRef, { notes });
   }
+
+  async validateFriendIds(friendIds: string[]): Promise<{[key: string]: string | null}> {
+    const results: {[key: string]: string | null} = {};
+    
+    // Get all users to validate friend IDs (admin permission required for this operation)
+    try {
+      const allUsers = await this.userService.getAllApplicants();
+      
+      for (const friendId of friendIds) {
+        if (!friendId) continue;
+        
+        const formattedId = friendId.replace(/\D/g, '');
+        const user = allUsers.find(u => u.operatorId === formattedId);
+        
+        if (user && user.firstName && user.lastName) {
+          results[friendId] = `${user.firstName} ${user.lastName}`;
+        } else {
+          results[friendId] = null;
+        }
+      }
+      
+      return results;
+    } catch (error) {
+      console.error('Error validating friend IDs:', error);
+      // Return empty validation if we can't access the data
+      return {};
+    }
+  }
 }

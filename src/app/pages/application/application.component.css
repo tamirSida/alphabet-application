@@ -1110,15 +1110,15 @@
   align-items: flex-start;
   gap: 1rem;
   margin-bottom: 2rem;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgba(30, 64, 175, 0.1);
+  border: 1px solid rgba(30, 64, 175, 0.2);
   border-radius: 12px;
   padding: 1.5rem;
 }
 
 .friends-intro i {
   font-size: 2rem;
-  color: #10b981;
+  color: #1e40af;
   margin-top: 0.25rem;
   flex-shrink: 0;
 }
@@ -1126,18 +1126,18 @@
 .friends-intro h3 {
   margin: 0 0 0.5rem 0;
   font-size: 1.2rem;
-  color: #e5e7eb;
+  color: #1f2937;
 }
 
 .friends-intro p {
   margin: 0;
-  color: #9ca3af;
+  color: #374151;
   line-height: 1.5;
 }
 
 .friends-note {
-  background: rgba(236, 72, 153, 0.1);
-  border: 1px solid rgba(236, 72, 153, 0.2);
+  background: rgba(30, 64, 175, 0.1);
+  border: 1px solid rgba(30, 64, 175, 0.2);
   border-radius: 12px;
   padding: 1rem;
   display: flex;
@@ -1147,7 +1147,7 @@
 }
 
 .friends-note i {
-  color: #ec4899;
+  color: #1e40af;
   font-size: 1.2rem;
   margin-top: 0.25rem;
   flex-shrink: 0;
@@ -1155,7 +1155,7 @@
 
 .friends-note p {
   margin: 0;
-  color: #e5e7eb;
+  color: #374151;
   line-height: 1.5;
   font-size: 0.9rem;
 }
@@ -1199,6 +1199,56 @@
     flex-direction: column;
     text-align: center;
   }
+}
+
+/* Friend Validation Styling */
+.validation-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.validation-message.loading {
+  background: rgba(30, 64, 175, 0.1);
+  color: #1e40af;
+  border: 1px solid rgba(30, 64, 175, 0.2);
+}
+
+.validation-message.valid {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.validation-message.invalid {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.form-input.input-valid {
+  border-color: #059669;
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.form-input.input-invalid {
+  border-color: #dc2626;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.form-input.input-valid:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.form-input.input-invalid:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
 /* Desktop */
