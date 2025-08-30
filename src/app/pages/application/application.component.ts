@@ -76,7 +76,7 @@ export class ApplicationComponent implements OnInit {
       serviceAvailability: this.fb.group({
         countryOfService: ['', Validators.required],
         englishProficiency: [''],
-        selectedClasses: [[], Validators.required]
+        unavailableClasses: [[]]
       }),
       
       // Section 3: Experience & Background
@@ -276,7 +276,11 @@ export class ApplicationComponent implements OnInit {
       case 1:
         return this.applicationForm.get('personalInformation')?.valid || false;
       case 2:
-        return this.applicationForm.get('serviceAvailability')?.valid || false;
+        // Check country selection and validate unavailable classes have reasons
+        const serviceGroup = this.applicationForm.get('serviceAvailability');
+        const unavailableClasses = serviceGroup?.get('unavailableClasses')?.value || [];
+        const hasEmptyReasons = unavailableClasses.some((item: any) => item.reason.trim() === '');
+        return (serviceGroup?.get('countryOfService')?.valid || false) && !hasEmptyReasons;
       case 3:
         return this.applicationForm.get('experienceBackground')?.valid || false;
       case 4:
@@ -302,24 +306,43 @@ export class ApplicationComponent implements OnInit {
     return text.trim().split(/\s+/).filter(word => word.length > 0).length;
   }
 
-  // Toggle class selection
-  toggleClassSelection(classId: string) {
-    const selectedClasses = this.applicationForm.get('serviceAvailability.selectedClasses')?.value || [];
-    const index = selectedClasses.indexOf(classId);
+  // Toggle class unavailability
+  toggleClassUnavailability(classId: string) {
+    const unavailableClasses = this.applicationForm.get('serviceAvailability.unavailableClasses')?.value || [];
+    const existingIndex = unavailableClasses.findIndex((item: any) => item.classId === classId);
     
-    if (index > -1) {
-      selectedClasses.splice(index, 1);
+    if (existingIndex > -1) {
+      unavailableClasses.splice(existingIndex, 1);
     } else {
-      selectedClasses.push(classId);
+      unavailableClasses.push({ classId, reason: '' });
     }
     
-    this.applicationForm.get('serviceAvailability.selectedClasses')?.setValue(selectedClasses);
+    this.applicationForm.get('serviceAvailability.unavailableClasses')?.setValue(unavailableClasses);
   }
 
-  // Check if class is selected
-  isClassSelected(classId: string): boolean {
-    const selectedClasses = this.applicationForm.get('serviceAvailability.selectedClasses')?.value || [];
-    return selectedClasses.includes(classId);
+  // Check if class is unavailable
+  isClassUnavailable(classId: string): boolean {
+    const unavailableClasses = this.applicationForm.get('serviceAvailability.unavailableClasses')?.value || [];
+    return unavailableClasses.some((item: any) => item.classId === classId);
+  }
+
+  // Get unavailability reason for a class
+  getUnavailabilityReason(classId: string): string {
+    const unavailableClasses = this.applicationForm.get('serviceAvailability.unavailableClasses')?.value || [];
+    const item = unavailableClasses.find((item: any) => item.classId === classId);
+    return item?.reason || '';
+  }
+
+  // Set unavailability reason for a class
+  setUnavailabilityReason(classId: string, event: any) {
+    const reason = event.target.value;
+    const unavailableClasses = this.applicationForm.get('serviceAvailability.unavailableClasses')?.value || [];
+    const itemIndex = unavailableClasses.findIndex((item: any) => item.classId === classId);
+    
+    if (itemIndex > -1) {
+      unavailableClasses[itemIndex].reason = reason;
+      this.applicationForm.get('serviceAvailability.unavailableClasses')?.setValue(unavailableClasses);
+    }
   }
 
   // Submit application

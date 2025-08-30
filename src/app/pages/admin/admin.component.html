@@ -225,9 +225,22 @@
                     <span>{{ selectedApplication()?.cohort?.number || 'Unknown' }}</span>
                   </div>
                   <div class="info-item">
-                    <label>Selected Classes:</label>
+                    <label>Available Classes:</label>
                     <span>{{ formatPreferredClasses(selectedApplication()!) }}</span>
                   </div>
+                  @if ((selectedApplication()?.formData?.serviceAvailability?.unavailableClasses?.length || 0) > 0) {
+                    <div class="info-item unavailable-classes">
+                      <label>Cannot Attend:</label>
+                      <div class="unavailable-list">
+                        @for (unavailable of selectedApplication()?.formData?.serviceAvailability?.unavailableClasses || []; track unavailable.classId) {
+                          <div class="unavailable-class">
+                            <strong>{{ getClassName(unavailable.classId) }}:</strong>
+                            <span>{{ unavailable.reason }}</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
                 </div>
               </div>
 

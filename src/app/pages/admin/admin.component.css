@@ -584,3 +584,34 @@
   .modal-body { padding: 1rem 1.5rem; }
   .modal-footer { padding: 0.75rem 1.5rem 1rem 1.5rem; }
 }
+
+/* Unavailable Classes Display */
+.unavailable-classes {
+  grid-column: 1 / -1;
+}
+
+.unavailable-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.unavailable-class {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.unavailable-class strong {
+  color: #dc2626;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.unavailable-class span {
+  color: #374151;
+  font-style: italic;
+}

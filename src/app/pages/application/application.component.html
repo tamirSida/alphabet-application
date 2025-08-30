@@ -177,14 +177,14 @@
           }
 
           <div class="form-group">
-            <label>Class Availability *</label>
-            <p class="field-description">Select the classes you're available for (you can select both):</p>
+            <label>Class Availability</label>
+            <p class="field-description">Are there any classes you would NOT be able to attend? If so, select them below and explain why:</p>
             <div class="class-options">
               @for (cohortClass of cohort()?.classes || []; track cohortClass.classId) {
                 <div
                   class="class-option"
-                  [class.selected]="isClassSelected(cohortClass.classId)"
-                  (click)="toggleClassSelection(cohortClass.classId)">
+                  [class.selected]="isClassUnavailable(cohortClass.classId)"
+                  (click)="toggleClassUnavailability(cohortClass.classId)">
                   <div class="class-header">
                     <h4>{{ cohortClass.name }}</h4>
                   </div>
@@ -197,13 +197,26 @@
                     </div>
                   }
                   <div class="selection-indicator">
-                    @if (isClassSelected(cohortClass.classId)) {
-                      <i class="fas fa-check-circle"></i>
+                    @if (isClassUnavailable(cohortClass.classId)) {
+                      <i class="fas fa-times-circle"></i>
                     } @else {
                       <i class="far fa-circle"></i>
                     }
                   </div>
                 </div>
+                
+                @if (isClassUnavailable(cohortClass.classId)) {
+                  <div class="unavailability-reason">
+                    <label>Why can't you attend {{ cohortClass.name }}?</label>
+                    <textarea
+                      [value]="getUnavailabilityReason(cohortClass.classId)"
+                      (input)="setUnavailabilityReason(cohortClass.classId, $event)"
+                      class="form-textarea"
+                      rows="2"
+                      placeholder="Briefly explain why you cannot attend this class..."
+                      maxlength="200"></textarea>
+                  </div>
+                }
               }
             </div>
           </div>

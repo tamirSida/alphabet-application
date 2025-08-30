@@ -418,6 +418,32 @@
   color: #1e40af;
 }
 
+.unavailability-reason {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+}
+
+.unavailability-reason label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #dc2626;
+  font-size: 0.9rem;
+}
+
+.unavailability-reason .form-textarea {
+  border-color: #fecaca;
+  background: white;
+}
+
+.unavailability-reason .form-textarea:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
 /* Special Sections */
 .friend-note {
   background: rgba(30, 64, 175, 0.1);

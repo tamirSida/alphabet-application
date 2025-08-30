@@ -17,7 +17,10 @@ export interface PersonalInformation {
 export interface ServiceAvailability {
   countryOfService: 'US' | 'IL';
   englishProficiency?: 'Yes' | 'No'; // Only shown if IL selected
-  selectedClasses: string[]; // Array of classIds from cohort
+  unavailableClasses: {
+    classId: string;
+    reason: string;
+  }[]; // Array of classes user cannot attend with reasons
 }
 
 // Section 3: Experience & Background

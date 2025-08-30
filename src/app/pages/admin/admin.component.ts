@@ -212,11 +212,12 @@ export class AdminComponent implements OnInit, OnDestroy {
       });
     });
     
-    // Get classes from application preferences, but filter out auto-generated IDs
+    // Get classes from cohorts and assigned classes
     this.applications().forEach(app => {
-      app.formData.serviceAvailability.selectedClasses?.forEach(className => {
-        if (className && this.isValidClassName(className)) {
-          allClasses.add(className);
+      // Add all classes from the cohort
+      app.cohort?.classes?.forEach(cohortClass => {
+        if (this.isValidClassName(cohortClass.name)) {
+          allClasses.add(cohortClass.name);
         }
       });
       
@@ -279,10 +280,12 @@ export class AdminComponent implements OnInit, OnDestroy {
 
     // Apply class filter
     if (classFilter !== 'all') {
-      filtered = filtered.filter(app => 
-        app.formData.serviceAvailability.selectedClasses?.includes(classFilter) ||
-        app.assignedClass === classFilter
-      );
+      filtered = filtered.filter(app => {
+        // Check if user is available for this class (not in unavailable list)
+        const unavailableClasses = app.formData.serviceAvailability.unavailableClasses || [];
+        const isAvailableForClass = !unavailableClasses.some(item => item.classId === classFilter);
+        return isAvailableForClass || app.assignedClass === classFilter;
+      });
     }
 
     this.filteredApplications.set(filtered);
@@ -666,11 +669,27 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   formatPreferredClasses(application: Application & { cohort?: Cohort }): string {
-    const selectedClasses = application.formData?.serviceAvailability?.selectedClasses;
-    if (!selectedClasses || selectedClasses.length === 0) return 'Not specified';
+    const unavailableClasses = application.formData?.serviceAvailability?.unavailableClasses || [];
+    const allClasses = application.cohort?.classes || [];
     
-    const classNames = this.getClassNamesByIds(selectedClasses, application.cohort);
-    return classNames.join(', ');
+    if (unavailableClasses.length === 0) {
+      return 'Available for all classes';
+    }
+    
+    const unavailableClassIds = unavailableClasses.map(item => item.classId);
+    const availableClasses = allClasses.filter(cls => !unavailableClassIds.includes(cls.classId));
+    
+    if (availableClasses.length === 0) {
+      return 'No classes available';
+    }
+    
+    return availableClasses.map(cls => cls.name).join(', ');
+  }
+
+  getClassName(classId: string): string {
+    const cohort = this.selectedApplication()?.cohort;
+    const cohortClass = cohort?.classes?.find(cls => cls.classId === classId);
+    return cohortClass?.name || classId;
   }
 
   async signOut() {
