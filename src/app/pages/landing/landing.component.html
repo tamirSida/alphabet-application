@@ -36,6 +36,20 @@
                 {{ currentAcceptingCohort()?.cohortStartDate | date:'fullDate' }}
               </p>
             </div>
+            @if (currentAcceptingCohort()) {
+              <div class="countdown-timer">
+                <div class="countdown-label">Time to submit:</div>
+                <div class="countdown-display">
+                  <span class="time-unit">{{ getTimeRemaining().days }}<small>D</small></span>
+                  <span class="separator">:</span>
+                  <span class="time-unit">{{ getTimeRemaining().hours }}<small>H</small></span>
+                  <span class="separator">:</span>
+                  <span class="time-unit">{{ getTimeRemaining().minutes }}<small>M</small></span>
+                  <span class="separator">:</span>
+                  <span class="time-unit">{{ getTimeRemaining().seconds }}<small>S</small></span>
+                </div>
+              </div>
+            }
             @if (isAuthenticated) {
               <button class="primary-button" (click)="goToDashboard()">
                 <i class="fas fa-user"></i>

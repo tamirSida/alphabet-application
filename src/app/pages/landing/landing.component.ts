@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CohortService, AuthService } from '../../services';
@@ -11,10 +11,12 @@ import { Cohort } from '../../models';
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.css']
 })
-export class LandingComponent implements OnInit {
+export class LandingComponent implements OnInit, OnDestroy {
   nextCohort = signal<Cohort | null>(null);
   currentAcceptingCohort = signal<Cohort | null>(null);
   isLoading = signal(true);
+  timeRemaining = signal<{months: number, weeks: number, days: number, hours: number, minutes: number, seconds: number} | null>(null);
+  private countdownInterval: any;
 
   constructor(
     private cohortService: CohortService,
@@ -38,6 +40,7 @@ export class LandingComponent implements OnInit {
     }
 
     await this.loadCohortInfo();
+    this.startCountdown();
     this.isLoading.set(false);
   }
 
@@ -89,5 +92,52 @@ export class LandingComponent implements OnInit {
 
   get noUpcomingCohorts() {
     return !this.hasOpenApplications && !this.nextCohort();
+  }
+
+  ngOnDestroy() {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+    }
+  }
+
+  private startCountdown() {
+    // Clear existing interval
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+    }
+
+    // Update countdown every second
+    this.updateCountdown();
+    this.countdownInterval = setInterval(() => {
+      this.updateCountdown();
+    }, 1000);
+  }
+
+  private updateCountdown() {
+    const cohort = this.currentAcceptingCohort();
+    if (!cohort) {
+      this.timeRemaining.set(null);
+      return;
+    }
+
+    const now = new Date();
+    const deadline = cohort.applicationEndDate;
+    const diffMs = deadline.getTime() - now.getTime();
+
+    if (diffMs <= 0) {
+      this.timeRemaining.set({ months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 });
+      return;
+    }
+
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+    this.timeRemaining.set({ months: 0, weeks: 0, days, hours, minutes, seconds });
+  }
+
+  getTimeRemaining() {
+    return this.timeRemaining() || { months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
   }
 }
