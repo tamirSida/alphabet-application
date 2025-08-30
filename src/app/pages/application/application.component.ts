@@ -348,7 +348,8 @@ export class ApplicationComponent implements OnInit {
   // Submit application
   async submitApplication() {
     if (!this.applicationForm.valid) {
-      this.error.set('Please fill in all required fields');
+      const validationErrors = this.getValidationErrors();
+      this.error.set(validationErrors);
       return;
     }
 
@@ -499,6 +500,179 @@ export class ApplicationComponent implements OnInit {
   // Check if we can add more files
   canAddMoreFiles(): boolean {
     return this.getProofOfServiceArray().length < 2;
+  }
+
+  // Get detailed validation errors
+  getValidationErrors(): string {
+    const errors: string[] = [];
+    
+    // Check each section
+    const personalInfo = this.applicationForm.get('personalInformation');
+    if (personalInfo?.invalid) {
+      if (personalInfo.get('firstName')?.hasError('required')) {
+        errors.push('• First Name is required');
+      }
+      if (personalInfo.get('lastName')?.hasError('required')) {
+        errors.push('• Last Name is required');
+      }
+      if (personalInfo.get('email')?.hasError('required')) {
+        errors.push('• Email is required');
+      }
+      if (personalInfo.get('email')?.hasError('email')) {
+        errors.push('• Please enter a valid email address');
+      }
+    }
+
+    const serviceAvail = this.applicationForm.get('serviceAvailability');
+    if (serviceAvail?.invalid) {
+      if (serviceAvail.get('countryOfService')?.hasError('required')) {
+        errors.push('• Country of Service is required');
+      }
+      if (serviceAvail.get('englishProficiency')?.hasError('required')) {
+        errors.push('• English Proficiency is required for IL service');
+      }
+      
+      // Check unavailable classes reasons
+      const unavailableClasses = serviceAvail.get('unavailableClasses')?.value || [];
+      const hasEmptyReasons = unavailableClasses.some((item: any) => !item.reason || item.reason.trim() === '');
+      if (hasEmptyReasons) {
+        errors.push('• Please provide reasons for all unavailable classes');
+      }
+      const hasOverLimitReasons = unavailableClasses.some((item: any) => this.getWordCount(item.reason) > 80);
+      if (hasOverLimitReasons) {
+        errors.push('• Unavailability reasons must be 80 words or less');
+      }
+    }
+
+    const experience = this.applicationForm.get('experienceBackground');
+    if (experience?.invalid) {
+      if (experience.get('combatService')?.hasError('required')) {
+        errors.push('• Combat Service selection is required');
+      }
+      if (experience.get('militaryServiceDescription')?.hasError('required')) {
+        errors.push('• Military Service Description is required');
+      }
+      if (experience.get('militaryServiceDescription')?.hasError('wordCount')) {
+        const error = experience.get('militaryServiceDescription')?.errors?.['wordCount'];
+        errors.push(`• Military Service Description must be ${error.max} words or less (currently ${error.actual} words)`);
+      }
+      if (experience.get('proofOfService')?.hasError('required')) {
+        errors.push('• Proof of Military Service documents are required (1-2 files)');
+      }
+      if (experience.get('hasProjectIdea')?.hasError('required')) {
+        errors.push('• Please specify if you have a project idea');
+      }
+      
+      // Check project idea description if "Yes" was selected
+      const hasProjectIdea = experience.get('hasProjectIdea')?.value;
+      if (hasProjectIdea === 'Yes') {
+        const projectDesc = experience.get('projectIdea.description');
+        if (projectDesc?.hasError('required')) {
+          errors.push('• Project idea description is required when you have a project idea');
+        }
+        if (projectDesc?.hasError('wordCount')) {
+          const error = projectDesc?.errors?.['wordCount'];
+          errors.push(`• Project idea description must be ${error.max} words or less (currently ${error.actual} words)`);
+        }
+      }
+      
+      // Check professional experience word count
+      if (experience.get('professionalExperience')?.hasError('wordCount')) {
+        const error = experience.get('professionalExperience')?.errors?.['wordCount'];
+        errors.push(`• Professional Experience must be ${error.max} words or less (currently ${error.actual} words)`);
+      }
+    }
+
+    const skills = this.applicationForm.get('skills');
+    if (skills?.invalid) {
+      const skillNames = {
+        aiDailyUse: 'AI Daily Use',
+        programming: 'Programming',
+        marketingSales: 'Product Marketing & Sales Experience',
+        management: 'Leadership Experience',
+        publicSpeaking: 'Public Speaking & Presentation Skills'
+      };
+      
+      Object.entries(skillNames).forEach(([key, name]) => {
+        const control = skills.get(key);
+        if (control?.hasError('required')) {
+          errors.push(`• ${name} rating is required`);
+        }
+        if (control?.hasError('min') || control?.hasError('max')) {
+          errors.push(`• ${name} rating must be between 1 and 5`);
+        }
+      });
+
+      // Check custom skill
+      const otherSkill = skills.get('other');
+      if (otherSkill?.get('skill')?.value && otherSkill?.get('rating')?.hasError('required')) {
+        errors.push('• Please rate your custom skill');
+      }
+      if (otherSkill?.get('rating')?.hasError('min') || otherSkill?.get('rating')?.hasError('max')) {
+        errors.push('• Custom skill rating must be between 1 and 5');
+      }
+    }
+
+    const qualities = this.applicationForm.get('personalQualities');
+    if (qualities?.invalid) {
+      const qualityNames = {
+        proactivePersonality: 'Proactive Personality',
+        persistenceHandleDifficulties: 'Persistence & Handle Difficulties',
+        performUnderStress: 'Perform Under Stress',
+        independence: 'Independence',
+        teamwork: 'Teamwork',
+        mentalFlexibility: 'Mental Flexibility',
+        passionForProjects: 'Passion for Projects',
+        creativeThinking: 'Creative Thinking'
+      };
+      
+      Object.entries(qualityNames).forEach(([key, name]) => {
+        const qualityGroup = qualities.get(key);
+        if (qualityGroup?.get('rating')?.hasError('required')) {
+          errors.push(`• ${name} rating is required`);
+        }
+        if (qualityGroup?.get('rating')?.hasError('min') || qualityGroup?.get('rating')?.hasError('max')) {
+          errors.push(`• ${name} rating must be between 0 and 10`);
+        }
+        if (qualityGroup?.get('example')?.hasError('required')) {
+          errors.push(`• ${name} example is required`);
+        }
+        if (qualityGroup?.get('example')?.hasError('wordCount')) {
+          const error = qualityGroup?.get('example')?.errors?.['wordCount'];
+          errors.push(`• ${name} example must be ${error.max} words or less (currently ${error.actual} words)`);
+        }
+      });
+    }
+
+    const shortAnswer = this.applicationForm.get('shortAnswer');
+    if (shortAnswer?.invalid) {
+      if (shortAnswer.get('failureDescription')?.hasError('required')) {
+        errors.push('• Failure description is required');
+      }
+      if (shortAnswer.get('failureDescription')?.hasError('wordCount')) {
+        const error = shortAnswer.get('failureDescription')?.errors?.['wordCount'];
+        errors.push(`• Failure description must be ${error.max} words or less (currently ${error.actual} words)`);
+      }
+    }
+
+    const video = this.applicationForm.get('videoIntroduction');
+    if (video?.invalid) {
+      if (video.get('videoUrl')?.hasError('required')) {
+        errors.push('• Video Introduction URL is required');
+      }
+    }
+
+    const coverLetter = this.applicationForm.get('coverLetter');
+    if (coverLetter?.get('content')?.hasError('wordCount')) {
+      const error = coverLetter.get('content')?.errors?.['wordCount'];
+      errors.push(`• Additional Information must be ${error.max} words or less (currently ${error.actual} words)`);
+    }
+
+    if (errors.length === 0) {
+      return 'Please check all required fields';
+    }
+
+    return `Please fix the following issues:\n\n${errors.join('\n')}`;
   }
 
   // Detect user's locale to determine date format preference
