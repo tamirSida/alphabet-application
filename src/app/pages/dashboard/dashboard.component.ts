@@ -50,7 +50,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private async loadUserData() {
     try {
-      const userData = this.authService.userData();
+      // Refresh user data from database to get latest status
+      const uid = this.authService.currentUser()?.uid;
+      if (!uid) {
+        this.router.navigate(['/auth']);
+        return;
+      }
+
+      const userData = await this.userService.getUserData(uid);
       if (!userData) {
         this.router.navigate(['/auth']);
         return;
@@ -77,6 +84,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
       console.error('Error loading user data:', error);
       this.error.set('Failed to load dashboard data.');
     }
+  }
+
+  // Public method to refresh data (called after application submission)
+  async refreshData() {
+    this.isLoading.set(true);
+    await this.loadUserData();
+    this.updateStatusDisplay();
+    this.isLoading.set(false);
   }
 
   async signOut() {

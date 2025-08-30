@@ -387,10 +387,8 @@ export class ApplicationComponent implements OnInit {
         request
       );
 
-      this.success.set('Application submitted successfully! Redirecting to dashboard...');
-      setTimeout(() => {
-        this.router.navigate(['/dashboard']);
-      }, 2000);
+      // Navigate immediately to dashboard
+      this.router.navigate(['/dashboard']);
 
     } catch (error: any) {
       this.error.set(error.message || 'Failed to submit application');
