@@ -152,7 +152,7 @@ export class ApplicationComponent implements OnInit {
       
       // Section 7: Cover Letter
       coverLetter: this.fb.group({
-        content: ['', [Validators.required, this.wordCountValidator(300)]]
+        content: ['', this.wordCountValidator(300)]
       }),
       
       // Section 8: Video Introduction
@@ -384,7 +384,7 @@ export class ApplicationComponent implements OnInit {
       'Personal Qualities',
       'Short Answer',
       'Video Introduction',
-      'Cover Letter',
+      'Additional Information',
       'Friends (Optional)'
     ];
     return titles[step - 1] || '';

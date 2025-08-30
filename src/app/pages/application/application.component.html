@@ -824,13 +824,13 @@
       @if (currentStep() === 8) {
         <div class="form-section" formGroupName="coverLetter">
           <div class="form-group">
-            <label>Cover Letter *</label>
-            <p class="field-description">Write a 300-word cover letter explaining why you should be accepted to the program.</p>
+            <label>Tell us anything else</label>
+            <p class="field-description">Anything you would like to add or think we should know about you (300 words).</p>
             <textarea
               formControlName="content"
               class="form-textarea"
               rows="12"
-              placeholder="Write your cover letter here..."></textarea>
+              placeholder="Share anything else you'd like us to know about you..."></textarea>
             <div class="word-count">
               {{ getWordCount(applicationForm.get('coverLetter.content')?.value || '') }}/300 words
             </div>

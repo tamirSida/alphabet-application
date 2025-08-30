@@ -281,20 +281,8 @@
                 <div class="info-section">
                   <h3>Project Idea Details</h3>
                   <div class="info-item-vertical">
-                    <label>Problem Statement:</label>
-                    <span class="long-text-content">{{ selectedApplication()?.formData?.experienceBackground?.projectIdea?.problemStatement }}</span>
-                  </div>
-                  <div class="info-item-vertical">
-                    <label>Idea Summary:</label>
-                    <span class="long-text-content">{{ selectedApplication()?.formData?.experienceBackground?.projectIdea?.ideaSummary }}</span>
-                  </div>
-                  <div class="info-item-vertical">
-                    <label>Solution Approach:</label>
-                    <span class="long-text-content">{{ selectedApplication()?.formData?.experienceBackground?.projectIdea?.solutionApproach }}</span>
-                  </div>
-                  <div class="info-item-vertical">
-                    <label>Market & Clients:</label>
-                    <span class="long-text-content">{{ selectedApplication()?.formData?.experienceBackground?.projectIdea?.marketClients }}</span>
+                    <label>Project Description (200 words):</label>
+                    <span class="long-text-content">{{ selectedApplication()?.formData?.experienceBackground?.projectIdea?.description }}</span>
                   </div>
                 </div>
               }
@@ -402,12 +390,12 @@
                 </div>
               }
 
-              <!-- Cover Letter Section -->
+              <!-- Additional Information Section -->
               @if (selectedApplication()?.formData?.coverLetter?.content) {
                 <div class="info-section">
-                  <h3>Cover Letter</h3>
+                  <h3>Additional Information</h3>
                   <div class="info-item-vertical">
-                    <label>Cover Letter (300 words):</label>
+                    <label>Tell us anything else (300 words):</label>
                     <span class="long-text-content">{{ selectedApplication()?.formData?.coverLetter?.content }}</span>
                   </div>
                 </div>
