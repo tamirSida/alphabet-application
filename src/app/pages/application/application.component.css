@@ -1070,8 +1070,8 @@
 
 /* Video Help */
 .video-help {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: rgba(30, 64, 175, 0.1);
+  border: 1px solid rgba(30, 64, 175, 0.2);
   border-radius: 12px;
   padding: 1rem;
   margin-top: 1rem;
@@ -1081,7 +1081,7 @@
 }
 
 .video-help i {
-  color: #3b82f6;
+  color: #1e40af;
   font-size: 1.2rem;
   margin-top: 0.25rem;
   flex-shrink: 0;
@@ -1090,13 +1090,13 @@
 .video-help p {
   margin: 0 0 0.5rem 0;
   font-weight: 600;
-  color: #e5e7eb;
+  color: #1f2937;
 }
 
 .video-help ul {
   margin: 0;
   padding-left: 1rem;
-  color: #9ca3af;
+  color: #374151;
 }
 
 .video-help li {
