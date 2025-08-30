@@ -29,9 +29,10 @@
             <h2>Applications Now Open!</h2>
             <div class="cohort-details">
               <p><strong>Cohort:</strong> {{ currentAcceptingCohort()?.number }}</p>
-              <p><strong>Application Deadline:</strong> 
-                {{ currentAcceptingCohort()?.applicationEndDate | date:'fullDate' }}
-              </p>
+              <div class="deadline-info">
+                <p><strong>Application Deadline:</strong></p>
+                <div class="timezone-display">{{ formatDateWithTimezones(currentAcceptingCohort()?.applicationEndDate) }}</div>
+              </div>
               <p><strong>Program Start:</strong> 
                 {{ currentAcceptingCohort()?.cohortStartDate | date:'fullDate' }}
               </p>

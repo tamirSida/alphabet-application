@@ -416,14 +416,78 @@ export class ApplicationComponent implements OnInit {
 
   formatClassSchedule(cohortClass: CohortClass): string {
     return cohortClass.weeklySchedule
-      .map(schedule => `${schedule.day} ${schedule.startTime}-${schedule.endTime}`)
-      .join(', ');
+      .map(schedule => this.formatScheduleWithTimezones(schedule.day, schedule.startTime, schedule.endTime))
+      .join('\n\n');
   }
 
   formatLabSchedule(lab: any): string {
     return lab.weeklySchedule
-      .map((schedule: any) => `${schedule.day} ${schedule.startTime}-${schedule.endTime}`)
-      .join(', ');
+      .map((schedule: any) => this.formatScheduleWithTimezones(schedule.day, schedule.startTime, schedule.endTime))
+      .join('\n\n');
+  }
+
+  // Format a single schedule entry with all timezones
+  formatScheduleWithTimezones(day: string, startTime: string, endTime: string): string {
+    // Create dates for today with the given times (using IL timezone as base)
+    const today = new Date().toISOString().split('T')[0];
+    const startDate = this.createDateInILTimezone(today, startTime);
+    const endDate = this.createDateInILTimezone(today, endTime);
+
+    const ilStart = new Intl.DateTimeFormat('en-IL', {
+      timeZone: 'Asia/Jerusalem',
+      timeStyle: 'short'
+    }).format(startDate);
+    
+    const ilEnd = new Intl.DateTimeFormat('en-IL', {
+      timeZone: 'Asia/Jerusalem', 
+      timeStyle: 'short'
+    }).format(endDate);
+
+    const ptStart = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      timeStyle: 'short'
+    }).format(startDate);
+    
+    const ptEnd = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      timeStyle: 'short'
+    }).format(endDate);
+
+    const etStart = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      timeStyle: 'short'
+    }).format(startDate);
+    
+    const etEnd = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      timeStyle: 'short'
+    }).format(endDate);
+
+    return `${day}\nIL: ${ilStart}-${ilEnd}\nPT: ${ptStart}-${ptEnd}\nET: ${etStart}-${etEnd}`;
+  }
+
+  // Create date in IL timezone
+  private createDateInILTimezone(dateStr: string, timeStr: string): Date {
+    // Create date assuming IL timezone
+    const isoString = `${dateStr}T${timeStr}:00`;
+    
+    // Use a more accurate approach - create the date and interpret it as IL time
+    const date = new Date(isoString);
+    
+    // Get what this time would be in IL timezone
+    const ilFormatter = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Asia/Jerusalem',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit', 
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    
+    // Format the date as if it were in UTC, then parse as IL time
+    const utcDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return new Date(utcDate.toISOString().replace('Z', '+02:00'));
   }
 
   // File upload handling

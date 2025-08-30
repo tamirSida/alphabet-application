@@ -56,7 +56,10 @@
                 <p>You haven't submitted an application yet.</p>
                 @if (currentAcceptingCohort()) {
                   <p><strong>Good news!</strong> Applications are currently open for {{ currentAcceptingCohort()?.number }}.</p>
-                  <p><strong>Deadline:</strong> {{ currentAcceptingCohort()?.applicationEndDate | date:'fullDate' }}</p>
+                  <div class="deadline-info">
+                    <p><strong>Deadline:</strong></p>
+                    <div class="timezone-display">{{ formatDateWithTimezones(currentAcceptingCohort()?.applicationEndDate) }}</div>
+                  </div>
                   
                   <div class="status-action">
                     <button class="primary-button" (click)="goToApplication()">

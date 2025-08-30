@@ -707,9 +707,9 @@ export class AdminComponent implements OnInit, OnDestroy {
     try {
       const formData = this.cohortForm.value;
       
-      // Combine date and time for application dates
-      const appStartDateTime = new Date(`${formData.applicationStartDate}T${formData.applicationStartTime}`);
-      const appEndDateTime = new Date(`${formData.applicationEndDate}T${formData.applicationEndTime}`);
+      // Combine date and time for application dates in IL timezone
+      const appStartDateTime = this.createDateInILTimezone(formData.applicationStartDate, formData.applicationStartTime);
+      const appEndDateTime = this.createDateInILTimezone(formData.applicationEndDate, formData.applicationEndTime);
       
       if (this.editingCohort()) {
         // Update existing cohort
@@ -719,8 +719,8 @@ export class AdminComponent implements OnInit, OnDestroy {
           number: formData.number,
           applicationStartDate: appStartDateTime,
           applicationEndDate: appEndDateTime,
-          cohortStartDate: new Date(formData.cohortStartDate),
-          cohortEndDate: new Date(formData.cohortEndDate),
+          cohortStartDate: this.createDateInILTimezone(formData.cohortStartDate, '00:00'),
+          cohortEndDate: this.createDateInILTimezone(formData.cohortEndDate, '23:59'),
           classes: cohortClasses,
           lab: cohortLab
         });
@@ -733,8 +733,8 @@ export class AdminComponent implements OnInit, OnDestroy {
           number: formData.number,
           applicationStartDate: appStartDateTime,
           applicationEndDate: appEndDateTime,
-          cohortStartDate: new Date(formData.cohortStartDate),
-          cohortEndDate: new Date(formData.cohortEndDate),
+          cohortStartDate: this.createDateInILTimezone(formData.cohortStartDate, '00:00'),
+          cohortEndDate: this.createDateInILTimezone(formData.cohortEndDate, '23:59'),
           classes: cohortClasses,
           lab: cohortLab
         });
@@ -1132,5 +1132,51 @@ export class AdminComponent implements OnInit, OnDestroy {
     return lab.weeklySchedule
       .map((schedule: any) => `${schedule.day} ${schedule.startTime}-${schedule.endTime}`)
       .join(', ');
+  }
+
+  // Create date in IL timezone
+  private createDateInILTimezone(dateStr: string, timeStr: string): Date {
+    // Use Intl API to create date in IL timezone
+    const isoString = `${dateStr}T${timeStr}:00`;
+    
+    // Create a date assuming it's in IL timezone
+    const tempDate = new Date(isoString);
+    
+    // Get the timezone offset for Israel
+    const ilTimeString = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Asia/Jerusalem',
+      year: 'numeric',
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).format(tempDate);
+    
+    // Create the final date
+    return new Date(ilTimeString.replace(' ', 'T') + 'Z');
+  }
+
+  // Format date for multiple timezones
+  formatDateWithTimezones(date: Date): string {
+    const ilTime = new Intl.DateTimeFormat('en-IL', {
+      timeZone: 'Asia/Jerusalem',
+      dateStyle: 'full',
+      timeStyle: 'short'
+    }).format(date);
+    
+    const ptTime = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles', 
+      dateStyle: 'full',
+      timeStyle: 'short'
+    }).format(date);
+    
+    const etTime = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      dateStyle: 'full', 
+      timeStyle: 'short'
+    }).format(date);
+    
+    return `IL: ${ilTime}\nPT: ${ptTime}\nET: ${etTime}`;
   }
 }

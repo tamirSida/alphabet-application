@@ -541,3 +541,25 @@
     padding: 0.3rem 0.5rem;
   }
 }
+
+/* Timezone Display */
+.deadline-info {
+  margin: 1rem 0;
+}
+
+.deadline-info p {
+  margin-bottom: 0.5rem;
+}
+
+.timezone-display {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-family: 'Gunplay', monospace;
+  font-size: 0.85rem;
+  color: #374151;
+  white-space: pre-line;
+  line-height: 1.4;
+  margin-top: 0.5rem;
+}

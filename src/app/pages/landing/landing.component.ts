@@ -140,4 +140,29 @@ export class LandingComponent implements OnInit, OnDestroy {
   getTimeRemaining() {
     return this.timeRemaining() || { months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
   }
+
+  // Format date for multiple timezones
+  formatDateWithTimezones(date: Date | undefined): string {
+    if (!date) return '';
+    
+    const ilTime = new Intl.DateTimeFormat('en-IL', {
+      timeZone: 'Asia/Jerusalem',
+      dateStyle: 'full',
+      timeStyle: 'short'
+    }).format(date);
+    
+    const ptTime = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles', 
+      dateStyle: 'full',
+      timeStyle: 'short'
+    }).format(date);
+    
+    const etTime = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      dateStyle: 'full', 
+      timeStyle: 'short'
+    }).format(date);
+    
+    return `IL: ${ilTime}\nPT: ${ptTime}\nET: ${etTime}`;
+  }
 }

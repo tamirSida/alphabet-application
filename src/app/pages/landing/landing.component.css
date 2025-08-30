@@ -371,3 +371,25 @@
     min-width: 40px;
   }
 }
+
+/* Timezone Display */
+.deadline-info {
+  margin: 1rem 0;
+}
+
+.deadline-info p {
+  margin-bottom: 0.5rem;
+}
+
+.timezone-display {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-family: 'Gunplay', monospace;
+  font-size: 0.85rem;
+  color: #1e40af;
+  white-space: pre-line;
+  line-height: 1.4;
+  margin-top: 0.5rem;
+}
