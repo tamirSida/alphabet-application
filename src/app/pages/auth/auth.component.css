@@ -216,6 +216,7 @@
   justify-content: center;
   gap: 0.5rem;
   margin-top: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .submit-button:hover:not(:disabled) {
