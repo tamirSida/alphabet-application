@@ -124,16 +124,41 @@
         </div>
 
         <div class="form-group">
-          <label for="phone">Phone Number (Optional)</label>
+          <label for="region">Region</label>
+          <div class="input-group">
+            <i class="fas fa-globe"></i>
+            <select
+              id="region"
+              formControlName="region"
+              class="region-select"
+              (change)="onRegionChange($any($event.target).value)"
+            >
+              <option value="US">United States</option>
+              <option value="IL">Israel</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
           <div class="input-group">
             <i class="fas fa-phone"></i>
             <input
               type="tel"
               id="phone"
               formControlName="phone"
-              placeholder="Enter your phone number"
+              [placeholder]="getPhonePlaceholder()"
+              (input)="formatPhoneInput($event)"
+              [class.error]="registerForm.get('phone')?.touched && registerForm.get('phone')?.errors"
             />
           </div>
+          @if (registerForm.get('phone')?.touched && registerForm.get('phone')?.errors) {
+            <div class="field-error">
+              @if (registerForm.get('phone')?.errors?.['required']) {
+                Phone number is required
+              }
+            </div>
+          }
         </div>
 
         <div class="form-group">

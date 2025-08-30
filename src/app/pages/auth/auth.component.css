@@ -164,10 +164,23 @@
   box-sizing: border-box;
 }
 
-.input-group input:focus {
+.input-group input:focus,
+.input-group select:focus {
   outline: none;
   border-color: #1e293b;
   box-shadow: 0 0 0 3px rgba(30, 41, 59, 0.1);
+}
+
+.region-select {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  background: white;
+  cursor: pointer;
 }
 
 .input-group input.error {
