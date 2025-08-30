@@ -280,7 +280,8 @@ export class ApplicationComponent implements OnInit {
         const serviceGroup = this.applicationForm.get('serviceAvailability');
         const unavailableClasses = serviceGroup?.get('unavailableClasses')?.value || [];
         const hasEmptyReasons = unavailableClasses.some((item: any) => item.reason.trim() === '');
-        return (serviceGroup?.get('countryOfService')?.valid || false) && !hasEmptyReasons;
+        const hasOverLimitReasons = unavailableClasses.some((item: any) => this.getWordCount(item.reason) > 80);
+        return (serviceGroup?.get('countryOfService')?.valid || false) && !hasEmptyReasons && !hasOverLimitReasons;
       case 3:
         return this.applicationForm.get('experienceBackground')?.valid || false;
       case 4:
@@ -290,9 +291,9 @@ export class ApplicationComponent implements OnInit {
       case 6:
         return this.applicationForm.get('shortAnswer')?.valid || false;
       case 7:
-        return this.applicationForm.get('coverLetter')?.valid || false;
-      case 8:
         return this.applicationForm.get('videoIntroduction')?.valid || false;
+      case 8:
+        return this.applicationForm.get('coverLetter')?.valid || false;
       case 9:
         return true; // Friends section is optional
       default:
@@ -389,8 +390,8 @@ export class ApplicationComponent implements OnInit {
       'Skills Assessment',
       'Personal Qualities',
       'Short Answer',
-      'Cover Letter',
       'Video Introduction',
+      'Cover Letter',
       'Friends (Optional)'
     ];
     return titles[step - 1] || '';

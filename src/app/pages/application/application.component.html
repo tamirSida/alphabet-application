@@ -214,7 +214,10 @@
                       class="form-textarea"
                       rows="2"
                       placeholder="Briefly explain why you cannot attend this class..."
-                      maxlength="200"></textarea>
+                      maxlength="480"></textarea>
+                    <div class="word-count">
+                      {{ getWordCount(getUnavailabilityReason(cohortClass.classId)) }}/80 words
+                    </div>
                   </div>
                 }
               }
@@ -809,26 +812,8 @@
         </div>
       }
 
-      <!-- Section 7: Cover Letter -->
+      <!-- Section 7: Video Introduction -->
       @if (currentStep() === 7) {
-        <div class="form-section" formGroupName="coverLetter">
-          <div class="form-group">
-            <label>Cover Letter *</label>
-            <p class="field-description">Write a 300-word cover letter explaining why you should be accepted to the program.</p>
-            <textarea
-              formControlName="content"
-              class="form-textarea"
-              rows="12"
-              placeholder="Write your cover letter here..."></textarea>
-            <div class="word-count">
-              {{ getWordCount(applicationForm.get('coverLetter.content')?.value || '') }}/300 words
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- Section 8: Video Introduction -->
-      @if (currentStep() === 8) {
         <div class="form-section" formGroupName="videoIntroduction">
           <div class="form-group">
             <label>Video Introduction *</label>
@@ -851,6 +836,24 @@
                   <li>Set YouTube videos to "Unlisted" for privacy</li>
                 </ul>
               </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Section 8: Cover Letter -->
+      @if (currentStep() === 8) {
+        <div class="form-section" formGroupName="coverLetter">
+          <div class="form-group">
+            <label>Cover Letter *</label>
+            <p class="field-description">Write a 300-word cover letter explaining why you should be accepted to the program.</p>
+            <textarea
+              formControlName="content"
+              class="form-textarea"
+              rows="12"
+              placeholder="Write your cover letter here..."></textarea>
+            <div class="word-count">
+              {{ getWordCount(applicationForm.get('coverLetter.content')?.value || '') }}/300 words
             </div>
           </div>
         </div>
