@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService, ApplicationService, CohortService, UserService } from '../../services';
@@ -12,13 +12,15 @@ import { Application, Cohort, User } from '../../models';
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   user = signal<User | null>(null);
   application = signal<Application | null>(null);
   cohort = signal<Cohort | null>(null);
   currentAcceptingCohort = signal<Cohort | null>(null);
   isLoading = signal(true);
   error = signal<string | null>(null);
+  timeRemaining = signal<{months: number, weeks: number, days: number, hours: number, minutes: number, seconds: number} | null>(null);
+  private countdownInterval: any;
 
   constructor(
     private authService: AuthService,
@@ -42,6 +44,7 @@ export class DashboardComponent implements OnInit {
 
     await this.loadUserData();
     this.updateStatusDisplay();
+    this.startCountdown();
     this.isLoading.set(false);
   }
 
@@ -176,5 +179,54 @@ export class DashboardComponent implements OnInit {
       operatorId: user.operatorId,
       reviewDate: application.reviewedAt ? application.reviewedAt.toLocaleDateString() : 'TBD'
     });
+  }
+
+  ngOnDestroy() {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+    }
+  }
+
+  private startCountdown() {
+    // Clear existing interval
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+    }
+
+    // Update countdown every second
+    this.updateCountdown();
+    this.countdownInterval = setInterval(() => {
+      this.updateCountdown();
+    }, 1000); // Update every second
+  }
+
+  private updateCountdown() {
+    const cohort = this.currentAcceptingCohort();
+    if (!cohort || this.user()?.status !== 'not_submitted') {
+      this.timeRemaining.set(null);
+      return;
+    }
+
+    const now = new Date();
+    const deadline = cohort.applicationEndDate;
+    const diffMs = deadline.getTime() - now.getTime();
+
+    if (diffMs <= 0) {
+      this.timeRemaining.set({ months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 });
+      return;
+    }
+
+    const months = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30));
+    const weeks = Math.floor((diffMs % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60 * 24 * 7));
+    const days = Math.floor((diffMs % (1000 * 60 * 60 * 24 * 7)) / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+    this.timeRemaining.set({ months, weeks, days, hours, minutes, seconds });
+  }
+
+  getTimeRemaining() {
+    return this.timeRemaining() || { months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
   }
 }

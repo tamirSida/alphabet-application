@@ -45,8 +45,10 @@
             <h2>Application Status</h2>
           </div>
           <div class="status-content">
-            <div [class]="'status-badge ' + statusDisplay().class">
-              {{ statusDisplay().text }}
+            <div class="status-badge-row">
+              <div [class]="'status-badge ' + statusDisplay().class">
+                {{ statusDisplay().text }}
+              </div>
             </div>
             
             @if (user()?.status === 'not_submitted') {
@@ -55,6 +57,31 @@
                 @if (currentAcceptingCohort()) {
                   <p><strong>Good news!</strong> Applications are currently open for {{ currentAcceptingCohort()?.number }}.</p>
                   <p><strong>Deadline:</strong> {{ currentAcceptingCohort()?.applicationEndDate | date:'fullDate' }}</p>
+                  
+                  <div class="status-action">
+                    <button class="primary-button" (click)="goToApplication()">
+                      <i class="fas fa-paper-plane"></i>
+                      Start Application
+                    </button>
+                    @if (currentAcceptingCohort()) {
+                      <div class="countdown-timer">
+                        <div class="countdown-label">Time to submit:</div>
+                        <div class="countdown-display">
+                          <span class="time-unit">{{ getTimeRemaining().months }}<small>M</small></span>
+                          <span class="separator">:</span>
+                          <span class="time-unit">{{ getTimeRemaining().weeks }}<small>W</small></span>
+                          <span class="separator">:</span>
+                          <span class="time-unit">{{ getTimeRemaining().days }}<small>D</small></span>
+                          <span class="separator">:</span>
+                          <span class="time-unit">{{ getTimeRemaining().hours }}<small>H</small></span>
+                          <span class="separator">:</span>
+                          <span class="time-unit">{{ getTimeRemaining().minutes }}<small>M</small></span>
+                          <span class="separator">:</span>
+                          <span class="time-unit">{{ getTimeRemaining().seconds }}<small>S</small></span>
+                        </div>
+                      </div>
+                    }
+                  </div>
                 } @else {
                   <p>No applications are currently being accepted. Check back later for upcoming cohorts.</p>
                 }
@@ -81,17 +108,6 @@
 
         <!-- Action Cards -->
         <div class="action-cards">
-          @if (canApply) {
-            <div class="action-card apply-card">
-              <i class="fas fa-edit"></i>
-              <h3>Apply Now</h3>
-              <p>Start your application for {{ currentAcceptingCohort()?.number }}.</p>
-              <button class="primary-button" (click)="goToApplication()">
-                <i class="fas fa-paper-plane"></i>
-                Start Application
-              </button>
-            </div>
-          }
 
           @if (hasApplication) {
             <div class="action-card view-card">
