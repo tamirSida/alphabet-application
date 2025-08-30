@@ -116,35 +116,35 @@ export class ApplicationComponent implements OnInit {
       personalQualities: this.fb.group({
         proactivePersonality: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', Validators.required]
+          example: ['', [Validators.required, this.wordCountValidator(100)]]
         }),
         persistenceHandleDifficulties: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', Validators.required]
+          example: ['', [Validators.required, this.wordCountValidator(100)]]
         }),
         performUnderStress: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', Validators.required]
+          example: ['', [Validators.required, this.wordCountValidator(100)]]
         }),
         independence: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', Validators.required]
+          example: ['', [Validators.required, this.wordCountValidator(100)]]
         }),
         teamwork: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', Validators.required]
+          example: ['', [Validators.required, this.wordCountValidator(100)]]
         }),
         mentalFlexibility: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', Validators.required]
+          example: ['', [Validators.required, this.wordCountValidator(100)]]
         }),
         passionForProjects: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', Validators.required]
+          example: ['', [Validators.required, this.wordCountValidator(100)]]
         }),
         creativeThinking: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', Validators.required]
+          example: ['', [Validators.required, this.wordCountValidator(100)]]
         })
       }),
       

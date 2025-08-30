@@ -592,7 +592,11 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."></textarea>
+              placeholder="Give a brief example from your past experience..."
+              maxlength="600"></textarea>
+            <div class="word-count">
+              {{ getWordCount(applicationForm.get('personalQualities.proactivePersonality.example')?.value) }}/100 words
+            </div>
           </div>
 
           <div class="quality-item" formGroupName="persistenceHandleDifficulties">
@@ -615,7 +619,11 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."></textarea>
+              placeholder="Give a brief example from your past experience..."
+              maxlength="600"></textarea>
+            <div class="word-count">
+              {{ getWordCount(applicationForm.get('personalQualities.persistenceHandleDifficulties.example')?.value) }}/100 words
+            </div>
           </div>
 
           <div class="quality-item" formGroupName="performUnderStress">
@@ -638,7 +646,11 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."></textarea>
+              placeholder="Give a brief example from your past experience..."
+              maxlength="600"></textarea>
+            <div class="word-count">
+              {{ getWordCount(applicationForm.get('personalQualities.performUnderStress.example')?.value) }}/100 words
+            </div>
           </div>
 
           <div class="quality-item" formGroupName="independence">
@@ -661,7 +673,11 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."></textarea>
+              placeholder="Give a brief example from your past experience..."
+              maxlength="600"></textarea>
+            <div class="word-count">
+              {{ getWordCount(applicationForm.get('personalQualities.independence.example')?.value) }}/100 words
+            </div>
           </div>
 
           <div class="quality-item" formGroupName="teamwork">
@@ -684,7 +700,11 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."></textarea>
+              placeholder="Give a brief example from your past experience..."
+              maxlength="600"></textarea>
+            <div class="word-count">
+              {{ getWordCount(applicationForm.get('personalQualities.teamwork.example')?.value) }}/100 words
+            </div>
           </div>
 
           <div class="quality-item" formGroupName="mentalFlexibility">
@@ -707,7 +727,11 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."></textarea>
+              placeholder="Give a brief example from your past experience..."
+              maxlength="600"></textarea>
+            <div class="word-count">
+              {{ getWordCount(applicationForm.get('personalQualities.mentalFlexibility.example')?.value) }}/100 words
+            </div>
           </div>
 
           <div class="quality-item" formGroupName="passionForProjects">
@@ -730,7 +754,11 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."></textarea>
+              placeholder="Give a brief example from your past experience..."
+              maxlength="600"></textarea>
+            <div class="word-count">
+              {{ getWordCount(applicationForm.get('personalQualities.passionForProjects.example')?.value) }}/100 words
+            </div>
           </div>
 
           <div class="quality-item" formGroupName="creativeThinking">
@@ -753,7 +781,11 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."></textarea>
+              placeholder="Give a brief example from your past experience..."
+              maxlength="600"></textarea>
+            <div class="word-count">
+              {{ getWordCount(applicationForm.get('personalQualities.creativeThinking.example')?.value) }}/100 words
+            </div>
           </div>
         </div>
       }
