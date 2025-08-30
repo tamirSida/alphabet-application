@@ -2,7 +2,7 @@ Application Status Update
 
 Dear {firstName} {lastName},
 
-Thank you for your interest in the Alphabet Program and for taking the time to submit your application.
+Thank you for your interest in the Alpha-bet Program and for taking the time to submit your application.
 
 After careful review of all applications, we regret to inform you that we are unable to offer you a place in the current cohort. This decision was extremely difficult given the high quality of applications we received.
 
