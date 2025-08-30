@@ -105,7 +105,7 @@ export class ApplicationComponent implements OnInit {
         programming: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
         marketingSales: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
         management: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
-        graphicDesign: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
+        publicSpeaking: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
         other: this.fb.group({
           skill: [''],
           rating: [null, [Validators.min(1), Validators.max(5)]]

@@ -617,8 +617,8 @@
 
 /* Skills Rating (1-5 scale) */
 .skills-intro, .qualities-intro {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: rgba(30, 64, 175, 0.1);
+  border: 1px solid rgba(30, 64, 175, 0.2);
   border-radius: 12px;
   padding: 1rem;
   margin-bottom: 2rem;
@@ -627,13 +627,13 @@
 
 .skills-intro p, .qualities-intro p {
   margin: 0;
-  color: #e5e7eb;
+  color: #1f2937;
   font-weight: 500;
 }
 
 .skill-item, .quality-item {
-  background: rgba(17, 24, 39, 0.3);
-  border: 1px solid rgba(30, 41, 59, 0.3);
+  background: white;
+  border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
@@ -644,7 +644,7 @@
   margin-bottom: 1rem;
   font-size: 1rem;
   font-weight: 600;
-  color: #e5e7eb;
+  color: #374151;
 }
 
 .rating-scale-5 {
@@ -667,14 +667,14 @@
 }
 
 .rating-option:hover {
-  background: rgba(30, 41, 59, 0.3);
+  background: rgba(30, 64, 175, 0.1);
   transform: translateY(-2px);
 }
 
 .rating-option.selected {
-  background: rgba(226, 232, 240, 0.1);
+  background: rgba(30, 64, 175, 0.1);
   transform: scale(1.05);
-  border: 2px solid #e2e8f0;
+  border: 2px solid #1e40af;
   border-radius: 12px;
 }
 
@@ -682,35 +682,35 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: rgba(30, 41, 59, 0.5);
-  border: 2px solid rgba(30, 41, 59, 0.7);
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #9ca3af;
+  color: #6b7280;
   transition: all 0.3s ease;
   margin-bottom: 0.5rem;
 }
 
 .rating-option.selected .rating-circle {
-  background: #e2e8f0;
-  border-color: #e2e8f0;
-  color: #1e293b;
+  background: #1e40af;
+  border-color: #1e40af;
+  color: white;
   font-weight: 900;
-  box-shadow: 0 0 0 3px rgba(226, 232, 240, 0.3);
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.3);
 }
 
 .rating-label {
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: #6b7280;
   text-align: center;
   font-weight: 500;
 }
 
 .rating-option.selected .rating-label {
-  color: #e5e7eb;
+  color: #1f2937;
   font-weight: 600;
 }
 
@@ -939,8 +939,8 @@
 
 /* Other Skill Section */
 .other-skill-section {
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgba(30, 64, 175, 0.1);
+  border: 1px solid rgba(30, 64, 175, 0.2);
   border-radius: 16px;
   padding: 1.5rem;
   margin-top: 1.5rem;

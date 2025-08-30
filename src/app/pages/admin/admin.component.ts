@@ -1036,7 +1036,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     let maxScore = 0;
     
     // Add up all the standard skills (1-5 scale)
-    const standardSkills = ['aiDailyUse', 'programming', 'marketingSales', 'management', 'graphicDesign'];
+    const standardSkills = ['aiDailyUse', 'programming', 'marketingSales', 'management', 'publicSpeaking'];
     
     standardSkills.forEach(skill => {
       if (skills[skill] !== undefined) {

@@ -40,7 +40,7 @@ export interface Skills {
   programming: number; // 1-5
   marketingSales: number; // 1-5
   management: number; // 1-5
-  graphicDesign: number; // 1-5
+  publicSpeaking: number; // 1-5
   other?: {
     skill: string;
     rating: number; // 1-5

@@ -396,7 +396,7 @@
       @if (currentStep() === 4) {
         <div class="form-section" formGroupName="skills">
           <div class="skills-intro">
-            <p>Rate your skills on a scale of 1-5 (1 = Beginner, 5 = Expert)</p>
+            <p>Rate your skills on a scale of 1-5 • 1: Beginner • 5: Expert</p>
           </div>
 
           <div class="skill-item">
@@ -446,7 +446,7 @@
           </div>
 
           <div class="skill-item">
-            <label>Marketing & Sales *</label>
+            <label>Product Marketing & Sales Experience *</label>
             <div class="rating-scale-5">
               @for (rating of [1,2,3,4,5]; track rating) {
                 <div
@@ -469,7 +469,7 @@
           </div>
 
           <div class="skill-item">
-            <label>Management *</label>
+            <label>Leadership Experience *</label>
             <div class="rating-scale-5">
               @for (rating of [1,2,3,4,5]; track rating) {
                 <div
@@ -492,13 +492,13 @@
           </div>
 
           <div class="skill-item">
-            <label>Graphic Design *</label>
+            <label>Public Speaking & Presentation Skills *</label>
             <div class="rating-scale-5">
               @for (rating of [1,2,3,4,5]; track rating) {
                 <div
                   class="rating-option"
-                  [class.selected]="applicationForm.get('skills.graphicDesign')?.value === rating"
-                  (click)="applicationForm.get('skills.graphicDesign')?.setValue(rating)">
+                  [class.selected]="applicationForm.get('skills.publicSpeaking')?.value === rating"
+                  (click)="applicationForm.get('skills.publicSpeaking')?.setValue(rating)">
                   <div class="rating-circle">{{ rating }}</div>
                   <div class="rating-label">
                     @switch (rating) {
