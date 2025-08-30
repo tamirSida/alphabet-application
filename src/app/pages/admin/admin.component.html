@@ -235,6 +235,19 @@
                         @for (unavailable of selectedApplication()?.formData?.serviceAvailability?.unavailableClasses || []; track unavailable.classId) {
                           <div class="unavailable-class">
                             <strong>{{ getClassName(unavailable.classId) }}:</strong>
+                            @if (selectedApplication()?.cohort?.classes) {
+                              <div class="class-details">
+                                @for (cohortClass of selectedApplication()?.cohort?.classes || []; track cohortClass.classId) {
+                                  @if (cohortClass.classId === unavailable.classId) {
+                                    <div class="class-schedule-info">{{ formatClassSchedule(cohortClass) }}</div>
+                                    @if (selectedApplication()?.cohort?.lab) {
+                                      <div class="lab-schedule-info"><strong>Lab:</strong> {{ formatLabSchedule(selectedApplication()?.cohort?.lab) }}</div>
+                                    }
+                                  }
+                                }
+                              </div>
+                            }
+                            <div class="reason-header">Reason:</div>
                             <span>{{ unavailable.reason }}</span>
                           </div>
                         }
@@ -432,8 +445,9 @@
                   <div class="info-item">
                     <label>Video URL:</label>
                     <span>
-                      <a [href]="selectedApplication()?.formData?.videoIntroduction?.videoUrl" target="_blank" rel="noopener noreferrer">
-                        {{ selectedApplication()?.formData?.videoIntroduction?.videoUrl }}
+                      <a [href]="selectedApplication()?.formData?.videoIntroduction?.videoUrl" target="_blank" rel="noopener noreferrer" class="video-play-link">
+                        <i class="fas fa-play"></i>
+                        Play Video
                       </a>
                     </span>
                   </div>

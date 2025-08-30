@@ -1121,4 +1121,16 @@ export class AdminComponent implements OnInit, OnDestroy {
         return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
   }
+
+  formatClassSchedule(cohortClass: any): string {
+    return cohortClass.weeklySchedule
+      .map((schedule: any) => `${schedule.day} ${schedule.startTime}-${schedule.endTime}`)
+      .join(', ');
+  }
+
+  formatLabSchedule(lab: any): string {
+    return lab.weeklySchedule
+      .map((schedule: any) => `${schedule.day} ${schedule.startTime}-${schedule.endTime}`)
+      .join(', ');
+  }
 }

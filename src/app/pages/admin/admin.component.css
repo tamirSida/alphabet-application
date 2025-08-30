@@ -616,6 +616,34 @@
   font-style: italic;
 }
 
+.class-details {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: #f8fafc;
+  border-radius: 4px;
+  border-left: 3px solid #3b82f6;
+}
+
+.class-schedule-info {
+  color: #3b82f6;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.lab-schedule-info {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.reason-header {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
 .missing-data {
   color: #9ca3af;
   font-style: italic;
@@ -658,4 +686,29 @@
 .uploaded-file-display i.fa-external-link-alt {
   color: #6b7280;
   font-size: 0.9rem;
+}
+
+/* Video Play Link */
+.video-play-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #3b82f6;
+  color: white !important;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.video-play-link:hover {
+  background: #2563eb;
+  text-decoration: none;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.video-play-link i {
+  font-size: 1rem;
 }
