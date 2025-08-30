@@ -191,6 +191,11 @@
                   <div class="class-schedule">
                     {{ formatClassSchedule(cohortClass) }}
                   </div>
+                  @if (cohort()?.lab) {
+                    <div class="lab-schedule">
+                      <strong>Lab:</strong> {{ formatLabSchedule(cohort()!.lab) }}
+                    </div>
+                  }
                   <div class="selection-indicator">
                     @if (isClassSelected(cohortClass.classId)) {
                       <i class="fas fa-check-circle"></i>

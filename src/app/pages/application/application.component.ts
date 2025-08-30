@@ -365,6 +365,12 @@ export class ApplicationComponent implements OnInit {
       .join(', ');
   }
 
+  formatLabSchedule(lab: any): string {
+    return lab.weeklySchedule
+      .map((schedule: any) => `${schedule.day} ${schedule.startTime}-${schedule.endTime}`)
+      .join(', ');
+  }
+
   // File upload handling
   async onFileSelected(event: any, field: string) {
     const file = event.target.files[0];
