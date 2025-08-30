@@ -10,6 +10,15 @@ export interface CohortClass {
   enrolled: number;
 }
 
+export interface CohortLab {
+  name: string; // Always "Lab"
+  weeklySchedule: {
+    day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+    startTime: string; // "18:00" 
+    endTime: string; // "21:00"
+  }[];
+}
+
 export interface Cohort {
   cohortId: string;
   number: string;
@@ -19,6 +28,7 @@ export interface Cohort {
   cohortEndDate: Date;
   status: 'upcoming' | 'accepting_applications' | 'closed' | 'in_progress' | 'completed';
   classes: CohortClass[];
+  lab: CohortLab;
 }
 
 export interface CreateCohortRequest {
@@ -28,4 +38,5 @@ export interface CreateCohortRequest {
   cohortStartDate: Date;
   cohortEndDate: Date;
   classes: Omit<CohortClass, 'classId' | 'enrolled'>[];
+  lab: CohortLab;
 }

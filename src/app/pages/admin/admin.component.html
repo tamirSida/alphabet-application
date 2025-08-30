@@ -895,6 +895,65 @@
                   }
                 </div>
 
+                <!-- Lab Section -->
+                <div class="lab-section">
+                  <div class="lab-header">
+                    <h3>Lab Configuration</h3>
+                    <span class="lab-subtitle">One lab session shared by all classes</span>
+                  </div>
+
+                  <div formGroupName="lab" class="lab-item">
+                    <!-- Weekdays Selection for Lab -->
+                    <div class="weekdays-section">
+                      <label class="section-label">Select Lab Weekdays</label>
+                      <div class="weekdays-grid" formGroupName="weekdays">
+                        @for (day of ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']; track day) {
+                          <div class="weekday-item">
+                            <input 
+                              type="checkbox"
+                              [id]="'lab-weekday-' + day"
+                              [formControlName]="day"
+                              (change)="onLabWeekdayChange(day, $any($event.target).checked)">
+                            <label [for]="'lab-weekday-' + day" class="weekday-label">
+                              {{ day.substring(0, 3) }}
+                            </label>
+                          </div>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Times for Selected Days -->
+                    <div class="times-section" formGroupName="times">
+                      <label class="section-label">Lab Times</label>
+                      <div class="times-grid">
+                        @for (day of getSelectedLabWeekdays(); track day) {
+                          <div class="time-row" [formGroupName]="day">
+                            <div class="day-name">{{ day }}</div>
+                            <div class="time-inputs">
+                              <input
+                                type="time"
+                                formControlName="startTime"
+                                class="form-input time-input">
+                              <span class="time-separator">to</span>
+                              <input
+                                type="time"
+                                formControlName="endTime"
+                                class="form-input time-input">
+                            </div>
+                          </div>
+                        }
+                      </div>
+                      
+                      @if (getSelectedLabWeekdays().length === 0) {
+                        <div class="no-days-selected">
+                          <i class="fas fa-info-circle"></i>
+                          Select weekdays above to set lab times
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+
                 <div class="form-actions">
                   <button type="button" class="secondary-button" (click)="toggleCohortForm()">
                     Cancel

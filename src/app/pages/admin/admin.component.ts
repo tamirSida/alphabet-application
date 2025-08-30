@@ -74,7 +74,8 @@ export class AdminComponent implements OnInit, OnDestroy {
       applicationEndTime: ['23:59', Validators.required],
       cohortStartDate: ['', Validators.required],
       cohortEndDate: ['', Validators.required],
-      classes: this.fb.array([], [Validators.required, Validators.minLength(1)])
+      classes: this.fb.array([], [Validators.required, Validators.minLength(1)]),
+      lab: this.createLabFormGroup()
     });
 
     // Add initial class
@@ -694,25 +695,29 @@ export class AdminComponent implements OnInit, OnDestroy {
       if (this.editingCohort()) {
         // Update existing cohort
         const cohortClasses = this.convertFormClassesToCohortClasses(formData.classes);
+        const cohortLab = this.convertFormLabToCohortLab(formData.lab);
         await this.cohortService.updateCohort(this.editingCohort()!.cohortId, {
           number: formData.number,
           applicationStartDate: appStartDateTime,
           applicationEndDate: appEndDateTime,
           cohortStartDate: new Date(formData.cohortStartDate),
           cohortEndDate: new Date(formData.cohortEndDate),
-          classes: cohortClasses
+          classes: cohortClasses,
+          lab: cohortLab
         });
         this.success.set('Cohort updated successfully!');
       } else {
         // Create new cohort
         const cohortClasses = this.convertFormClassesToCohortClasses(formData.classes);
+        const cohortLab = this.convertFormLabToCohortLab(formData.lab);
         await this.cohortService.createCohort({
           number: formData.number,
           applicationStartDate: appStartDateTime,
           applicationEndDate: appEndDateTime,
           cohortStartDate: new Date(formData.cohortStartDate),
           cohortEndDate: new Date(formData.cohortEndDate),
-          classes: cohortClasses
+          classes: cohortClasses,
+          lab: cohortLab
         });
         this.success.set('Cohort created successfully!');
       }
@@ -891,6 +896,26 @@ export class AdminComponent implements OnInit, OnDestroy {
     });
   }
 
+  createLabFormGroup(): FormGroup {
+    return this.fb.group({
+      name: ['Lab'],
+      weekdays: this.fb.group({
+        Monday: [false],
+        Tuesday: [false],
+        Wednesday: [false],
+        Thursday: [false],
+        Friday: [false]
+      }),
+      times: this.fb.group({
+        Monday: this.fb.group({ startTime: ['18:00'], endTime: ['21:00'] }),
+        Tuesday: this.fb.group({ startTime: ['18:00'], endTime: ['21:00'] }),
+        Wednesday: this.fb.group({ startTime: ['18:00'], endTime: ['21:00'] }),
+        Thursday: this.fb.group({ startTime: ['18:00'], endTime: ['21:00'] }),
+        Friday: this.fb.group({ startTime: ['18:00'], endTime: ['21:00'] })
+      })
+    });
+  }
+
   addNewClass() {
     const classForm = this.createClassFormGroup();
     
@@ -937,6 +962,23 @@ export class AdminComponent implements OnInit, OnDestroy {
     return Object.keys(weekdaysGroup.controls).filter(day => weekdaysGroup.get(day)?.value);
   }
 
+  // Lab-specific methods
+  onLabWeekdayChange(day: string, checked: boolean): void {
+    const labControl = this.cohortForm.get('lab') as FormGroup;
+    const weekdaysGroup = labControl?.get('weekdays') as FormGroup;
+    if (!weekdaysGroup) return;
+    
+    weekdaysGroup.get(day)?.setValue(checked);
+  }
+
+  getSelectedLabWeekdays(): string[] {
+    const labControl = this.cohortForm.get('lab') as FormGroup;
+    const weekdaysGroup = labControl?.get('weekdays') as FormGroup;
+    if (!weekdaysGroup) return [];
+    
+    return Object.keys(weekdaysGroup.controls).filter(day => weekdaysGroup.get(day)?.value);
+  }
+
   // Convert form classes to cohort classes format
   private convertFormClassesToCohortClasses(formClasses: any[]): any[] {
     return formClasses.map(formClass => {
@@ -954,6 +996,22 @@ export class AdminComponent implements OnInit, OnDestroy {
         weeklySchedule
       };
     });
+  }
+
+  // Convert form lab to cohort lab format
+  private convertFormLabToCohortLab(formLab: any): any {
+    const selectedDays = Object.keys(formLab.weekdays).filter(day => formLab.weekdays[day]);
+    
+    const weeklySchedule = selectedDays.map(day => ({
+      day: day as 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday',
+      startTime: formLab.times[day].startTime,
+      endTime: formLab.times[day].endTime
+    }));
+
+    return {
+      name: 'Lab',
+      weeklySchedule
+    };
   }
 
   getStatusClass(status: string): string {

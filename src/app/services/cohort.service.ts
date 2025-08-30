@@ -98,7 +98,8 @@ export class CohortService {
         cohortStartDate,
         cohortEndDate,
         status: currentStatus,
-        classes: classes
+        classes: classes,
+        lab: data['lab'] || { name: 'Lab', weeklySchedule: [] } // Default lab for backward compatibility
       } as Cohort;
     });
   }
@@ -131,7 +132,8 @@ export class CohortService {
         cohortStartDate,
         cohortEndDate,
         status: currentStatus,
-        classes: classes
+        classes: classes,
+        lab: data['lab'] || { name: 'Lab', weeklySchedule: [] } // Default lab for backward compatibility
       } as Cohort;
     }
     return null;
