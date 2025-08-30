@@ -369,39 +369,17 @@
               <h3>Tell us about your project idea</h3>
 
               <div class="form-group">
-                <label>Problem Statement *</label>
+                <label>Describe Your Idea *</label>
+                <p class="field-description">In 200 words, describe your idea - address the problem you wish to solve, how you plan to solve it, and your target market.</p>
                 <textarea
-                  formControlName="problemStatement"
+                  formControlName="description"
                   class="form-textarea"
-                  rows="3"
-                  placeholder="What problem are you aiming to solve?"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Idea Summary *</label>
-                <textarea
-                  formControlName="ideaSummary"
-                  class="form-textarea"
-                  rows="3"
-                  placeholder="Briefly explain your proposed solution."></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Solution Approach *</label>
-                <textarea
-                  formControlName="solutionApproach"
-                  class="form-textarea"
-                  rows="3"
-                  placeholder="How will your idea solve the problem?"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Market & Clients *</label>
-                <textarea
-                  formControlName="marketClients"
-                  class="form-textarea"
-                  rows="3"
-                  placeholder="Briefly describe the relevant market and potential clients."></textarea>
+                  rows="8"
+                  placeholder="Describe your business/project idea, the problem it solves, your approach, and target market..."
+                  maxlength="1200"></textarea>
+                <div class="word-count">
+                  {{ getWordCount(applicationForm.get('experienceBackground.projectIdea.description')?.value) }}/200 words
+                </div>
               </div>
             </div>
           }

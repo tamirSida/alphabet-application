@@ -92,10 +92,7 @@ export class ApplicationComponent implements OnInit {
         professionalExperience: ['', this.wordCountValidator(150)],
         hasProjectIdea: ['', Validators.required],
         projectIdea: this.fb.group({
-          problemStatement: [''],
-          ideaSummary: [''],
-          solutionApproach: [''],
-          marketClients: ['']
+          description: ['']
         })
       }),
       
@@ -186,14 +183,10 @@ export class ApplicationComponent implements OnInit {
     this.applicationForm.get('experienceBackground.hasProjectIdea')?.valueChanges.subscribe(hasIdea => {
       const projectIdeaGroup = this.applicationForm.get('experienceBackground.projectIdea') as FormGroup;
       if (hasIdea === 'Yes') {
-        Object.keys(projectIdeaGroup?.controls || {}).forEach(key => {
-          projectIdeaGroup?.get(key)?.setValidators(Validators.required);
-        });
+        projectIdeaGroup?.get('description')?.setValidators([Validators.required, this.wordCountValidator(200)]);
       } else {
-        Object.keys(projectIdeaGroup?.controls || {}).forEach(key => {
-          projectIdeaGroup?.get(key)?.clearValidators();
-          projectIdeaGroup?.get(key)?.setValue('');
-        });
+        projectIdeaGroup?.get('description')?.clearValidators();
+        projectIdeaGroup?.get('description')?.setValue('');
       }
       projectIdeaGroup?.updateValueAndValidity();
     });

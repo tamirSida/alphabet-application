@@ -30,11 +30,8 @@ export interface ExperienceBackground {
   professionalExperience?: string; // max 150 words, optional
   hasProjectIdea: 'Yes' | 'No'; // New question to address feedback
   projectIdea?: {
-    problemStatement: string;
-    ideaSummary: string;
-    solutionApproach: string;
-    marketClients: string;
-  }; // max 200 words total, optional if hasProjectIdea is No
+    description: string; // Combined description covering problem, solution, and market
+  }; // max 200 words, optional if hasProjectIdea is No
 }
 
 // Section 4: Skills (1-5 scale)
