@@ -242,6 +242,23 @@
             </div>
           </div>
 
+          <div class="form-row">
+            <div class="form-group">
+              <label>Military Draft Date</label>
+              <input 
+                type="date" 
+                formControlName="militaryDraftDate" 
+                class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Military Release Date</label>
+              <input 
+                type="date" 
+                formControlName="militaryReleaseDate" 
+                class="form-input">
+            </div>
+          </div>
+
           <div class="form-group">
             <label>Military Service Description *</label>
             <textarea 
@@ -253,6 +270,38 @@
             <div class="word-count">
               {{ getWordCount(applicationForm.get('experienceBackground.militaryServiceDescription')?.value) }}/75 words
             </div>
+          </div>
+
+          <div class="form-group" formGroupName="proofOfService">
+            <label>Proof of Military Service</label>
+            <p class="field-description">Upload a document proving your military service (PDF, JPG, JPEG, PNG accepted)</p>
+            
+            @if (!applicationForm.get('experienceBackground.proofOfService.fileName')?.value) {
+              <div class="file-upload-area" (click)="fileInput.click()">
+                <input 
+                  #fileInput
+                  type="file" 
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  style="display: none;"
+                  (change)="onFileSelected($event, 'experienceBackground.proofOfService')">
+                <div class="upload-placeholder">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <p>Click to upload proof of service</p>
+                  <small>PDF, JPG, JPEG, PNG (max 5MB)</small>
+                </div>
+              </div>
+            } @else {
+              <div class="uploaded-file">
+                <i class="fas fa-file-alt"></i>
+                <span>{{ applicationForm.get('experienceBackground.proofOfService.fileName')?.value }}</span>
+                <button 
+                  type="button" 
+                  class="remove-file" 
+                  (click)="removeFile('experienceBackground.proofOfService')">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            }
           </div>
 
           <div class="form-group">

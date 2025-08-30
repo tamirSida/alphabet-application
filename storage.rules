@@ -1,0 +1,14 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Proof of service documents
+    match /proofs-of-service/{userId}/{allPaths=**} {
+      // Allow authenticated users to upload their own files
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Allow admins to read all files
+      allow read: if request.auth != null && 
+        exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+        get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+  }
+}

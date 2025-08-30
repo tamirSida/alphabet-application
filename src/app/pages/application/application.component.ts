@@ -2,8 +2,9 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { AuthService, CohortService, ApplicationService, UserService } from '../../services';
+import { AuthService, CohortService, ApplicationService, UserService, FirebaseService } from '../../services';
 import { Cohort, ApplicationFormData, CreateApplicationRequest, CohortClass } from '../../models';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 @Component({
   selector: 'app-application',
@@ -32,6 +33,7 @@ export class ApplicationComponent implements OnInit {
     private cohortService: CohortService,
     private applicationService: ApplicationService,
     private userService: UserService,
+    private firebaseService: FirebaseService,
     public router: Router,
     private route: ActivatedRoute
   ) {
@@ -74,7 +76,13 @@ export class ApplicationComponent implements OnInit {
       // Section 3: Experience & Background
       experienceBackground: this.fb.group({
         combatService: ['', Validators.required],
+        militaryDraftDate: [''],
+        militaryReleaseDate: [''],
         militaryServiceDescription: ['', [Validators.required, this.wordCountValidator(75)]],
+        proofOfService: this.fb.group({
+          fileUrl: [''],
+          fileName: ['']
+        }),
         professionalExperience: ['', this.wordCountValidator(150)],
         hasProjectIdea: ['', Validators.required],
         projectIdea: this.fb.group({
@@ -372,7 +380,7 @@ export class ApplicationComponent implements OnInit {
   }
 
   // File upload handling
-  async onFileSelected(event: any, field: string) {
+  async onFileSelected(event: any, fieldPath: string) {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -383,24 +391,32 @@ export class ApplicationComponent implements OnInit {
     }
 
     // Validate file type
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
-      this.error.set('Only PDF, DOC, and DOCX files are allowed');
+      this.error.set('Only PDF, JPG, JPEG, and PNG files are allowed');
       return;
     }
 
     try {
       this.isLoading.set(true);
       
-      // TODO: Upload to Firebase Storage
-      // For now, we'll simulate the upload and store the file name
-      const fileUrl = `uploads/${field}_${Date.now()}_${file.name}`;
+      // Upload to Firebase Storage
+      const timestamp = Date.now();
+      const userId = this.authService.currentUser()?.uid;
+      const fileName = `${timestamp}_${file.name}`;
+      const filePath = `proofs-of-service/${userId}/${fileName}`;
       
-      this.applicationForm.patchValue({
-        [field]: {
-          fileUrl: fileUrl,
-          fileName: file.name
-        }
+      // Create storage reference and upload
+      const storageRef = ref(this.firebaseService.storage, filePath);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      // Update the nested form path
+      const pathParts = fieldPath.split('.');
+      const formGroup = this.applicationForm.get(pathParts.slice(0, -1).join('.'));
+      formGroup?.patchValue({
+        fileUrl: downloadURL,
+        fileName: file.name
       });
 
       this.success.set('File uploaded successfully!');
@@ -414,12 +430,12 @@ export class ApplicationComponent implements OnInit {
     }
   }
 
-  removeFile(field: string) {
-    this.applicationForm.patchValue({
-      [field]: {
-        fileUrl: '',
-        fileName: ''
-      }
+  removeFile(fieldPath: string) {
+    const pathParts = fieldPath.split('.');
+    const formGroup = this.applicationForm.get(pathParts.slice(0, -1).join('.'));
+    formGroup?.patchValue({
+      fileUrl: '',
+      fileName: ''
     });
   }
 }
