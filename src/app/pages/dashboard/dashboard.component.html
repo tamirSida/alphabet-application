@@ -95,11 +95,11 @@
               </div>
             } @else if (user()?.status === 'accepted') {
               <div class="status-description">
-                <pre class="status-message">{{ getAcceptedMessage() }}</pre>
+                <div class="status-message">{{ acceptedMessage() }}</div>
               </div>
             } @else if (user()?.status === 'rejected') {
               <div class="status-description">
-                <pre class="status-message">{{ getRejectedMessage() }}</pre>
+                <div class="status-message">{{ rejectedMessage() }}</div>
               </div>
             }
           </div>

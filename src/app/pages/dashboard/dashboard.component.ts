@@ -44,6 +44,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     await this.loadUserData();
     this.updateStatusDisplay();
+    await this.loadMessages();
     this.startCountdown();
     this.isLoading.set(false);
   }
@@ -91,6 +92,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     await this.loadUserData();
     this.updateStatusDisplay();
+    await this.loadMessages();
     this.isLoading.set(false);
   }
 
@@ -150,12 +152,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.user()?.status === 'rejected' && !!this.currentAcceptingCohort();
   }
 
-  getAcceptedMessage(): string {
+  acceptedMessage = signal<string>('');
+  rejectedMessage = signal<string>('');
+
+  async getAcceptedMessage(): Promise<void> {
     const user = this.user();
     const application = this.application();
     const cohort = this.cohort();
     
-    if (!user || !application || !cohort) return '';
+    if (!user || !application || !cohort) return;
     
     // Find the assigned class details
     const assignedClass = cohort.classes?.find(c => c.name === application.assignedClass);
@@ -170,7 +175,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       classSchedule = Array.from(new Set(times)).join(', ');
     }
     
-    return this.messageTemplateService.getAcceptedMessage({
+    const {body} = await this.messageTemplateService.getAcceptedMessage({
       firstName: application.formData.personalInformation.firstName,
       lastName: application.formData.personalInformation.lastName,
       className: application.assignedClass || 'TBD',
@@ -179,21 +184,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
       applicationId: application.applicationId,
       operatorId: user.operatorId
     });
+    
+    this.acceptedMessage.set(body);
   }
 
-  getRejectedMessage(): string {
+  async getRejectedMessage(): Promise<void> {
     const user = this.user();
     const application = this.application();
     
-    if (!user || !application) return '';
+    if (!user || !application) return;
     
-    return this.messageTemplateService.getRejectedMessage({
+    const {body} = await this.messageTemplateService.getRejectedMessage({
       firstName: application.formData.personalInformation.firstName,
       lastName: application.formData.personalInformation.lastName,
       applicationId: application.applicationId,
-      operatorId: user.operatorId,
-      reviewDate: application.reviewedAt ? application.reviewedAt.toLocaleDateString() : 'TBD'
+      operatorId: user.operatorId
     });
+    
+    this.rejectedMessage.set(body);
+  }
+
+  private async loadMessages() {
+    const status = this.user()?.status;
+    if (status === 'accepted') {
+      await this.getAcceptedMessage();
+    } else if (status === 'rejected') {
+      await this.getRejectedMessage();
+    }
   }
 
   ngOnDestroy() {
