@@ -60,7 +60,7 @@
       @if (currentStep() === 1) {
         <div class="form-section" formGroupName="personalInformation">
           <div class="form-group">
-            <label>Student ID</label>
+            <label>Operator ID</label>
             <input
               type="text"
               formControlName="studentId"
@@ -229,6 +229,28 @@
                   </div>
                 }
               }
+              
+              <!-- Commit to Both Option -->
+              <div class="commit-both-option">
+                <div 
+                  class="class-option commit-both"
+                  [class.selected]="canCommitToBoth()"
+                  (click)="toggleCommitToBoth()">
+                  <div class="class-header">
+                    <h4>I can commit to both classes</h4>
+                  </div>
+                  <div class="class-schedule">
+                    Maximum flexibility - available for either class assignment
+                  </div>
+                  <div class="selection-indicator">
+                    @if (canCommitToBoth()) {
+                      <i class="fas fa-check-circle"></i>
+                    } @else {
+                      <i class="far fa-circle"></i>
+                    }
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -320,7 +342,7 @@
             @if (canAddMoreFiles()) {
               <div 
                 class="file-upload-area" 
-                [class.drag-over]="isDragOver"
+                [class.drag-over]="isDragOver()"
                 (click)="fileInput.click()"
                 (dragover)="onDragOver($event)"
                 (dragleave)="onDragLeave($event)"
@@ -874,12 +896,12 @@
             <i class="fas fa-user-friends"></i>
             <div>
               <h3>Friends (Optional)</h3>
-              <p>If you're signing up with friends, enter their Student IDs below. We'll do our best to place you together, but it's not guaranteed.</p>
+              <p>If you're signing up with friends, enter their Operator IDs below. We'll do our best to place you together, but it's not guaranteed.</p>
             </div>
           </div>
 
           <div class="form-group">
-            <label>Friend #1 Student ID</label>
+            <label>Friend #1 Operator ID</label>
             <input
               type="text"
               formControlName="friend1StudentId"
@@ -918,7 +940,7 @@
           </div>
 
           <div class="form-group">
-            <label>Friend #2 Student ID</label>
+            <label>Friend #2 Operator ID</label>
             <input
               type="text"
               formControlName="friend2StudentId"

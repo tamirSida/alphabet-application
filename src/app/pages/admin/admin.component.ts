@@ -733,6 +733,11 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   formatPreferredClasses(application: Application & { cohort?: Cohort }): string {
+    // Check if user committed to both classes
+    if (application.formData?.serviceAvailability?.commitToBoth) {
+      return 'Committed to both classes';
+    }
+    
     const unavailableClasses = application.formData?.serviceAvailability?.unavailableClasses || [];
     const allClasses = application.cohort?.classes || [];
     

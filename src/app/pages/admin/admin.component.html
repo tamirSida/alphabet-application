@@ -227,6 +227,12 @@
                   <div class="info-item">
                     <label>Available Classes:</label>
                     <span>{{ formatPreferredClasses(selectedApplication()!) }}</span>
+                    @if (selectedApplication()?.formData?.serviceAvailability?.commitToBoth) {
+                      <div class="commit-both-badge">
+                        <i class="fas fa-check-double"></i>
+                        Maximum Flexibility
+                      </div>
+                    }
                   </div>
                   @if ((selectedApplication()?.formData?.serviceAvailability?.unavailableClasses?.length || 0) > 0) {
                     <div class="info-item unavailable-classes">

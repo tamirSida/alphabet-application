@@ -89,7 +89,8 @@ export class ApplicationComponent implements OnInit {
       serviceAvailability: this.fb.group({
         countryOfService: ['', Validators.required],
         englishProficiency: [''],
-        unavailableClasses: [[]]
+        unavailableClasses: [[]],
+        commitToBoth: [false]
       }),
       
       // Section 3: Experience & Background
@@ -310,19 +311,6 @@ export class ApplicationComponent implements OnInit {
     return text.trim().split(/\s+/).filter(word => word.length > 0).length;
   }
 
-  // Toggle class unavailability
-  toggleClassUnavailability(classId: string) {
-    const unavailableClasses = this.applicationForm.get('serviceAvailability.unavailableClasses')?.value || [];
-    const existingIndex = unavailableClasses.findIndex((item: any) => item.classId === classId);
-    
-    if (existingIndex > -1) {
-      unavailableClasses.splice(existingIndex, 1);
-    } else {
-      unavailableClasses.push({ classId, reason: '' });
-    }
-    
-    this.applicationForm.get('serviceAvailability.unavailableClasses')?.setValue(unavailableClasses);
-  }
 
   // Check if class is unavailable
   isClassUnavailable(classId: string): boolean {
@@ -347,6 +335,42 @@ export class ApplicationComponent implements OnInit {
       unavailableClasses[itemIndex].reason = reason;
       this.applicationForm.get('serviceAvailability.unavailableClasses')?.setValue(unavailableClasses);
     }
+  }
+
+  // Commit to both classes functionality
+  canCommitToBoth(): boolean {
+    return this.applicationForm.get('serviceAvailability.commitToBoth')?.value || false;
+  }
+
+  toggleCommitToBoth() {
+    const currentValue = this.canCommitToBoth();
+    this.applicationForm.get('serviceAvailability.commitToBoth')?.setValue(!currentValue);
+    
+    // If committing to both, clear any unavailable classes
+    if (!currentValue) {
+      this.applicationForm.get('serviceAvailability.unavailableClasses')?.setValue([]);
+    }
+  }
+
+  // Override toggleClassUnavailability to prevent selection when commitToBoth is true
+  toggleClassUnavailability(classId: string) {
+    // Prevent individual class selection if committed to both
+    if (this.canCommitToBoth()) {
+      return;
+    }
+    
+    const unavailableClasses = this.applicationForm.get('serviceAvailability.unavailableClasses')?.value || [];
+    const existingIndex = unavailableClasses.findIndex((item: any) => item.classId === classId);
+    
+    if (existingIndex > -1) {
+      unavailableClasses.splice(existingIndex, 1);
+    } else {
+      unavailableClasses.push({ classId, reason: '' });
+      // Clear commitToBoth if selecting individual classes
+      this.applicationForm.get('serviceAvailability.commitToBoth')?.setValue(false);
+    }
+    
+    this.applicationForm.get('serviceAvailability.unavailableClasses')?.setValue(unavailableClasses);
   }
 
   // Show validation issues popup
@@ -606,8 +630,17 @@ export class ApplicationComponent implements OnInit {
         errors.push('• English Proficiency is required for IL service');
       }
       
-      // Check unavailable classes reasons
+      // Check class availability selection
       const unavailableClasses = serviceAvail.get('unavailableClasses')?.value || [];
+      const commitToBoth = serviceAvail.get('commitToBoth')?.value || false;
+      const totalClasses = this.cohort()?.classes?.length || 0;
+      
+      // Validate that user has made a clear choice
+      if (!commitToBoth && unavailableClasses.length === totalClasses) {
+        errors.push('• You cannot mark all classes as unavailable. Either select classes you can attend or choose "I can commit to both"');
+      }
+      
+      // Check unavailable classes reasons
       const hasEmptyReasons = unavailableClasses.some((item: any) => !item.reason || item.reason.trim() === '');
       if (hasEmptyReasons) {
         errors.push('• Please provide reasons for all unavailable classes');

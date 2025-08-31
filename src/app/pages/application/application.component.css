@@ -35,6 +35,27 @@
   font-size: 0.9rem;
 }
 
+/* Commit to Both Styles */
+.commit-both-option {
+  margin-top: 1rem;
+}
+
+.commit-both {
+  background: #f0f9ff;
+  border: 2px solid #0ea5e9;
+}
+
+.commit-both.selected {
+  background: #0ea5e9;
+  color: white;
+}
+
+.class-option.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .application-container {
   min-height: 100vh;
   background: white;

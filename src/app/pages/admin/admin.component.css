@@ -45,6 +45,7 @@
 .schedule-link { color: #3b82f6; text-decoration: none; font-weight: 500; }
 .schedule-link:hover { color: #2563eb; text-decoration: underline; }
 .form-hint { color: #6b7280; font-size: 0.85rem; margin-top: 0.25rem; display: block; }
+.commit-both-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: #0ea5e9; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: 500; margin-left: 0.5rem; }
 
 /* Grids & Cards */
 .applications-grid, .cohorts-grid, .admins-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1.5rem; }

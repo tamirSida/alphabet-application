@@ -21,6 +21,7 @@ export interface ServiceAvailability {
     classId: string;
     reason: string;
   }[]; // Array of classes user cannot attend with reasons
+  commitToBoth?: boolean; // User can commit to both classes
 }
 
 // File upload interface
