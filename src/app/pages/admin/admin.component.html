@@ -225,7 +225,7 @@
                     <span>{{ selectedApplication()?.cohort?.number || 'Unknown' }}</span>
                   </div>
                   <div class="info-item">
-                    <label>Available Classes:</label>
+                    <label>Class Availability:</label>
                     <span>{{ formatPreferredClasses(selectedApplication()!) }}</span>
                     @if (selectedApplication()?.formData?.serviceAvailability?.commitToBoth) {
                       <div class="commit-both-badge">
@@ -631,7 +631,7 @@
                       <th>Email</th>
                       <th>ID</th>
                       <th>Country</th>
-                      <th>Preferred Class</th>
+                      <th>Class Availability</th>
                       <th>Assigned Class</th>
                       <th>Status</th>
                       <th>Submitted</th>

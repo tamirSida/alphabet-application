@@ -739,20 +739,18 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
     
     const unavailableClasses = application.formData?.serviceAvailability?.unavailableClasses || [];
-    const allClasses = application.cohort?.classes || [];
     
     if (unavailableClasses.length === 0) {
       return 'Available for all classes';
     }
     
-    const unavailableClassIds = unavailableClasses.map(item => item.classId);
-    const availableClasses = allClasses.filter(cls => !unavailableClassIds.includes(cls.classId));
+    // Show which classes they CAN'T commit to
+    const unavailableClassNames = unavailableClasses.map(item => {
+      const cohortClass = application.cohort?.classes?.find(cls => cls.classId === item.classId);
+      return cohortClass?.name || item.classId;
+    });
     
-    if (availableClasses.length === 0) {
-      return 'No classes available';
-    }
-    
-    return availableClasses.map(cls => cls.name).join(', ');
+    return `Can't commit to: ${unavailableClassNames.join(', ')}`;
   }
 
   getClassName(classId: string): string {
