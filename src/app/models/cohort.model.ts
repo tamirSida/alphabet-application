@@ -29,6 +29,7 @@ export interface Cohort {
   status: 'upcoming' | 'accepting_applications' | 'closed' | 'in_progress' | 'completed';
   classes: CohortClass[];
   lab: CohortLab;
+  scheduleLink: string;
 }
 
 export interface CreateCohortRequest {
@@ -39,4 +40,5 @@ export interface CreateCohortRequest {
   cohortEndDate: Date;
   classes: Omit<CohortClass, 'classId' | 'enrolled'>[];
   lab: CohortLab;
+  scheduleLink: string;
 }

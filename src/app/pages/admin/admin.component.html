@@ -518,16 +518,34 @@
                     (click)="publishResults()"
                     style="background: #059669; color: white;">
                     <i class="fas fa-paper-plane"></i>
-                    Publish Results to All Applicants
+                    Publish Results & Send Emails
                   </button>
                 } @else if (isPublishing()) {
-                  <button 
-                    class="primary-button"
-                    disabled
-                    style="background: #6b7280; color: white; cursor: not-allowed;">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    Publishing Results...
-                  </button>
+                  <div class="publishing-container">
+                    <button 
+                      class="primary-button"
+                      disabled
+                      style="background: #6b7280; color: white; cursor: not-allowed;">
+                      @if (isSendingEmails()) {
+                        <i class="fas fa-envelope fa-spin"></i>
+                        Sending Emails... ({{ emailProgress().sent }}/{{ emailProgress().total }})
+                      } @else {
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Publishing Results...
+                      }
+                    </button>
+                    
+                    @if (isSendingEmails()) {
+                      <div class="email-progress">
+                        <div class="progress-bar">
+                          <div class="progress-fill" [style.width.%]="(emailProgress().sent / emailProgress().total) * 100"></div>
+                        </div>
+                        <span class="progress-text">
+                          Sending {{ emailProgress().sent }} of {{ emailProgress().total }} emails
+                        </span>
+                      </div>
+                    }
+                  </div>
                 } @else if (applications().length > 0) {
                   <span class="stat-item" style="background: #fbbf24; color: #92400e;">
                     ⚠️ All applications must be accepted or rejected to publish
@@ -536,6 +554,18 @@
               </div>
 
               <!-- Publish Status Indicator -->
+              @if (emailErrors().length > 0) {
+                <div class="email-errors">
+                  <h4><i class="fas fa-exclamation-triangle"></i> Email Delivery Issues</h4>
+                  <div class="error-list">
+                    @for (error of emailErrors(); track error.email) {
+                      <div class="error-item">
+                        <strong>{{ error.email }}</strong>: {{ error.error }}
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
               @if (lastPublishTime()) {
                 <div class="publish-status-indicator">
                   <i class="fas fa-check-circle"></i>
@@ -993,6 +1023,19 @@
                   </div>
                 </div>
 
+                <!-- Schedule Link Section -->
+                <div class="form-group">
+                  <label for="schedule-link">Schedule Link</label>
+                  <input
+                    type="url"
+                    id="schedule-link"
+                    formControlName="scheduleLink"
+                    placeholder="https://example.com/schedule"
+                    class="form-input"
+                  />
+                  <small class="form-hint">URL to the full schedule that applicants can view</small>
+                </div>
+
                 <div class="form-actions">
                   <button type="button" class="secondary-button" (click)="toggleCohortForm()">
                     Cancel
@@ -1031,6 +1074,12 @@
                     <div class="timeline-item">
                       <i class="fas fa-play-circle"></i>
                       <span>Program: {{ cohort.cohortStartDate | date:'shortDate' }} - {{ cohort.cohortEndDate | date:'shortDate' }}</span>
+                    </div>
+                    <div class="timeline-item">
+                      <i class="fas fa-external-link-alt"></i>
+                      <a [href]="cohort.scheduleLink" target="_blank" rel="noopener noreferrer" class="schedule-link">
+                        View Full Schedule
+                      </a>
                     </div>
                   </div>
 

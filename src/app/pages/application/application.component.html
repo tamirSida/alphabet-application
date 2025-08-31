@@ -179,6 +179,14 @@
           <div class="form-group">
             <label>Class Availability</label>
             <p class="field-description">Are there any classes you would NOT be able to attend? If so, select them below and explain why:</p>
+            @if (cohort()?.scheduleLink) {
+              <p class="schedule-link-info">
+                <a [href]="cohort()?.scheduleLink" target="_blank" rel="noopener noreferrer" class="view-schedule-link">
+                  <i class="fas fa-external-link-alt"></i>
+                  Click here to view full schedule
+                </a>
+              </p>
+            }
             <div class="class-options">
               @for (cohortClass of cohort()?.classes || []; track cohortClass.classId) {
                 <div

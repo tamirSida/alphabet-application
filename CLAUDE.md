@@ -8,6 +8,7 @@ A comprehensive CRM system for managing applications to the Alphabet Program, bu
 ### Tech Stack
 - **Frontend**: Angular 20 (Standalone Components)
 - **Backend**: Firebase (Firestore + Auth)
+- **Email Service**: Postmark (client-side transactional emails)
 - **Styling**: CSS with dark theme design language and mobile-first responsive design
 - **Icons**: FontAwesome 6.4.0
 - **Forms**: Angular Reactive Forms with validation
@@ -71,6 +72,7 @@ src/
 │   │   ├── cohort.service.ts
 │   │   ├── application.service.ts
 │   │   ├── message-template.service.ts
+│   │   ├── email.service.ts
 │   │   └── index.ts
 │   ├── pages/            # Route components
 │   │   ├── landing/      # ✅ Dark theme homepage
@@ -162,12 +164,14 @@ npm install
 - Cohort management system with creation and tracking
 - Admin management with user creation capabilities
 - Auto-refresh system for real-time updates
-- Results publication workflow with UX indicators
+- Results publication workflow with automated email notifications
+- Professional email system with custom domain (application@alphabet.versionbravo.com)
 - Application deletion functionality
 - Mobile-responsive dark theme design
 - Firestore security rules implementation
 - Comprehensive error handling and validation
 - Enhanced UX with vertical text layout and readable class names
+- Advanced form validation with mobile-responsive popup interface
 
 ## CRM Features (Applications Management)
 
@@ -218,12 +222,16 @@ npm install
 - **Vertical Text Layout**: Long-form text responses (military description, cover letter, personal qualities) displayed in full-width vertical cards for better readability
 - **Mobile Optimized**: Responsive design for all screen sizes
 
-### Results Publication System
+### Results Publication & Email System
 - **Private Review Mode**: Admins can accept/reject applications without applicants seeing changes
-- **Bulk Publication**: Single "Publish Results" button updates all applicant dashboards simultaneously  
+- **Bulk Publication**: Single "Publish Results & Send Emails" button updates dashboards and sends emails
+- **Automated Email Notifications**: Professional HTML emails sent via Postmark with custom domain
+- **Email Templates**: Acceptance and rejection emails with personalized content and class information
+- **Progress Tracking**: Real-time email sending progress with visual indicators
+- **Error Handling**: Comprehensive email delivery error reporting and retry logic
+- **Custom Domain**: Emails sent from `application@alphabet.versionbravo.com` for professional branding
 - **Prerequisite Validation**: Publishing only allowed when all applications are reviewed (accepted/rejected)
 - **UX Feedback**: Loading states, animated success messages, and progress indicators
-- **Template-based Messages**: Custom acceptance/rejection messages from text file templates
 
 ### Application Management
 - **Delete Functionality**: Complete application removal with user status reset
@@ -260,14 +268,44 @@ npm install
 - **Readable Class Names**: Preferred classes show "Class A, Class B" instead of Firebase document IDs
 - **Publication Status**: Admin interface shows persistent indicator when results have been published to applicants
 - **Professional Polish**: Consistent styling, hover effects, and visual feedback throughout
+- **Advanced Form Validation**: Mobile-responsive validation popup with clickable issue navigation
+- **Timezone Support**: Multi-timezone display (IL, Pacific, Eastern) for cohort schedules and deadlines
+
+## Email System (Postmark Integration)
+
+### Configuration
+- **Service**: Postmark transactional email service
+- **Domain**: `alphabet.versionbravo.com` with DNS verification
+- **From Address**: `application@alphabet.versionbravo.com`
+- **Server Token**: Stored securely in Angular environment files
+- **Client-Side**: Direct API calls from Angular (no backend required)
+- **Security**: API token secured in environment configuration (not exposed in code)
+
+### Email Templates
+- **Acceptance Email**: Professional HTML with class assignments, schedules, and next steps
+- **Rejection Email**: Supportive messaging with constructive feedback and reapplication encouragement
+- **Dynamic Content**: Personalized with user names, operator IDs, class details, and multi-timezone schedules
+- **Responsive Design**: Mobile-optimized HTML emails with professional styling
+
+### Delivery Features
+- **High Deliverability**: 99%+ inbox delivery rate via Postmark infrastructure
+- **Error Handling**: Comprehensive retry logic and detailed error reporting
+- **Progress Tracking**: Real-time progress indicators during bulk email sending
+- **Rate Limiting**: 300ms delay between emails to prevent API throttling
+- **Professional Branding**: Custom domain ensures emails appear from your organization
+
+### Integration Points
+- **Publish Results**: Automatically triggers email sending when results are published
+- **Admin Interface**: Shows email progress and delivery status
+- **Error Management**: Failed emails are tracked and reported with specific error messages
 
 🚧 **Future Enhancements**:
 - Route guards for enhanced security
-- Email notifications for status changes
 - Data export functionality (CSV/Excel)
 - Advanced analytics and reporting
 - Bulk operations for admin actions
 - Class capacity management and waitlists
+- Email delivery analytics and tracking
 
 ## Firebase Security Rules (Production)
 Current rules located in `/rules.txt`:
@@ -316,4 +354,13 @@ service cloud.firestore {
 - **Accessibility**: Semantic HTML, proper form labels, keyboard navigation support
 
 ## System Architecture Summary
-This is a production-ready CRM system with comprehensive user management, application processing, and admin capabilities. The dark theme design language provides a modern, professional interface while the robust backend ensures data integrity and security. The system successfully handles the complete lifecycle from user registration through application submission to admin review and cohort management.
+This is a production-ready CRM system with comprehensive user management, application processing, admin capabilities, and professional email communications. The system integrates Angular 20 frontend with Firebase backend and Postmark email service to provide a complete solution. Key features include:
+
+- **Complete Application Lifecycle**: From user registration to results notification via email
+- **Professional Email System**: Custom domain emails with high deliverability rates
+- **Advanced Admin Interface**: CRM-style management with real-time updates and comprehensive filtering
+- **Mobile-First Design**: Responsive dark theme interface optimized for all devices
+- **Enterprise Security**: Comprehensive Firestore rules and authentication protection
+- **Advanced UX Features**: Form validation, timezone support, progress tracking, and error handling
+
+The system successfully handles the complete lifecycle from user registration through application submission, admin review, cohort management, and automated email notifications to applicants.

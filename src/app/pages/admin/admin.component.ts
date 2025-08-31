@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService, UserService, ApplicationService, CohortService } from '../../services';
+import { AuthService, UserService, ApplicationService, CohortService, EmailService } from '../../services';
 import { User, Application, Cohort } from '../../models';
 
 @Component({
@@ -29,6 +29,11 @@ export class AdminComponent implements OnInit, OnDestroy {
   // Publish results state
   isPublishing = signal(false);
   lastPublishTime = signal<Date | null>(null);
+  
+  // Email sending state
+  isSendingEmails = signal(false);
+  emailProgress = signal({ sent: 0, total: 0 });
+  emailErrors = signal<Array<{email: string, error: string}>>([]);
   
   // Search and filter
   searchTerm = signal('');
@@ -63,6 +68,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private applicationService: ApplicationService,
     private cohortService: CohortService,
+    private emailService: EmailService,
     private router: Router,
     private fb: FormBuilder
   ) {
@@ -75,7 +81,8 @@ export class AdminComponent implements OnInit, OnDestroy {
       cohortStartDate: ['', Validators.required],
       cohortEndDate: ['', Validators.required],
       classes: this.fb.array([], [Validators.required, Validators.minLength(1)]),
-      lab: this.createLabFormGroup()
+      lab: this.createLabFormGroup(),
+      scheduleLink: ['', Validators.required]
     });
 
     // Add initial class
@@ -486,34 +493,91 @@ export class AdminComponent implements OnInit, OnDestroy {
       return;
     }
     
-    const confirmMessage = `Are you sure you want to publish results to all ${apps.length} applicant(s)? This will update their dashboard status and cannot be undone.`;
+    const acceptedCount = apps.filter(app => app.status === 'accepted').length;
+    const rejectedCount = apps.filter(app => app.status === 'rejected').length;
+    
+    const confirmMessage = `Are you sure you want to publish results to all ${apps.length} applicant(s)?\n\n` +
+      `• ${acceptedCount} acceptance emails\n` +
+      `• ${rejectedCount} rejection emails\n\n` +
+      `This will update their dashboard status and send emails. This action cannot be undone.`;
     
     if (!confirm(confirmMessage)) {
       return;
     }
     
     this.isPublishing.set(true);
+    this.isSendingEmails.set(true);
     this.error.set(null);
+    this.emailErrors.set([]);
+    this.emailProgress.set({ sent: 0, total: apps.length });
     
     try {
+      // Step 1: Publish results in database
       await this.applicationService.publishResults();
+      
+      // Step 2: Send emails
+      const acceptedUsers: Array<{user: User, application: Application}> = [];
+      const rejectedUsers: Array<{user: User, application: Application}> = [];
+      
+      // Get the current cohort for email context
+      const currentCohort = this.cohorts().find(c => c.status === 'accepting_applications' || c.status === 'closed');
+      
+      if (!currentCohort) {
+        throw new Error('No active cohort found for email context');
+      }
+      
+      // Categorize users
+      apps.forEach(app => {
+        if (!app.user) return;
+        
+        const userAppPair = { user: app.user, application: app };
+        if (app.status === 'accepted') {
+          acceptedUsers.push(userAppPair);
+        } else if (app.status === 'rejected') {
+          rejectedUsers.push(userAppPair);
+        }
+      });
+      
+      // Send emails with progress tracking
+      const emailResults = await this.emailService.sendBulkResultsEmails(
+        acceptedUsers,
+        rejectedUsers,
+        currentCohort,
+        (sent, total) => {
+          this.emailProgress.set({ sent, total });
+        }
+      );
       
       // Set last publish time
       this.lastPublishTime.set(new Date());
       
-      // Show success with animation
-      this.success.set(`🎉 Successfully published results to all ${apps.length} applicant(s)! 🎉`);
+      // Handle results
+      if (emailResults.failed.length > 0) {
+        this.emailErrors.set(emailResults.failed);
+        this.success.set(
+          `✅ Results published! ${emailResults.success}/${apps.length} emails sent successfully. ` +
+          `${emailResults.failed.length} emails failed - check details below.`
+        );
+      } else {
+        this.success.set(
+          `🎉 Successfully published results to all ${apps.length} applicant(s)! ` +
+          `All ${emailResults.success} emails sent successfully! 🎉`
+        );
+      }
       
-      // Auto-clear success message after 8 seconds
+      // Auto-clear success message after 10 seconds
       setTimeout(() => {
         this.success.set(null);
-      }, 8000);
+        this.emailErrors.set([]);
+      }, 10000);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error publishing results:', error);
-      this.error.set('Failed to publish results.');
+      this.error.set(`Failed to publish results: ${error.message || 'Unknown error'}`);
     } finally {
       this.isPublishing.set(false);
+      this.isSendingEmails.set(false);
+      this.emailProgress.set({ sent: 0, total: 0 });
     }
   }
 
@@ -722,7 +786,8 @@ export class AdminComponent implements OnInit, OnDestroy {
           cohortStartDate: this.createDateInILTimezone(formData.cohortStartDate, '00:00'),
           cohortEndDate: this.createDateInILTimezone(formData.cohortEndDate, '23:59'),
           classes: cohortClasses,
-          lab: cohortLab
+          lab: cohortLab,
+          scheduleLink: formData.scheduleLink
         });
         this.success.set('Cohort updated successfully!');
       } else {
@@ -736,7 +801,8 @@ export class AdminComponent implements OnInit, OnDestroy {
           cohortStartDate: this.createDateInILTimezone(formData.cohortStartDate, '00:00'),
           cohortEndDate: this.createDateInILTimezone(formData.cohortEndDate, '23:59'),
           classes: cohortClasses,
-          lab: cohortLab
+          lab: cohortLab,
+          scheduleLink: formData.scheduleLink
         });
         this.success.set('Cohort created successfully!');
       }
@@ -864,7 +930,8 @@ export class AdminComponent implements OnInit, OnDestroy {
       applicationEndDate: appEndDate,
       applicationEndTime: appEndTime,
       cohortStartDate: cohortStartDate,
-      cohortEndDate: cohortEndDate
+      cohortEndDate: cohortEndDate,
+      scheduleLink: cohort.scheduleLink
     });
   }
 

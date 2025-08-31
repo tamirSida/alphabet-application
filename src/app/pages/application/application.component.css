@@ -7,6 +7,34 @@
 
 /* Mobile-First Application Form Styles */
 
+/* Schedule Link Styles */
+.schedule-link-info {
+  margin: 0.5rem 0 1rem 0;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+}
+
+.view-schedule-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.view-schedule-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.view-schedule-link i {
+  font-size: 0.9rem;
+}
+
 .application-container {
   min-height: 100vh;
   background: white;
