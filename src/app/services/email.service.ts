@@ -192,7 +192,7 @@ export class EmailService {
    * Convert plain text to HTML with basic styling
    */
   private convertToHTML(text: string): string {
-    // Basic HTML structure with professional styling
+    // Convert plain text to HTML with basic formatting
     const styledText = text
       .replace(/\n\n/g, '</p><p>')  // Double line breaks become paragraph breaks
       .replace(/\n/g, '<br>')       // Single line breaks become <br> tags
@@ -206,56 +206,22 @@ export class EmailService {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alphabet Program</title>
-    <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            line-height: 1.6; 
-            color: #1f2937; 
-            max-width: 600px; 
-            margin: 0 auto; 
-            padding: 20px; 
-            background-color: #f9fafb;
-        }
-        .header { 
-            background: linear-gradient(135deg, #1e40af, #3b82f6); 
-            color: white; 
-            text-align: center; 
-            padding: 30px 20px; 
-            border-radius: 12px 12px 0 0; 
-        }
-        .content { 
-            background: white; 
-            padding: 30px; 
-            border: 1px solid #e5e7eb; 
-            border-radius: 0 0 12px 12px; 
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); 
-        }
-        .footer { 
-            text-align: center; 
-            font-size: 12px; 
-            color: #6b7280; 
-            margin-top: 30px; 
-            padding-top: 20px; 
-            border-top: 1px solid #e5e7eb; 
-        }
-        p { margin: 15px 0; }
-        h1, h2, h3 { color: #1e40af; }
-        strong { color: #374151; }
-    </style>
 </head>
-<body>
-    <div class="header">
+<body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto;">
         <h1>Alphabet Program</h1>
-        <p>Application Update</p>
-    </div>
-    
-    <div class="content">
-        <p>${styledText}</p>
-    </div>
-    
-    <div class="footer">
-        <p>© 2024 Alphabet Program | support@alphabet.versionbravo.com</p>
-        <p>For questions, please contact our team</p>
+        <h3>Application Update</h3>
+        
+        <div>
+            ${styledText}
+        </div>
+        
+        <hr style="margin: 30px 0;">
+        
+        <p style="font-size: 12px; text-align: center;">
+            © 2024 Alphabet Program | support@alphabet.versionbravo.com<br>
+            For questions, please contact our team
+        </p>
     </div>
 </body>
 </html>`;
