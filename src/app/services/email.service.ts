@@ -317,7 +317,6 @@ export class EmailService {
         To: 'test@example.com',
         Subject: 'Postmark Configuration Test',
         HtmlBody: '<p>This is a test email from Postmark.</p>',
-        ReplyTo: this.config.replyToEmail,
         MessageStream: 'outbound'
       };
 

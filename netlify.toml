@@ -1,0 +1,7 @@
+[build]
+  command = "npm run build"
+  publish = "dist/alpahbet-application/browser"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "22"
