@@ -8,7 +8,8 @@ export const environment = {
     messagingSenderId: "171008014108",
     appId: "1:171008014108:web:3cc0530a0db04354b16cd9"
   },
-  postmark: {
-    serverToken: "6fc8710f-e888-4533-8928-eab7ebac0e2c"
-  }
+  resend: {
+    fromEmail: "application@alphabet.versionbravo.com"
+  },
+  emailApiUrl: "/.netlify/functions/send-email"
 };

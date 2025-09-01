@@ -5,10 +5,8 @@ import { Cohort } from '../models/cohort.model';
 import { MessageTemplateService } from './message-template.service';
 import { environment } from '../../environments/environment';
 
-export interface PostmarkConfig {
-  serverToken: string;
+export interface EmailConfig {
   fromEmail: string;
-  replyToEmail: string;
   apiUrl: string;
 }
 
@@ -16,18 +14,15 @@ export interface PostmarkConfig {
   providedIn: 'root'
 })
 export class EmailService {
-  private config: PostmarkConfig = {
-    serverToken: environment.postmark.serverToken,
-    fromEmail: 'application@alphabet.versionbravo.com',
-    replyToEmail: 'support@alphabet.versionbravo.com',
-    apiUrl: 'https://api.postmarkapp.com/email'
+  private config: EmailConfig = {
+    fromEmail: environment.resend.fromEmail,
+    apiUrl: environment.emailApiUrl
   };
 
   constructor(private messageTemplateService: MessageTemplateService) {
-    // Postmark doesn't require initialization
     // Validate configuration on startup
-    if (!this.config.serverToken) {
-      console.error('Postmark server token not found in environment configuration!');
+    if (!this.config.apiUrl) {
+      console.error('Email API URL not found in environment configuration!');
     }
   }
 
@@ -57,27 +52,24 @@ export class EmailService {
       const htmlContent = this.convertToHTML(body);
       
       const emailData = {
-        From: this.config.fromEmail,
-        To: user.email,
-        Subject: subject,
-        HtmlBody: htmlContent,
-        ReplyTo: this.config.replyToEmail,
-        MessageStream: 'outbound'
+        from: this.config.fromEmail,
+        to: user.email,
+        subject: subject,
+        html: htmlContent
       };
 
       const response = await fetch(this.config.apiUrl, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'X-Postmark-Server-Token': this.config.serverToken
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(emailData)
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.Message || 'Failed to send email');
+        throw new Error(errorData.message || errorData.error || 'Failed to send email');
       }
 
       const result = await response.json();
@@ -108,27 +100,24 @@ export class EmailService {
       const htmlContent = this.convertToHTML(body);
       
       const emailData = {
-        From: this.config.fromEmail,
-        To: user.email,
-        Subject: subject,
-        HtmlBody: htmlContent,
-        ReplyTo: this.config.replyToEmail,
-        MessageStream: 'outbound'
+        from: this.config.fromEmail,
+        to: user.email,
+        subject: subject,
+        html: htmlContent
       };
 
       const response = await fetch(this.config.apiUrl, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'X-Postmark-Server-Token': this.config.serverToken
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(emailData)
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.Message || 'Failed to send email');
+        throw new Error(errorData.message || errorData.error || 'Failed to send email');
       }
 
       const result = await response.json();
