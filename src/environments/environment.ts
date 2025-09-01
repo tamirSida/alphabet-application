@@ -9,8 +9,7 @@ export const environment = {
     appId: "1:171008014108:web:3cc0530a0db04354b16cd9"
   },
   resend: {
-    fromEmail: "application@alphabet.versionbravo.com",
-    apiKey: "re_ZAszuT9i_DLYMZQj4RUzcnuQVVc55nshD"
+    fromEmail: "application@alphabet.versionbravo.com"
   },
-  emailApiUrl: "http://localhost:8888/.netlify/functions/send-email"
+  emailApiUrl: "/.netlify/functions/send-email"
 };
