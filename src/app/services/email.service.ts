@@ -49,13 +49,12 @@ export class EmailService {
       };
       
       const {subject, body} = await this.messageTemplateService.getAcceptedMessage(templateData);
-      const htmlContent = this.convertToHTML(body);
       
       const emailData = {
         from: this.config.fromEmail,
         to: user.email,
         subject: subject,
-        html: htmlContent
+        text: body
       };
 
       const response = await fetch(this.config.apiUrl, {
@@ -97,13 +96,12 @@ export class EmailService {
       };
       
       const {subject, body} = await this.messageTemplateService.getRejectedMessage(templateData);
-      const htmlContent = this.convertToHTML(body);
       
       const emailData = {
         from: this.config.fromEmail,
         to: user.email,
         subject: subject,
-        html: htmlContent
+        text: body
       };
 
       const response = await fetch(this.config.apiUrl, {

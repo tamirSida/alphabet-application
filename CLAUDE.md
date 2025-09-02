@@ -8,7 +8,7 @@ A comprehensive CRM system for managing applications to the Alphabet Program, bu
 ### Tech Stack
 - **Frontend**: Angular 20 (Standalone Components)
 - **Backend**: Firebase (Firestore + Auth)
-- **Email Service**: Postmark (client-side transactional emails)
+- **Email Service**: Resend (via Netlify Functions)
 - **Styling**: CSS with dark theme design language and mobile-first responsive design
 - **Icons**: FontAwesome 6.4.0
 - **Forms**: Angular Reactive Forms with validation
@@ -33,6 +33,7 @@ A comprehensive CRM system for managing applications to the Alphabet Program, bu
    - cohortStartDate, cohortEndDate: Date
    - status: 'upcoming' | 'accepting_applications' | 'closed' | 'in_progress' | 'completed' (auto-calculated)
    - classes: CohortClass[] (array of class definitions with names and schedules)
+   - scheduleLink: string (URL field for cohort schedule display)
 
 3. **applications**
    - applicationId (document ID)
@@ -40,7 +41,7 @@ A comprehensive CRM system for managing applications to the Alphabet Program, bu
    - status: 'submitted' | 'under_review' | 'accepted' | 'rejected'
    - submittedAt, reviewedAt?: Date
    - assignedClass?: string (class assignment for accepted applications)
-   - formData: ApplicationFormData (comprehensive 9-section structure)
+   - formData: ApplicationFormData (comprehensive 9-section structure with commitToBoth option)
    - flags: ApplicationFlags (auto-calculated red flags for admin screening)
    - notes?: AdminNote (admin review notes with attribution and timestamps)
 
@@ -271,28 +272,28 @@ npm install
 - **Advanced Form Validation**: Mobile-responsive validation popup with clickable issue navigation
 - **Timezone Support**: Multi-timezone display (IL, Pacific, Eastern) for cohort schedules and deadlines
 
-## Email System (Postmark Integration)
+## Email System (Resend Integration)
 
 ### Configuration
-- **Service**: Postmark transactional email service
-- **Domain**: `alphabet.versionbravo.com` with DNS verification
-- **From Address**: `application@alphabet.versionbravo.com`
-- **Server Token**: Stored securely in Angular environment files
-- **Client-Side**: Direct API calls from Angular (no backend required)
-- **Security**: API token secured in environment configuration (not exposed in code)
+- **Service**: Resend transactional email service via Netlify Functions
+- **Domain**: `application.versionbravo.com` with DNS verification
+- **From Address**: `application@application.versionbravo.com`
+- **Architecture**: Secure server-side API calls through Netlify Functions
+- **Security**: API token stored securely in Netlify environment variables (not exposed in client code)
 
 ### Email Templates
-- **Acceptance Email**: Professional HTML with class assignments, schedules, and next steps
+- **Template Files**: External accepted.txt and rejected.txt files with variable replacement
+- **Acceptance Email**: Plain HTML with class assignments, schedules, and next steps
 - **Rejection Email**: Supportive messaging with constructive feedback and reapplication encouragement
-- **Dynamic Content**: Personalized with user names, operator IDs, class details, and multi-timezone schedules
-- **Responsive Design**: Mobile-optimized HTML emails with professional styling
+- **Dynamic Content**: Personalized with user names, operator IDs, class details, and schedules
+- **Simple Styling**: Plain HTML without complex CSS for maximum email client compatibility
 
 ### Delivery Features
-- **High Deliverability**: 99%+ inbox delivery rate via Postmark infrastructure
+- **Secure Architecture**: API key protected via Netlify Functions
 - **Error Handling**: Comprehensive retry logic and detailed error reporting
 - **Progress Tracking**: Real-time progress indicators during bulk email sending
 - **Rate Limiting**: 300ms delay between emails to prevent API throttling
-- **Professional Branding**: Custom domain ensures emails appear from your organization
+- **Professional Branding**: Custom verified domain for legitimate email delivery
 
 ### Integration Points
 - **Publish Results**: Automatically triggers email sending when results are published
@@ -357,10 +358,19 @@ service cloud.firestore {
 This is a production-ready CRM system with comprehensive user management, application processing, admin capabilities, and professional email communications. The system integrates Angular 20 frontend with Firebase backend and Postmark email service to provide a complete solution. Key features include:
 
 - **Complete Application Lifecycle**: From user registration to results notification via email
-- **Professional Email System**: Custom domain emails with high deliverability rates
+- **Professional Email System**: Resend integration with Netlify Functions and custom domain
 - **Advanced Admin Interface**: CRM-style management with real-time updates and comprehensive filtering
 - **Mobile-First Design**: Responsive dark theme interface optimized for all devices
 - **Enterprise Security**: Comprehensive Firestore rules and authentication protection
 - **Advanced UX Features**: Form validation, timezone support, progress tracking, and error handling
 
 The system successfully handles the complete lifecycle from user registration through application submission, admin review, cohort management, and automated email notifications to applicants.
+
+## Recent Updates
+- **Schedule Links**: Added schedule link field to cohorts for external schedule references
+- **Operator ID Terminology**: Updated client-facing language from "Student ID" to "Operator ID" 
+- **Class Commitment Options**: Added "commit to both classes" option with mutual exclusivity logic
+- **Admin Display Logic**: Changed from showing "preferred classes" to "can't commit to" classes
+- **Email Template System**: Migrated from hardcoded templates to external accepted.txt/rejected.txt files
+- **Email Service Migration**: Moved from Postmark to Resend with secure Netlify Functions architecture
+- **Plain Email Styling**: Removed complex CSS for better email client compatibility
