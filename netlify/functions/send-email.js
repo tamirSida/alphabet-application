@@ -30,7 +30,7 @@ exports.handler = async (event, context) => {
     const emailData = JSON.parse(event.body);
     
     // Validate required fields
-    if (!emailData.to || !emailData.subject || !emailData.html) {
+    if (!emailData.to || !emailData.subject || (!emailData.html && !emailData.text)) {
       return {
         statusCode: 400,
         headers: {
@@ -65,7 +65,7 @@ exports.handler = async (event, context) => {
         from: emailData.from,
         to: emailData.to,
         subject: emailData.subject,
-        html: emailData.html
+        ...(emailData.html ? { html: emailData.html } : { text: emailData.text })
       })
     });
 
