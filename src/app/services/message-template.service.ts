@@ -118,6 +118,17 @@ Operator ID: [operatorId]`;
       result = result.replace(new RegExp(placeholder, 'g'), data[key] || '');
     });
     
+    // Convert markdown-style formatting to HTML
+    result = result.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold text
+    result = result.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>'); // Links
+    result = result.replace(/\n\n/g, '</p><p>'); // Paragraph breaks
+    result = result.replace(/\n/g, '<br>'); // Line breaks
+    
+    // Wrap in paragraph tags
+    if (!result.startsWith('<p>')) {
+      result = '<p>' + result + '</p>';
+    }
+    
     return result;
   }
 }
