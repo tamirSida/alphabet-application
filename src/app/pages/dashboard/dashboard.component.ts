@@ -132,7 +132,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.statusDisplay.set({ text: 'Accepted', class: 'status-accepted', icon: 'fas fa-check-circle' });
         break;
       case 'rejected':
-        this.statusDisplay.set({ text: 'Not Selected', class: 'status-rejected', icon: 'fas fa-times-circle' });
+        this.statusDisplay.set({ text: 'Rejected', class: 'status-rejected', icon: 'fas fa-times-circle' });
         break;
       default:
         this.statusDisplay.set({ text: 'Unknown', class: 'status-unknown', icon: 'fas fa-question' });
@@ -148,9 +148,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return !!this.application();
   }
 
-  get canReapply() {
-    return this.user()?.status === 'rejected' && !!this.currentAcceptingCohort();
-  }
 
   acceptedMessage = signal<string>('');
   rejectedMessage = signal<string>('');

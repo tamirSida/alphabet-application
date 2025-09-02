@@ -109,19 +109,8 @@
         <div class="action-cards">
 
 
-          @if (canReapply) {
-            <div class="action-card reapply-card">
-              <i class="fas fa-redo"></i>
-              <h3>Apply Again</h3>
-              <p>Submit a new application for {{ currentAcceptingCohort()?.number }}.</p>
-              <button class="primary-button" (click)="goToApplication()">
-                <i class="fas fa-paper-plane"></i>
-                Apply Again
-              </button>
-            </div>
-          }
 
-          @if (!canApply && !canReapply && user()?.status === 'not_submitted') {
+          @if (!canApply && user()?.status === 'not_submitted') {
             <div class="action-card info-card">
               <i class="fas fa-info-circle"></i>
               <h3>No Open Applications</h3>
