@@ -276,7 +276,7 @@ npm install
 
 ### Configuration
 - **Service**: Resend transactional email service via Netlify Functions
-- **Domain**: `application.versionbravo.com` with DNS verification
+- **Domain**: `application.versionbravo.com` with DNS verification (SPF, DKIM, DMARC)
 - **From Address**: `application@application.versionbravo.com`
 - **Architecture**: Secure server-side API calls through Netlify Functions
 - **Security**: API token stored securely in Netlify environment variables (not exposed in client code)
@@ -371,6 +371,8 @@ The system successfully handles the complete lifecycle from user registration th
 - **Operator ID Terminology**: Updated client-facing language from "Student ID" to "Operator ID" 
 - **Class Commitment Options**: Added "commit to both classes" option with mutual exclusivity logic
 - **Admin Display Logic**: Changed from showing "preferred classes" to "can't commit to" classes
-- **Email Template System**: Migrated from hardcoded templates to external accepted.txt/rejected.txt files
-- **Email Service Migration**: Moved from Postmark to Resend with secure Netlify Functions architecture
-- **Plain Email Styling**: Removed complex CSS for better email client compatibility
+- **Email Template System**: Migrated from hardcoded templates to external accepted.txt/rejected.txt files in /public directory
+- **Email Service Migration**: Moved from Postmark to Resend with secure Netlify Functions architecture  
+- **Plain Email Styling**: Emails sent as plain text, dashboard renders with HTML formatting
+- **UI Improvements**: Changed "Not Selected" to "Rejected", removed "Apply Again" functionality
+- **Email Templates**: Updated with proper markdown formatting, PayPal links, and removed Application IDs
