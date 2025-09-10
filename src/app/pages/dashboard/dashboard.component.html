@@ -91,7 +91,7 @@
                 You will receive the outcome via email once we've made a decision. We review applications on a rolling basis but you will receive a final answer no later than {{ getReviewDeadline() }}.</p>
                 @if (application()) {
                   <p><strong>Submitted:</strong> {{ application()?.submittedAt | date:'fullDate' }}</p>
-                  <p><strong>Cohort:</strong> {{ cohort()?.number }}</p>
+                  <p><strong>Class:</strong> {{ cohort()?.number }}</p>
                 }
               </div>
             } @else if (user()?.status === 'accepted') {

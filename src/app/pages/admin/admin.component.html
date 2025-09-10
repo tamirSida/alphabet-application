@@ -814,7 +814,7 @@
                     />
                   </div>
                   <div class="form-group">
-                    <label for="app-start-time">Start Time</label>
+                    <label for="app-start-time">Start Time (ET)</label>
                     <input
                       type="time"
                       id="app-start-time"
@@ -835,7 +835,7 @@
                     />
                   </div>
                   <div class="form-group">
-                    <label for="app-end-time">End Time</label>
+                    <label for="app-end-time">End Time (ET)</label>
                     <input
                       type="time"
                       id="app-end-time"
@@ -931,7 +931,7 @@
 
                         <!-- Times for Selected Days -->
                         <div class="times-section" formGroupName="times">
-                          <label class="section-label">Class Times</label>
+                          <label class="section-label">Class Times (ET)</label>
                           <div class="times-grid">
                             @for (day of getSelectedWeekdays(classIndex); track day) {
                               <div class="time-row" [formGroupName]="day">
@@ -999,7 +999,7 @@
 
                     <!-- Times for Selected Days -->
                     <div class="times-section" formGroupName="times">
-                      <label class="section-label">Lab Times</label>
+                      <label class="section-label">Lab Times (ET)</label>
                       <div class="times-grid">
                         @for (day of getSelectedLabWeekdays(); track day) {
                           <div class="time-row" [formGroupName]="day">

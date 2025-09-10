@@ -257,29 +257,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.timeRemaining() || { months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
   }
 
-  // Format date for multiple timezones
+  // Format date for multiple timezones using simple conversion
   formatDateWithTimezones(date: Date | undefined): string {
     if (!date) return '';
     
-    const ilTime = new Intl.DateTimeFormat('en-IL', {
-      timeZone: 'Asia/Jerusalem',
-      dateStyle: 'full',
-      timeStyle: 'short'
-    }).format(date);
+    // Get the stored time (ET)
+    const etHours = date.getHours();
+    const etMinutes = date.getMinutes();
     
-    const ptTime = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Los_Angeles', 
-      dateStyle: 'full',
-      timeStyle: 'short'
-    }).format(date);
+    // Calculate IL time (ET + 7 hours)
+    const ilDate = new Date(date);
+    ilDate.setHours(etHours + 7);
     
-    const etTime = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York',
-      dateStyle: 'full', 
-      timeStyle: 'short'
-    }).format(date);
+    // Calculate PT time (ET - 3 hours)  
+    const ptDate = new Date(date);
+    ptDate.setHours(etHours - 3);
     
-    return `IL: ${ilTime}\nPT: ${ptTime}\nET: ${etTime}`;
+    // Format dates
+    const formatDate = (d: Date, label: string) => {
+      const dateStr = d.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric', 
+        month: 'long',
+        day: 'numeric'
+      });
+      const timeStr = d.toTimeString().slice(0, 5);
+      return `${label}: ${dateStr} at ${timeStr}`;
+    };
+    
+    return `${formatDate(ilDate, 'IL')}\n${formatDate(ptDate, 'PT')}\n${formatDate(date, 'ET')}`;
   }
 
   // Get review deadline (program start date - 5 days)
