@@ -14,6 +14,15 @@ A comprehensive CRM system for managing applications to the Alphabet Program, bu
 - **Forms**: Angular Reactive Forms with validation
 - **State Management**: Angular Signals
 
+### Timezone Management
+- **Input Timezone**: All times in cohort management are entered in **Eastern Time (ET)**
+- **Storage**: Times are stored exactly as entered (ET) without conversion
+- **Display Conversion**: Simple mathematical conversion using:
+  - **IL = ET + 7 hours**
+  - **PT = ET - 3 hours**
+- **Multi-timezone Display**: All schedules show IL, PT, and ET times simultaneously
+- **No Complex Timezone Libraries**: Uses simple hour arithmetic for reliability and consistency
+
 ### Database Schema (Firestore)
 
 #### Collections:
@@ -367,6 +376,12 @@ This is a production-ready CRM system with comprehensive user management, applic
 The system successfully handles the complete lifecycle from user registration through application submission, admin review, cohort management, and automated email notifications to applicants.
 
 ## Recent Updates
+- **Timezone System Overhaul**: Simplified timezone management with ET as input base
+  - Cohort management now accepts all times as Eastern Time (ET)
+  - Times stored exactly as entered without complex timezone conversion
+  - Display conversion uses simple arithmetic: IL = ET + 7hrs, PT = ET - 3hrs
+  - Consistent multi-timezone display across dashboard, application form, and admin interface
+- **Dashboard Messaging**: Updated application status to include email notification timeline
 - **Schedule Links**: Added schedule link field to cohorts for external schedule references
 - **Operator ID Terminology**: Updated client-facing language from "Student ID" to "Operator ID" 
 - **Class Commitment Options**: Added "commit to both classes" option with mutual exclusivity logic

@@ -460,69 +460,35 @@ export class ApplicationComponent implements OnInit {
       .join('\n\n');
   }
 
-  // Format a single schedule entry with all timezones
+  // Format a single schedule entry with all timezones using simple conversion
   formatScheduleWithTimezones(day: string, startTime: string, endTime: string): string {
-    // Create dates for today with the given times (using IL timezone as base)
-    const today = new Date().toISOString().split('T')[0];
-    const startDate = this.createDateInILTimezone(today, startTime);
-    const endDate = this.createDateInILTimezone(today, endTime);
-
-    const ilStart = new Intl.DateTimeFormat('en-IL', {
-      timeZone: 'Asia/Jerusalem',
-      timeStyle: 'short'
-    }).format(startDate);
+    // Parse ET times (times are stored as ET)
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
     
-    const ilEnd = new Intl.DateTimeFormat('en-IL', {
-      timeZone: 'Asia/Jerusalem', 
-      timeStyle: 'short'
-    }).format(endDate);
-
-    const ptStart = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Los_Angeles',
-      timeStyle: 'short'
-    }).format(startDate);
+    // Calculate IL times (ET + 7 hours)
+    const ilStartHour = (startHour + 7) % 24;
+    const ilEndHour = (endHour + 7) % 24;
     
-    const ptEnd = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Los_Angeles',
-      timeStyle: 'short'
-    }).format(endDate);
-
-    const etStart = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York',
-      timeStyle: 'short'
-    }).format(startDate);
+    // Calculate PT times (ET - 3 hours, handle negative hours)
+    const ptStartHour = startHour - 3 < 0 ? startHour - 3 + 24 : startHour - 3;
+    const ptEndHour = endHour - 3 < 0 ? endHour - 3 + 24 : endHour - 3;
     
-    const etEnd = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York',
-      timeStyle: 'short'
-    }).format(endDate);
+    // Format times
+    const formatTime = (hour: number, min: number) => {
+      return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+    };
+    
+    const etStart = formatTime(startHour, startMin);
+    const etEnd = formatTime(endHour, endMin);
+    const ilStart = formatTime(ilStartHour, startMin);
+    const ilEnd = formatTime(ilEndHour, endMin);
+    const ptStart = formatTime(ptStartHour, startMin);
+    const ptEnd = formatTime(ptEndHour, endMin);
 
     return `${day}\nIL: ${ilStart}-${ilEnd}\nPT: ${ptStart}-${ptEnd}\nET: ${etStart}-${etEnd}`;
   }
 
-  // Create date in IL timezone
-  private createDateInILTimezone(dateStr: string, timeStr: string): Date {
-    // Create date assuming IL timezone
-    const isoString = `${dateStr}T${timeStr}:00`;
-    
-    // Use a more accurate approach - create the date and interpret it as IL time
-    const date = new Date(isoString);
-    
-    // Get what this time would be in IL timezone
-    const ilFormatter = new Intl.DateTimeFormat('sv-SE', {
-      timeZone: 'Asia/Jerusalem',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit', 
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-    
-    // Format the date as if it were in UTC, then parse as IL time
-    const utcDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-    return new Date(utcDate.toISOString().replace('Z', '+02:00'));
-  }
 
   // File upload handling
   async onFileSelected(event: any, fieldPath: string) {
