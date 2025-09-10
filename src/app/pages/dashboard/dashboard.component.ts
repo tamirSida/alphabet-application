@@ -281,4 +281,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
     
     return `IL: ${ilTime}\nPT: ${ptTime}\nET: ${etTime}`;
   }
+
+  // Get review deadline (program start date - 5 days)
+  getReviewDeadline(): string {
+    const cohort = this.cohort();
+    if (!cohort || !cohort.cohortStartDate) return 'TBD';
+    
+    const startDate = new Date(cohort.cohortStartDate);
+    const reviewDeadline = new Date(startDate);
+    reviewDeadline.setDate(startDate.getDate() - 5);
+    
+    return reviewDeadline.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
 }

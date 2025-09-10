@@ -87,7 +87,8 @@
               </div>
             } @else if (user()?.status === 'submitted' || user()?.status === 'under_review') {
               <div class="status-description">
-                <p>Your application has been submitted and is currently under review.</p>
+                <p>Your application has been submitted and is currently under review. 
+                You will receive the outcome via email once we've made a decision. We review applications on a rolling basis but you will receive a final answer no later than {{ getReviewDeadline() }}.</p>
                 @if (application()) {
                   <p><strong>Submitted:</strong> {{ application()?.submittedAt | date:'fullDate' }}</p>
                   <p><strong>Cohort:</strong> {{ cohort()?.number }}</p>
