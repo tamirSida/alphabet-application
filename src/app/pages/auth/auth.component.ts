@@ -259,4 +259,44 @@ export class AuthComponent implements OnInit {
     
     return phone; // Fallback to original if no format matches
   }
+
+  async onForgotPassword() {
+    const email = this.loginForm.get('email')?.value;
+    
+    if (!email) {
+      this.error.set('Please enter your email address to reset your password.');
+      return;
+    }
+
+    if (!this.loginForm.get('email')?.valid) {
+      this.error.set('Please enter a valid email address.');
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.error.set(null);
+    this.success.set(null);
+
+    try {
+      await this.userService.sendPasswordReset(email);
+      this.success.set('Password reset email sent! Check your inbox and follow the instructions to reset your password.');
+    } catch (error: any) {
+      this.error.set(this.getForgotPasswordErrorMessage(error));
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  private getForgotPasswordErrorMessage(error: any): string {
+    switch (error.code) {
+      case 'auth/user-not-found':
+        return 'No account found with this email address.';
+      case 'auth/invalid-email':
+        return 'Please enter a valid email address.';
+      case 'auth/too-many-requests':
+        return 'Too many password reset requests. Please try again later.';
+      default:
+        return 'Failed to send password reset email. Please try again.';
+    }
+  }
 }

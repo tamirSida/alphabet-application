@@ -231,6 +231,31 @@
   transform: none;
 }
 
+.forgot-password {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.forgot-password-button {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.forgot-password-button:hover:not(:disabled) {
+  color: #1e40af;
+}
+
+.forgot-password-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .auth-toggle {
   padding: 1.5rem 2rem 2rem;
   text-align: center;

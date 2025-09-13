@@ -96,6 +96,12 @@
             Sign In
           }
         </button>
+        
+        <div class="forgot-password">
+          <button type="button" class="forgot-password-button" (click)="onForgotPassword()" [disabled]="isLoading()">
+            Forgot your password?
+          </button>
+        </div>
       </form>
     } @else {
       <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="auth-form">
