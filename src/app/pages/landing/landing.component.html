@@ -3,10 +3,6 @@
     <div class="header-top">
       <div class="logo-section">
         <img src="/images/logo.png" alt="Alpha-Bet Logo" class="logo">
-        <div class="version-text">
-          Version Bravo<br>
-          Alpha-Bet
-        </div>
       </div>
     </div>
     <div class="header-main">
@@ -33,7 +29,7 @@
                 <p><strong>Application Deadline:</strong></p>
                 <div class="timezone-display">{{ formatDateWithTimezones(currentAcceptingCohort()?.applicationEndDate) }}</div>
               </div>
-              <p><strong>Program Start:</strong> 
+              <p><strong>Program Start:</strong>
                 {{ currentAcceptingCohort()?.cohortStartDate | date:'fullDate' }}
               </p>
             </div>
@@ -75,10 +71,10 @@
             <h2>Next Cohort</h2>
             <div class="cohort-details">
               <p><strong>Cohort:</strong> {{ nextCohort()?.number }}</p>
-              <p><strong>Applications Open:</strong> 
+              <p><strong>Applications Open:</strong>
                 {{ nextCohort()?.applicationStartDate | date:'fullDate' }}
               </p>
-              <p><strong>Program Start:</strong> 
+              <p><strong>Program Start:</strong>
                 {{ nextCohort()?.cohortStartDate | date:'fullDate' }}
               </p>
             </div>

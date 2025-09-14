@@ -9,10 +9,6 @@
       <div class="header-top">
         <div class="logo-section">
           <img src="/images/logo.png" alt="Alpha-Bet Logo" class="logo">
-          <div class="version-text">
-            Version Bravo<br>
-            Alpha-Bet
-          </div>
         </div>
       </div>
       <div class="header-content">
@@ -50,7 +46,7 @@
                 {{ statusDisplay().text }}
               </div>
             </div>
-            
+
             @if (user()?.status === 'not_submitted') {
               <div class="status-description">
                 <p>You haven't submitted an application yet.</p>
@@ -60,7 +56,7 @@
                     <p><strong>Deadline:</strong></p>
                     <div class="timezone-display">{{ formatDateWithTimezones(currentAcceptingCohort()?.applicationEndDate) }}</div>
                   </div>
-                  
+
                   <div class="status-action">
                     <button class="primary-button" (click)="goToApplication()">
                       <i class="fas fa-paper-plane"></i>
@@ -87,7 +83,7 @@
               </div>
             } @else if (user()?.status === 'submitted' || user()?.status === 'under_review') {
               <div class="status-description">
-                <p>Your application has been submitted and is currently under review. 
+                <p>Your application has been submitted and is currently under review.
                 You will receive the outcome via email once we've made a decision. We review applications on a rolling basis but you will receive a final answer no later than {{ getReviewDeadline() }}.</p>
                 @if (application()) {
                   <p><strong>Submitted:</strong> {{ application()?.submittedAt | date:'fullDate' }}</p>
