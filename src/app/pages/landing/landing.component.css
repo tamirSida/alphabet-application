@@ -275,6 +275,23 @@
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
+  .header {
+    padding: 1.5rem 1rem;
+  }
+  
+  .header-top {
+    position: static;
+    margin-bottom: 2rem;
+  }
+  
+  .logo-section {
+    justify-content: center;
+  }
+  
+  .header-main {
+    margin-top: 0;
+  }
+  
   .title {
     font-size: 2rem;
   }
