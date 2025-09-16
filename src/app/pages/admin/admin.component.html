@@ -654,7 +654,6 @@
                       <th>Email</th>
                       <th>ID</th>
                       <th>Country</th>
-                      <th>Class Availability</th>
                       <th>Assigned Class</th>
                       <th>Recommendation</th>
                       <th>Assigned To</th>
@@ -686,11 +685,6 @@
                         <td>
                           <div class="country-cell">
                             {{ application.formData.serviceAvailability.countryOfService }}
-                          </div>
-                        </td>
-                        <td>
-                          <div class="preferred-class-cell">
-                            {{ formatPreferredClasses(application) }}
                           </div>
                         </td>
                         <td>
@@ -751,13 +745,6 @@
                         </td>
                         <td>
                           <div class="actions-cell">
-                            <button 
-                              class="table-action-btn view-btn"
-                              (click)="$event.stopPropagation(); viewApplication(application)"
-                              title="View Details">
-                              <i class="fas fa-eye"></i>
-                            </button>
-                            
                             <!-- Accept/Reject Toggle -->
                             @if (application.status === 'accepted') {
                               <button 
