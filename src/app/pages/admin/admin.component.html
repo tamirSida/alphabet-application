@@ -29,6 +29,13 @@
     </button>
     <button 
       class="nav-button"
+      [class.active]="currentView() === 'users'"
+      (click)="switchView('users')">
+      <i class="fas fa-user"></i>
+      Users
+    </button>
+    <button 
+      class="nav-button"
       [class.active]="currentView() === 'admin'"
       (click)="switchView('admin')">
       <i class="fas fa-user-shield"></i>
@@ -1101,6 +1108,67 @@
                   </div>
                 </div>
               }
+            </div>
+          }
+        </div>
+      } @else if (currentView() === 'users') {
+        <div class="users-view">
+          <div class="view-header">
+            <h2>
+              <i class="fas fa-user"></i>
+              Users
+            </h2>
+            <div class="stats">
+              <div class="stat-item">
+                <i class="fas fa-users"></i>
+                {{ users().length }} Total Users
+              </div>
+            </div>
+          </div>
+
+          @if (users().length === 0) {
+            <div class="empty-state">
+              <i class="fas fa-user-slash"></i>
+              <h3>No Users Found</h3>
+              <p>No registered users in the system yet.</p>
+            </div>
+          } @else {
+            <div class="users-table-container">
+              <table class="users-table">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Operator ID</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (user of users(); track user.userId) {
+                    <tr class="user-row">
+                      <td class="user-email">
+                        <div class="email-cell">
+                          <i class="fas fa-user"></i>
+                          {{ user.email }}
+                        </div>
+                      </td>
+                      <td class="user-status">
+                        <span [class]="'status-badge status-' + (user.status || 'unknown')">
+                          {{ user.status === 'not_submitted' ? 'Not Submitted' : 'Submitted' }}
+                        </span>
+                      </td>
+                      <td class="user-operator-id">
+                        <span class="operator-id-badge">
+                          {{ user.operatorId }}
+                        </span>
+                      </td>
+                      <td class="user-created">
+                        {{ user.createdAt | date:'short' }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
             </div>
           }
         </div>

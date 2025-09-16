@@ -171,6 +171,19 @@ export class UserService {
     });
   }
 
+  async getAllUsers(): Promise<User[]> {
+    const q = query(collection(this.firebaseService.firestore, 'users'));
+    
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        createdAt: data['createdAt']?.toDate ? data['createdAt'].toDate() : new Date(data['createdAt'])
+      } as User;
+    });
+  }
+
   async getUserByOperatorId(operatorId: string): Promise<User | null> {
     const q = query(
       collection(this.firebaseService.firestore, 'users'),

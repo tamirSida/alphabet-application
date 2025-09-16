@@ -13,11 +13,12 @@ import { User, Application, Cohort } from '../../models';
   styleUrls: ['./admin.component.css']
 })
 export class AdminComponent implements OnInit, OnDestroy {
-  currentView = signal<'applications' | 'cohorts' | 'admin'>('applications');
+  currentView = signal<'applications' | 'cohorts' | 'users' | 'admin'>('applications');
   applications = signal<(Application & { user?: User, cohort?: Cohort })[]>([]);
   filteredApplications = signal<(Application & { user?: User, cohort?: Cohort })[]>([]);
   cohorts = signal<Cohort[]>([]);
   admins = signal<User[]>([]);
+  users = signal<User[]>([]);
   isLoading = signal(true);
   error = signal<string | null>(null);
   success = signal<string | null>(null);
@@ -172,6 +173,8 @@ export class AdminComponent implements OnInit, OnDestroy {
         await this.loadApplications();
       } else if (this.currentView() === 'cohorts') {
         await this.loadCohorts();
+      } else if (this.currentView() === 'users') {
+        await this.loadUsers();
       } else if (this.currentView() === 'admin') {
         await this.loadAdmins();
       }
@@ -336,7 +339,18 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.admins.set(admins);
   }
 
-  async switchView(view: 'applications' | 'cohorts' | 'admin') {
+  private async loadUsers() {
+    const allUsers = await this.userService.getAllUsers();
+    // Filter out admin users to show only non-admin users
+    const nonAdminUsers = allUsers.filter(user => user.role !== 'admin');
+    // Sort by creation time descending (newest first)
+    const sortedUsers = nonAdminUsers.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    this.users.set(sortedUsers);
+  }
+
+  async switchView(view: 'applications' | 'cohorts' | 'users' | 'admin') {
     this.currentView.set(view);
     this.isLoading.set(true);
     this.error.set(null);
