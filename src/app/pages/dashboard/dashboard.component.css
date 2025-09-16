@@ -441,6 +441,49 @@
   .operator-id {
     font-size: 0.8rem;
   }
+
+  /* Enhanced mobile formatting for status-action section */
+  .status-action {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    text-align: center;
+  }
+
+  .primary-button {
+    width: 100%;
+    font-size: 1rem;
+    padding: 1rem 1.5rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+    min-height: 50px; /* Better touch target */
+  }
+
+  .countdown-timer {
+    align-items: center;
+    margin-top: 0;
+  }
+
+  .countdown-label {
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  .countdown-display {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+
+  .time-unit {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.5rem;
+    min-width: 45px;
+    justify-content: center;
+  }
+
+  .separator {
+    font-size: 0.9rem;
+  }
 }
 
 /* Status Message Styling */
