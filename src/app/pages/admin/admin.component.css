@@ -193,7 +193,29 @@
 .search-box input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem; background: white; }
 .search-box input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
 .filter-controls { display: flex; gap: 1rem; align-items: center; }
-.filter-controls select { padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem; background: white; min-width: 150px; }
+.filter-controls select { 
+  padding: 0.75rem 1rem; 
+  border: 1px solid #d1d5db; 
+  border-radius: 8px; 
+  font-size: 0.9rem; 
+  background: white; 
+  min-width: 150px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+.filter-controls select:focus { 
+  outline: none; 
+  border-color: #3b82f6; 
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); 
+}
+.filter-controls select:hover { 
+  border-color: #9ca3af; 
+}
 
 .table-container { 
   background: white; 

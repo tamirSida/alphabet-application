@@ -194,13 +194,6 @@ export class AdminComponent implements OnInit, OnDestroy {
     ]);
     
     const applications = await this.applicationService.getAllApplications();
-    console.log('🔍 Raw applications from service:', applications.map(app => ({
-      id: app.applicationId,
-      assignedTo: app.assignedTo,
-      recommendation: app.recommendation,
-      hasAssignedTo: app.hasOwnProperty('assignedTo'),
-      hasRecommendation: app.hasOwnProperty('recommendation')
-    })));
     
     const enrichedApplications = [];
 
@@ -219,12 +212,6 @@ export class AdminComponent implements OnInit, OnDestroy {
       enrichedApplications.push(enrichedApp);
     }
 
-    console.log('🔍 Final enriched applications:', enrichedApplications.map(app => ({
-      id: app.applicationId,
-      assignedTo: app.assignedTo,
-      recommendation: app.recommendation
-    })));
-    
     this.applications.set(enrichedApplications);
     this.lastApplicationCount = enrichedApplications.length; // Track count for auto-refresh
     this.loadAvailableClasses();
@@ -382,7 +369,6 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   private async loadAdmins() {
     const admins = await this.userService.getAllAdmins();
-    console.log('🔍 Loaded admins:', admins.map(admin => admin.email));
     this.admins.set(admins);
   }
 
