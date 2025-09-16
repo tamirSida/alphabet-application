@@ -7,6 +7,34 @@
 
 /* Mobile-First Application Form Styles */
 
+/* Language Notice Styles */
+.language-notice {
+  margin: 1rem 0 1.5rem 0;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+.notice-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #92400e;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.notice-content i {
+  font-size: 1.1rem;
+  color: #f59e0b;
+}
+
+.notice-content strong {
+  font-weight: 600;
+}
+
 /* Schedule Link Styles */
 .schedule-link-info {
   margin: 0.5rem 0 1rem 0;
