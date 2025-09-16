@@ -192,8 +192,18 @@ export class ApplicationService {
   }
 
   async updateApplicationAssignedTo(applicationId: string, assignedTo: string | null): Promise<void> {
+    console.log('Updating assignedTo:', applicationId, assignedTo);
     const applicationRef = doc(this.firebaseService.firestore, 'applications', applicationId);
-    await updateDoc(applicationRef, { assignedTo });
+    const updateData: any = {};
+    
+    if (assignedTo === null || assignedTo === '') {
+      updateData.assignedTo = null;
+    } else {
+      updateData.assignedTo = assignedTo;
+    }
+    
+    await updateDoc(applicationRef, updateData);
+    console.log('AssignedTo updated successfully');
   }
 
   async validateFriendIds(friendIds: string[]): Promise<{[key: string]: string | null}> {

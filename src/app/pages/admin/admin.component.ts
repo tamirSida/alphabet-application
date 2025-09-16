@@ -495,23 +495,65 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   async updateRecommendation(applicationId: string, recommendation: Application['recommendation']) {
     try {
+      // Update local state immediately for instant UI feedback
+      const apps = this.applications();
+      const appIndex = apps.findIndex(a => a.applicationId === applicationId);
+      if (appIndex !== -1) {
+        apps[appIndex] = { ...apps[appIndex], recommendation };
+        this.applications.set([...apps]);
+        this.filterApplications();
+        
+        // Update selected application if it's the same one
+        if (this.selectedApplication()?.applicationId === applicationId) {
+          this.selectedApplication.set({ ...this.selectedApplication()!, recommendation });
+        }
+      }
+      
+      // Then update the backend
       await this.applicationService.updateApplicationRecommendation(applicationId, recommendation);
-      await this.loadApplications();
       this.success.set('Recommendation updated successfully!');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        this.success.set(null);
+      }, 3000);
     } catch (error) {
       console.error('Error updating recommendation:', error);
       this.error.set('Failed to update recommendation.');
+      // Reload applications to revert optimistic update on error
+      await this.loadApplications();
     }
   }
 
   async updateAssignedTo(applicationId: string, assignedTo: string | null) {
     try {
+      // Update local state immediately for instant UI feedback
+      const apps = this.applications();
+      const appIndex = apps.findIndex(a => a.applicationId === applicationId);
+      if (appIndex !== -1) {
+        apps[appIndex] = { ...apps[appIndex], assignedTo };
+        this.applications.set([...apps]);
+        this.filterApplications();
+        
+        // Update selected application if it's the same one
+        if (this.selectedApplication()?.applicationId === applicationId) {
+          this.selectedApplication.set({ ...this.selectedApplication()!, assignedTo });
+        }
+      }
+      
+      // Then update the backend
       await this.applicationService.updateApplicationAssignedTo(applicationId, assignedTo);
-      await this.loadApplications();
       this.success.set('Assignment updated successfully!');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        this.success.set(null);
+      }, 3000);
     } catch (error) {
       console.error('Error updating assignment:', error);
       this.error.set('Failed to update assignment.');
+      // Reload applications to revert optimistic update on error
+      await this.loadApplications();
     }
   }
 
@@ -1338,5 +1380,50 @@ export class AdminComponent implements OnInit, OnDestroy {
       default:
         return 'recommendation-none';
     }
+  }
+
+  getAssignedToStyle(assignedTo: string | undefined): any {
+    if (!assignedTo) {
+      console.log('No assignedTo, returning empty style');
+      return {};
+    }
+    
+    // Generate a consistent color based on email hash
+    const colors = this.generateAdminColor(assignedTo);
+    console.log('Generated colors for', assignedTo, ':', colors);
+    
+    const style = {
+      'background-color': colors.background,
+      'color': colors.text,
+      'border-color': colors.border
+    };
+    
+    console.log('Returning style:', style);
+    return style;
+  }
+
+  private generateAdminColor(email: string): { background: string; text: string; border: string } {
+    // Simple hash function for consistency
+    let hash = 0;
+    for (let i = 0; i < email.length; i++) {
+      const char = email.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    // Predefined color palette with good contrast
+    const colorPalettes = [
+      { background: '#fce7f3', text: '#be185d', border: '#ec4899' }, // Pink
+      { background: '#dbeafe', text: '#1e40af', border: '#3b82f6' }, // Blue
+      { background: '#ecfdf5', text: '#059669', border: '#10b981' }, // Green
+      { background: '#fef3c7', text: '#92400e', border: '#f59e0b' }, // Amber
+      { background: '#f3e8ff', text: '#7c3aed', border: '#8b5cf6' }, // Purple
+      { background: '#fef2f2', text: '#dc2626', border: '#ef4444' }, // Red
+      { background: '#ecfeff', text: '#0891b2', border: '#06b6d4' }, // Cyan
+      { background: '#f0fdf4', text: '#16a34a', border: '#22c55e' }, // Lime
+    ];
+    
+    const index = Math.abs(hash) % colorPalettes.length;
+    return colorPalettes[index];
   }
 }

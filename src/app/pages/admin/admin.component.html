@@ -121,6 +121,37 @@
                     Delete Application
                   </button>
                 </div>
+
+                <!-- Workflow Management -->
+                <div class="action-group workflow-controls">
+                  <div class="workflow-item">
+                    <label><strong>Recommendation:</strong></label>
+                    <select 
+                      [value]="selectedApplication()?.recommendation || 'none'"
+                      (change)="updateRecommendation(selectedApplication()!.applicationId, $any($event.target).value)"
+                      class="inline-select recommendation-select detail-select"
+                      [ngClass]="getRecommendationClass(selectedApplication()?.recommendation)">
+                      <option value="none">None</option>
+                      <option value="recommend_accept">Accept</option>
+                      <option value="recommend_reject">Reject</option>
+                      <option value="need_fix">Fix</option>
+                    </select>
+                  </div>
+                  
+                  <div class="workflow-item">
+                    <label><strong>Assigned To:</strong></label>
+                    <select 
+                      [value]="selectedApplication()?.assignedTo || ''"
+                      (change)="updateAssignedTo(selectedApplication()!.applicationId, $any($event.target).value || null)"
+                      [class]="'inline-select assigned-to-select detail-select' + (selectedApplication()?.assignedTo ? ' has-assignment' : '')"
+                      [ngStyle]="getAssignedToStyle(selectedApplication()?.assignedTo)">
+                      <option value="">Unassigned</option>
+                      @for (admin of admins(); track admin.email) {
+                        <option [value]="admin.email">{{ admin.email }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
                 
                 <!-- Class Management -->
                 @if (selectedApplication()?.status === 'accepted') {
@@ -623,9 +654,9 @@
                 <select [value]="recommendationFilter()" (change)="updateRecommendationFilter($any($event.target).value)">
                   <option value="all">All Recommendations</option>
                   <option value="none">None</option>
-                  <option value="recommend_accept">Recommend Accept</option>
-                  <option value="recommend_reject">Recommend Reject</option>
-                  <option value="need_fix">Need Fix</option>
+                  <option value="recommend_accept">Accept</option>
+                  <option value="recommend_reject">Reject</option>
+                  <option value="need_fix">Fix</option>
                 </select>
                 
                 <select [value]="assignedToFilter()" (change)="updateAssignedToFilter($any($event.target).value)">
@@ -698,11 +729,12 @@
                               [value]="application.recommendation || 'none'"
                               (change)="updateRecommendation(application.applicationId, $any($event.target).value)"
                               (click)="$event.stopPropagation()"
-                              class="inline-select recommendation-select">
+                              class="inline-select recommendation-select"
+                              [ngClass]="getRecommendationClass(application.recommendation)">
                               <option value="none">None</option>
-                              <option value="recommend_accept">Recommend Accept</option>
-                              <option value="recommend_reject">Recommend Reject</option>
-                              <option value="need_fix">Need Fix</option>
+                              <option value="recommend_accept">Accept</option>
+                              <option value="recommend_reject">Reject</option>
+                              <option value="need_fix">Fix</option>
                             </select>
                           </div>
                         </td>
@@ -712,7 +744,8 @@
                               [value]="application.assignedTo || ''"
                               (change)="updateAssignedTo(application.applicationId, $any($event.target).value || null)"
                               (click)="$event.stopPropagation()"
-                              class="inline-select assigned-to-select">
+                              [class]="'inline-select assigned-to-select' + (application.assignedTo ? ' has-assignment' : '')"
+                              [ngStyle]="getAssignedToStyle(application.assignedTo)">
                               <option value="">Unassigned</option>
                               @for (admin of admins(); track admin.email) {
                                 <option [value]="admin.email">{{ admin.email }}</option>
