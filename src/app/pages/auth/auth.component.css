@@ -314,4 +314,31 @@
   .operator-id {
     font-size: 1.5rem;
   }
+
+  /* Enhanced mobile styling for region select */
+  .region-select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 1.2rem 1rem 1.2rem 3rem;
+    min-height: 50px; /* Better touch target */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 12px;
+    padding-right: 3rem;
+  }
+
+  /* Larger touch-friendly form elements on mobile */
+  .input-group input {
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 50px;
+    padding: 1.2rem 1rem 1.2rem 3rem;
+  }
+
+  .form-group label {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
 }
