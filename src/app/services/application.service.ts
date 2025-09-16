@@ -186,6 +186,16 @@ export class ApplicationService {
     await updateDoc(applicationRef, { notes });
   }
 
+  async updateApplicationRecommendation(applicationId: string, recommendation: Application['recommendation']): Promise<void> {
+    const applicationRef = doc(this.firebaseService.firestore, 'applications', applicationId);
+    await updateDoc(applicationRef, { recommendation });
+  }
+
+  async updateApplicationAssignedTo(applicationId: string, assignedTo: string | null): Promise<void> {
+    const applicationRef = doc(this.firebaseService.firestore, 'applications', applicationId);
+    await updateDoc(applicationRef, { assignedTo });
+  }
+
   async validateFriendIds(friendIds: string[]): Promise<{[key: string]: string | null}> {
     const results: {[key: string]: string | null} = {};
     

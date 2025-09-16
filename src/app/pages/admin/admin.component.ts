@@ -41,6 +41,8 @@ export class AdminComponent implements OnInit, OnDestroy {
   statusFilter = signal<string>('all');
   countryFilter = signal<string>('all');
   classFilter = signal<string>('all');
+  recommendationFilter = signal<string>('all');
+  assignedToFilter = signal<string>('all');
   selectedApplication = signal<(Application & { user?: User, cohort?: Cohort }) | null>(null);
   availableClasses = signal<string[]>([]);
   
@@ -185,8 +187,11 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   private async loadApplications() {
-    // Load cohorts first to ensure we have class data
-    await this.loadCohorts();
+    // Load cohorts and admins first to ensure we have class data and admin list
+    await Promise.all([
+      this.loadCohorts(),
+      this.loadAdmins()
+    ]);
     
     const applications = await this.applicationService.getAllApplications();
     const enrichedApplications = [];
@@ -265,6 +270,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     const status = this.statusFilter();
     const country = this.countryFilter();
     const classFilter = this.classFilter();
+    const recommendation = this.recommendationFilter();
+    const assignedTo = this.assignedToFilter();
 
     let filtered = apps;
 
@@ -298,6 +305,19 @@ export class AdminComponent implements OnInit, OnDestroy {
       });
     }
 
+    // Apply recommendation filter
+    if (recommendation !== 'all') {
+      filtered = filtered.filter(app => {
+        const appRecommendation = app.recommendation || 'none';
+        return appRecommendation === recommendation;
+      });
+    }
+
+    // Apply assigned to filter
+    if (assignedTo !== 'all') {
+      filtered = filtered.filter(app => app.assignedTo === assignedTo);
+    }
+
     this.filteredApplications.set(filtered);
   }
 
@@ -318,6 +338,16 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   updateClassFilter(classFilter: string) {
     this.classFilter.set(classFilter);
+    this.filterApplications();
+  }
+
+  updateRecommendationFilter(recommendation: string) {
+    this.recommendationFilter.set(recommendation);
+    this.filterApplications();
+  }
+
+  updateAssignedToFilter(assignedTo: string) {
+    this.assignedToFilter.set(assignedTo);
     this.filterApplications();
   }
 
@@ -460,6 +490,28 @@ export class AdminComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error updating application status:', error);
       this.error.set('Failed to update application status.');
+    }
+  }
+
+  async updateRecommendation(applicationId: string, recommendation: Application['recommendation']) {
+    try {
+      await this.applicationService.updateApplicationRecommendation(applicationId, recommendation);
+      await this.loadApplications();
+      this.success.set('Recommendation updated successfully!');
+    } catch (error) {
+      console.error('Error updating recommendation:', error);
+      this.error.set('Failed to update recommendation.');
+    }
+  }
+
+  async updateAssignedTo(applicationId: string, assignedTo: string | null) {
+    try {
+      await this.applicationService.updateApplicationAssignedTo(applicationId, assignedTo);
+      await this.loadApplications();
+      this.success.set('Assignment updated successfully!');
+    } catch (error) {
+      console.error('Error updating assignment:', error);
+      this.error.set('Failed to update assignment.');
     }
   }
 
@@ -1258,5 +1310,33 @@ export class AdminComponent implements OnInit, OnDestroy {
     };
     
     return `${formatDate(ilDate, 'IL')}\n${formatDate(ptDate, 'PT')}\n${formatDate(date, 'ET')}`;
+  }
+
+  formatRecommendation(recommendation: Application['recommendation']): string {
+    switch (recommendation) {
+      case 'recommend_accept':
+        return 'Recommend Accept';
+      case 'recommend_reject':
+        return 'Recommend Reject';
+      case 'need_fix':
+        return 'Need Fix';
+      case 'none':
+      default:
+        return 'None';
+    }
+  }
+
+  getRecommendationClass(recommendation: Application['recommendation']): string {
+    switch (recommendation) {
+      case 'recommend_accept':
+        return 'recommendation-accept';
+      case 'recommend_reject':
+        return 'recommendation-reject';
+      case 'need_fix':
+        return 'recommendation-fix';
+      case 'none':
+      default:
+        return 'recommendation-none';
+    }
   }
 }

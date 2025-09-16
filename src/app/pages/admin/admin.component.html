@@ -619,6 +619,22 @@
                     <option [value]="classOption">{{ classOption }}</option>
                   }
                 </select>
+                
+                <select [value]="recommendationFilter()" (change)="updateRecommendationFilter($any($event.target).value)">
+                  <option value="all">All Recommendations</option>
+                  <option value="none">None</option>
+                  <option value="recommend_accept">Recommend Accept</option>
+                  <option value="recommend_reject">Recommend Reject</option>
+                  <option value="need_fix">Need Fix</option>
+                </select>
+                
+                <select [value]="assignedToFilter()" (change)="updateAssignedToFilter($any($event.target).value)">
+                  <option value="all">All Assignments</option>
+                  <option value="">Unassigned</option>
+                  @for (admin of admins(); track admin.email) {
+                    <option [value]="admin.email">{{ admin.email }}</option>
+                  }
+                </select>
               </div>
             </div>
 
@@ -640,6 +656,8 @@
                       <th>Country</th>
                       <th>Class Availability</th>
                       <th>Assigned Class</th>
+                      <th>Recommendation</th>
+                      <th>Assigned To</th>
                       <th>Status</th>
                       <th>Submitted</th>
                       <th>Flags</th>
@@ -678,6 +696,34 @@
                         <td>
                           <div class="assigned-class-cell">
                             {{ application.assignedClass || '-' }}
+                          </div>
+                        </td>
+                        <td>
+                          <div class="recommendation-cell">
+                            <select 
+                              [value]="application.recommendation || 'none'"
+                              (change)="updateRecommendation(application.applicationId, $any($event.target).value)"
+                              (click)="$event.stopPropagation()"
+                              class="inline-select recommendation-select">
+                              <option value="none">None</option>
+                              <option value="recommend_accept">Recommend Accept</option>
+                              <option value="recommend_reject">Recommend Reject</option>
+                              <option value="need_fix">Need Fix</option>
+                            </select>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="assigned-to-cell">
+                            <select 
+                              [value]="application.assignedTo || ''"
+                              (change)="updateAssignedTo(application.applicationId, $any($event.target).value || null)"
+                              (click)="$event.stopPropagation()"
+                              class="inline-select assigned-to-select">
+                              <option value="">Unassigned</option>
+                              @for (admin of admins(); track admin.email) {
+                                <option [value]="admin.email">{{ admin.email }}</option>
+                              }
+                            </select>
                           </div>
                         </td>
                         <td>
