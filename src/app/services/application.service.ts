@@ -107,11 +107,14 @@ export class ApplicationService {
     
     return querySnapshot.docs.map(doc => {
       const data = doc.data();
+      
       return {
         applicationId: doc.id,
         ...data,
         submittedAt: data['submittedAt']?.toDate ? data['submittedAt'].toDate() : new Date(data['submittedAt']),
-        reviewedAt: data['reviewedAt'] ? (data['reviewedAt']?.toDate ? data['reviewedAt'].toDate() : new Date(data['reviewedAt'])) : undefined
+        reviewedAt: data['reviewedAt'] ? (data['reviewedAt']?.toDate ? data['reviewedAt'].toDate() : new Date(data['reviewedAt'])) : undefined,
+        assignedTo: data['assignedTo'] || null,
+        recommendation: data['recommendation'] || undefined
       } as Application;
     });
   }
@@ -130,7 +133,9 @@ export class ApplicationService {
         applicationId: doc.id,
         ...data,
         submittedAt: data['submittedAt']?.toDate ? data['submittedAt'].toDate() : new Date(data['submittedAt']),
-        reviewedAt: data['reviewedAt'] ? (data['reviewedAt']?.toDate ? data['reviewedAt'].toDate() : new Date(data['reviewedAt'])) : undefined
+        reviewedAt: data['reviewedAt'] ? (data['reviewedAt']?.toDate ? data['reviewedAt'].toDate() : new Date(data['reviewedAt'])) : undefined,
+        assignedTo: data['assignedTo'] || null,
+        recommendation: data['recommendation'] || undefined
       } as Application;
     });
   }
@@ -192,18 +197,15 @@ export class ApplicationService {
   }
 
   async updateApplicationAssignedTo(applicationId: string, assignedTo: string | null): Promise<void> {
-    console.log('Updating assignedTo:', applicationId, assignedTo);
     const applicationRef = doc(this.firebaseService.firestore, 'applications', applicationId);
-    const updateData: any = {};
     
-    if (assignedTo === null || assignedTo === '') {
-      updateData.assignedTo = null;
-    } else {
-      updateData.assignedTo = assignedTo;
+    try {
+      const updateData = { assignedTo: assignedTo === '' ? null : assignedTo };
+      await updateDoc(applicationRef, updateData);
+    } catch (error) {
+      console.error('Error updating assigned admin:', error);
+      throw error;
     }
-    
-    await updateDoc(applicationRef, updateData);
-    console.log('AssignedTo updated successfully');
   }
 
   async validateFriendIds(friendIds: string[]): Promise<{[key: string]: string | null}> {

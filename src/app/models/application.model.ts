@@ -128,7 +128,7 @@ export interface Application {
   notes?: AdminNote; // Notes added by admin reviewers with attribution
   // Internal admin workflow fields (not visible to applicants)
   recommendation?: 'recommend_accept' | 'recommend_reject' | 'need_fix' | 'none';
-  assignedTo?: string; // Admin email/ID who is assigned to review this application
+  assignedTo?: string | null; // Admin email/ID who is assigned to review this application
 }
 
 export interface CreateApplicationRequest {

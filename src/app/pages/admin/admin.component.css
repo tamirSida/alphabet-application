@@ -348,18 +348,14 @@
   padding-right: 1rem;
 }
 
-/* Admin-specific colors */
-.assigned-to-select.has-assignment {
-  font-weight: 600;
-  border-radius: 20px;
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
+/* Admin-specific colors - Higher specificity */
+.inline-select.assigned-to-select.has-assignment {
+  font-weight: 600 !important;
+  border-radius: 20px !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.85rem !important;
   background-image: none !important;
-  padding-right: 1rem;
-  /* Remove any background/color defaults to allow ngStyle to work */
-  background: unset;
-  color: unset;
-  border-color: unset;
+  padding-right: 1rem !important;
 }
 
 /* Dynamic admin colors will be applied via inline styles */

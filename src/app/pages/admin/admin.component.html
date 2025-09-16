@@ -141,13 +141,12 @@
                   <div class="workflow-item">
                     <label><strong>Assigned To:</strong></label>
                     <select 
-                      [value]="selectedApplication()?.assignedTo || ''"
                       (change)="updateAssignedTo(selectedApplication()!.applicationId, $any($event.target).value || null)"
                       [class]="'inline-select assigned-to-select detail-select' + (selectedApplication()?.assignedTo ? ' has-assignment' : '')"
                       [ngStyle]="getAssignedToStyle(selectedApplication()?.assignedTo)">
-                      <option value="">Unassigned</option>
+                      <option value="" [selected]="!selectedApplication()?.assignedTo">Unassigned</option>
                       @for (admin of admins(); track admin.email) {
-                        <option [value]="admin.email">{{ admin.email }}</option>
+                        <option [value]="admin.email" [selected]="selectedApplication()?.assignedTo === admin.email">{{ admin.email }}</option>
                       }
                     </select>
                   </div>
@@ -675,6 +674,11 @@
                 <h3>No Applications Found</h3>
                 <p>No applications match your current search and filter criteria.</p>
               </div>
+            } @else if (admins().length === 0) {
+              <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading admin data...</p>
+              </div>
             } @else {
               <!-- Applications Table -->
               <div class="table-container">
@@ -741,14 +745,13 @@
                         <td>
                           <div class="assigned-to-cell">
                             <select 
-                              [value]="application.assignedTo || ''"
                               (change)="updateAssignedTo(application.applicationId, $any($event.target).value || null)"
                               (click)="$event.stopPropagation()"
                               [class]="'inline-select assigned-to-select' + (application.assignedTo ? ' has-assignment' : '')"
                               [ngStyle]="getAssignedToStyle(application.assignedTo)">
-                              <option value="">Unassigned</option>
+                              <option value="" [selected]="!application.assignedTo">Unassigned</option>
                               @for (admin of admins(); track admin.email) {
-                                <option [value]="admin.email">{{ admin.email }}</option>
+                                <option [value]="admin.email" [selected]="application.assignedTo === admin.email">{{ admin.email }}</option>
                               }
                             </select>
                           </div>

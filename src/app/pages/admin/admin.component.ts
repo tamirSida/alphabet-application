@@ -194,6 +194,14 @@ export class AdminComponent implements OnInit, OnDestroy {
     ]);
     
     const applications = await this.applicationService.getAllApplications();
+    console.log('🔍 Raw applications from service:', applications.map(app => ({
+      id: app.applicationId,
+      assignedTo: app.assignedTo,
+      recommendation: app.recommendation,
+      hasAssignedTo: app.hasOwnProperty('assignedTo'),
+      hasRecommendation: app.hasOwnProperty('recommendation')
+    })));
+    
     const enrichedApplications = [];
 
     for (const app of applications) {
@@ -202,13 +210,21 @@ export class AdminComponent implements OnInit, OnDestroy {
         this.cohortService.getCohort(app.cohortId)
       ]);
 
-      enrichedApplications.push({
+      const enrichedApp = {
         ...app,
         user: user || undefined,
         cohort: cohort || undefined
-      });
+      };
+      
+      enrichedApplications.push(enrichedApp);
     }
 
+    console.log('🔍 Final enriched applications:', enrichedApplications.map(app => ({
+      id: app.applicationId,
+      assignedTo: app.assignedTo,
+      recommendation: app.recommendation
+    })));
+    
     this.applications.set(enrichedApplications);
     this.lastApplicationCount = enrichedApplications.length; // Track count for auto-refresh
     this.loadAvailableClasses();
@@ -366,6 +382,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   private async loadAdmins() {
     const admins = await this.userService.getAllAdmins();
+    console.log('🔍 Loaded admins:', admins.map(admin => admin.email));
     this.admins.set(admins);
   }
 
@@ -530,6 +547,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       // Update local state immediately for instant UI feedback
       const apps = this.applications();
       const appIndex = apps.findIndex(a => a.applicationId === applicationId);
+      
       if (appIndex !== -1) {
         apps[appIndex] = { ...apps[appIndex], assignedTo };
         this.applications.set([...apps]);
@@ -1382,24 +1400,19 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
   }
 
-  getAssignedToStyle(assignedTo: string | undefined): any {
+  getAssignedToStyle(assignedTo: string | null | undefined): any {
     if (!assignedTo) {
-      console.log('No assignedTo, returning empty style');
       return {};
     }
     
     // Generate a consistent color based on email hash
     const colors = this.generateAdminColor(assignedTo);
-    console.log('Generated colors for', assignedTo, ':', colors);
     
-    const style = {
+    return {
       'background-color': colors.background,
       'color': colors.text,
       'border-color': colors.border
     };
-    
-    console.log('Returning style:', style);
-    return style;
   }
 
   private generateAdminColor(email: string): { background: string; text: string; border: string } {
