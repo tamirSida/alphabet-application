@@ -695,6 +695,16 @@
     padding: 0.75rem 1rem;
     font-size: 0.9rem;
   }
+
+  /* Enhanced mobile styling for check-issues button */
+  .nav-button.check-issues {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    min-height: 56px;
+    justify-content: center;
+  }
 }
 
 /* Tablet and up */
