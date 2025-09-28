@@ -1318,31 +1318,36 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   // Create date - save time as entered (ET time)
   private createDateInETTimezone(dateStr: string, timeStr: string): Date {
-    // Simply combine date and time as entered - no timezone conversion
-    const isoString = `${dateStr}T${timeStr}:00`;
-    return new Date(isoString);
+    // Parse date string components
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    
+    // Create date object directly with EST values (no timezone interpretation)
+    return new Date(year, month - 1, day, hours, minutes);
   }
 
   // Extract time for form display (return as stored)
   private extractTimeInET(date: Date): string {
-    // Simply extract the time as stored - no timezone conversion
-    return date.toTimeString().slice(0, 5);
+    // Extract time components directly
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
   }
 
   // Format date for multiple timezones using simple conversion
   formatDateWithTimezones(date: Date): string {
-    // Get the stored time (ET)
-    const etHours = date.getHours();
-    const etMinutes = date.getMinutes();
-    
-    // Calculate IL time (ET + 7 hours)
-    const ilDate = new Date(date);
-    ilDate.setHours(etHours + 7);
-    
-    // Calculate PT time (ET - 3 hours)  
-    const ptDate = new Date(date);
-    ptDate.setHours(etHours - 3);
-    
+    // Get the stored time components directly (they represent EST)
+    const estYear = date.getFullYear();
+    const estMonth = date.getMonth();
+    const estDay = date.getDate();
+    const estHour = date.getHours();
+    const estMinute = date.getMinutes();
+
+    // Create new dates with EST as base, then apply hour arithmetic
+    const ilDate = new Date(estYear, estMonth, estDay, estHour + 7, estMinute);
+    const pstDate = new Date(estYear, estMonth, estDay, estHour - 3, estMinute);
+    const estDate = new Date(estYear, estMonth, estDay, estHour, estMinute);
+
     // Format dates
     const formatDate = (d: Date, label: string) => {
       const dateStr = d.toLocaleDateString('en-US', {
@@ -1355,7 +1360,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       return `${label}: ${dateStr} ${timeStr}`;
     };
     
-    return `${formatDate(ilDate, 'IL')}\n${formatDate(ptDate, 'PT')}\n${formatDate(date, 'ET')}`;
+    return `${formatDate(ilDate, 'IL')}\n${formatDate(ptDate, 'PT')}\n${formatDate(estDate, 'ET')}`;
   }
 
   formatRecommendation(recommendation: Application['recommendation']): string {

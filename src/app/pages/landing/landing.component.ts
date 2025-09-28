@@ -144,19 +144,30 @@ export class LandingComponent implements OnInit, OnDestroy {
   // Format date for multiple timezones
   formatDateWithTimezones(date: Date | undefined): string {
     if (!date) return '';
-    
-    // Get the stored time (ET)
-    const etHours = date.getHours();
-    const etMinutes = date.getMinutes();
-    
-    // Calculate IL time (ET + 7 hours)
-    const ilDate = new Date(date);
-    ilDate.setHours(etHours + 7);
-    
-    // Calculate PT time (ET - 3 hours)  
-    const ptDate = new Date(date);
-    ptDate.setHours(etHours - 3);
-    
+
+    // First, get the EST time components by forcing EST timezone
+    const estFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+
+    const estParts = estFormatter.formatToParts(date);
+    const estYear = parseInt(estParts.find(p => p.type === 'year')!.value);
+    const estMonth = parseInt(estParts.find(p => p.type === 'month')!.value) - 1;
+    const estDay = parseInt(estParts.find(p => p.type === 'day')!.value);
+    const estHour = parseInt(estParts.find(p => p.type === 'hour')!.value);
+    const estMinute = parseInt(estParts.find(p => p.type === 'minute')!.value);
+
+    // Create new dates with EST as base, then apply hour arithmetic
+    const ilDate = new Date(estYear, estMonth, estDay, estHour + 7, estMinute);
+    const pstDate = new Date(estYear, estMonth, estDay, estHour - 3, estMinute);
+    const estDate = new Date(estYear, estMonth, estDay, estHour, estMinute);
+
     // Format dates
     const formatDate = (d: Date, label: string) => {
       const dateStr = d.toLocaleDateString('en-US', {
@@ -169,6 +180,6 @@ export class LandingComponent implements OnInit, OnDestroy {
       return `${label}: ${dateStr} at ${timeStr}`;
     };
     
-    return `${formatDate(ilDate, 'IL')}\n${formatDate(ptDate, 'PT')}\n${formatDate(date, 'ET')}`;
+    return `${formatDate(ilDate, 'IL')}\n${formatDate(pstDate, 'PT')}\n${formatDate(estDate, 'ET')}`;
   }
 }
