@@ -124,35 +124,35 @@ export class ApplicationComponent implements OnInit {
       personalQualities: this.fb.group({
         proactivePersonality: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [Validators.required, this.wordCountValidator(100)]]
+          example: ['', [this.wordCountValidator(100)]]
         }),
         persistenceHandleDifficulties: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [Validators.required, this.wordCountValidator(100)]]
+          example: ['', [this.wordCountValidator(100)]]
         }),
         performUnderStress: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [Validators.required, this.wordCountValidator(100)]]
+          example: ['', [this.wordCountValidator(100)]]
         }),
         independence: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [Validators.required, this.wordCountValidator(100)]]
+          example: ['', [this.wordCountValidator(100)]]
         }),
         teamwork: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [Validators.required, this.wordCountValidator(100)]]
+          example: ['', [this.wordCountValidator(100)]]
         }),
         mentalFlexibility: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [Validators.required, this.wordCountValidator(100)]]
+          example: ['', [this.wordCountValidator(100)]]
         }),
         passionForProjects: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [Validators.required, this.wordCountValidator(100)]]
+          example: ['', [this.wordCountValidator(100)]]
         }),
         creativeThinking: this.fb.group({
           rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [Validators.required, this.wordCountValidator(100)]]
+          example: ['', [this.wordCountValidator(100)]]
         })
       }),
       
@@ -706,9 +706,6 @@ export class ApplicationComponent implements OnInit {
         if (qualityGroup?.get('rating')?.hasError('min') || qualityGroup?.get('rating')?.hasError('max')) {
           errors.push(`• ${name} rating must be between 0 and 10`);
         }
-        if (qualityGroup?.get('example')?.hasError('required')) {
-          errors.push(`• ${name} example is required`);
-        }
         if (qualityGroup?.get('example')?.hasError('wordCount')) {
           const error = qualityGroup?.get('example')?.errors?.['wordCount'];
           errors.push(`• ${name} example must be ${error.max} words or less (currently ${error.actual} words)`);
@@ -872,7 +869,7 @@ export class ApplicationComponent implements OnInit {
       
       Object.entries(qualityNames).forEach(([key, name]) => {
         const qualityGroup = qualities.get(key);
-        if (qualityGroup?.get('rating')?.hasError('required') || qualityGroup?.get('example')?.hasError('required')) {
+        if (qualityGroup?.get('rating')?.hasError('required')) {
           qualityIssues.push(name);
         }
       });

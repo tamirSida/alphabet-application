@@ -606,7 +606,7 @@
       @if (currentStep() === 5) {
         <div class="form-section" formGroupName="personalQualities">
           <div class="qualities-intro">
-            <p>Rate each quality from 0 to 10:<br>• 0 means "doesn't describe me at all"<br>• 10 means "describes me perfectly"<br><br>Provide a brief example from your past experience for each quality.</p>
+            <p>Rate each quality from 0 to 10:<br>• 0 means "doesn't describe me at all"<br>• 10 means "describes me perfectly"<br><br>Feel free to justify your answer for each quality.</p>
           </div>
 
           <div class="quality-item" formGroupName="proactivePersonality">
@@ -629,7 +629,7 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."
+              placeholder="Feel free to justify your answer..."
               maxlength="600"></textarea>
             <div class="word-count">
               {{ getWordCount(applicationForm.get('personalQualities.proactivePersonality.example')?.value) }}/100 words
@@ -656,7 +656,7 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."
+              placeholder="Feel free to justify your answer..."
               maxlength="600"></textarea>
             <div class="word-count">
               {{ getWordCount(applicationForm.get('personalQualities.persistenceHandleDifficulties.example')?.value) }}/100 words
@@ -683,7 +683,7 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."
+              placeholder="Feel free to justify your answer..."
               maxlength="600"></textarea>
             <div class="word-count">
               {{ getWordCount(applicationForm.get('personalQualities.performUnderStress.example')?.value) }}/100 words
@@ -710,7 +710,7 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."
+              placeholder="Feel free to justify your answer..."
               maxlength="600"></textarea>
             <div class="word-count">
               {{ getWordCount(applicationForm.get('personalQualities.independence.example')?.value) }}/100 words
@@ -737,7 +737,7 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."
+              placeholder="Feel free to justify your answer..."
               maxlength="600"></textarea>
             <div class="word-count">
               {{ getWordCount(applicationForm.get('personalQualities.teamwork.example')?.value) }}/100 words
@@ -764,7 +764,7 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."
+              placeholder="Feel free to justify your answer..."
               maxlength="600"></textarea>
             <div class="word-count">
               {{ getWordCount(applicationForm.get('personalQualities.mentalFlexibility.example')?.value) }}/100 words
@@ -791,7 +791,7 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."
+              placeholder="Feel free to justify your answer..."
               maxlength="600"></textarea>
             <div class="word-count">
               {{ getWordCount(applicationForm.get('personalQualities.passionForProjects.example')?.value) }}/100 words
@@ -818,7 +818,7 @@
               formControlName="example"
               class="form-textarea"
               rows="3"
-              placeholder="Give a brief example from your past experience..."
+              placeholder="Feel free to justify your answer..."
               maxlength="600"></textarea>
             <div class="word-count">
               {{ getWordCount(applicationForm.get('personalQualities.creativeThinking.example')?.value) }}/100 words
