@@ -141,45 +141,21 @@ export class LandingComponent implements OnInit, OnDestroy {
     return this.timeRemaining() || { months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
   }
 
-  // Format date for multiple timezones
-  formatDateWithTimezones(date: Date | undefined): string {
+  // Format date in user's local timezone
+  formatDateInUserTimezone(date: Date | undefined): string {
     if (!date) return '';
 
-    // First, get the EST time components by forcing EST timezone
-    const estFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York',
+    // Simple - just format in user's local timezone
+    const formattedDate = date.toLocaleString('en-US', {
+      weekday: 'long',
       year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+      month: 'long',
+      day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
     });
-
-    const estParts = estFormatter.formatToParts(date);
-    const estYear = parseInt(estParts.find(p => p.type === 'year')!.value);
-    const estMonth = parseInt(estParts.find(p => p.type === 'month')!.value) - 1;
-    const estDay = parseInt(estParts.find(p => p.type === 'day')!.value);
-    const estHour = parseInt(estParts.find(p => p.type === 'hour')!.value);
-    const estMinute = parseInt(estParts.find(p => p.type === 'minute')!.value);
-
-    // Create new dates with EST as base, then apply hour arithmetic
-    const ilDate = new Date(estYear, estMonth, estDay, estHour + 7, estMinute);
-    const pstDate = new Date(estYear, estMonth, estDay, estHour - 3, estMinute);
-    const estDate = new Date(estYear, estMonth, estDay, estHour, estMinute);
-
-    // Format dates
-    const formatDate = (d: Date, label: string) => {
-      const dateStr = d.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric', 
-        month: 'long',
-        day: 'numeric'
-      });
-      const timeStr = d.toTimeString().slice(0, 5);
-      return `${label}: ${dateStr} at ${timeStr}`;
-    };
     
-    return `${formatDate(ilDate, 'IL')}\n${formatDate(pstDate, 'PT')}\n${formatDate(estDate, 'ET')}`;
+    return `Deadline in your timezone:\n${formattedDate}`;
   }
 }

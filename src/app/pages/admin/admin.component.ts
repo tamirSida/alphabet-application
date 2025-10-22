@@ -988,12 +988,12 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.success.set(null);
     
     // Format dates for form inputs - convert to ET timezone for display
-    const appStartDate = cohort.applicationStartDate.toISOString().split('T')[0];
+    const appStartDate = this.extractDateInET(cohort.applicationStartDate);
     const appStartTime = this.extractTimeInET(cohort.applicationStartDate);
-    const appEndDate = cohort.applicationEndDate.toISOString().split('T')[0];
+    const appEndDate = this.extractDateInET(cohort.applicationEndDate);
     const appEndTime = this.extractTimeInET(cohort.applicationEndDate);
-    const cohortStartDate = cohort.cohortStartDate.toISOString().split('T')[0];
-    const cohortEndDate = cohort.cohortEndDate.toISOString().split('T')[0];
+    const cohortStartDate = this.extractDateInET(cohort.cohortStartDate);
+    const cohortEndDate = this.extractDateInET(cohort.cohortEndDate);
     
     // Clear existing classes
     while (this.classesArray.length !== 0) {
@@ -1026,8 +1026,8 @@ export class AdminComponent implements OnInit, OnDestroy {
           
           const dayTimeGroup = timesGroup.get(schedule.day) as FormGroup;
           dayTimeGroup.patchValue({
-            startTime: schedule.startTime,
-            endTime: schedule.endTime
+            startTime: this.convertUTCTimeToET(schedule.startTime),
+            endTime: this.convertUTCTimeToET(schedule.endTime)
           });
         });
         
@@ -1036,6 +1036,29 @@ export class AdminComponent implements OnInit, OnDestroy {
     } else {
       // If no classes exist, add one default class
       this.addNewClass();
+    }
+
+    // Populate lab data
+    if (cohort.lab && cohort.lab.weeklySchedule) {
+      const labControl = this.cohortForm.get('lab') as FormGroup;
+      const labWeekdaysGroup = labControl?.get('weekdays') as FormGroup;
+      const labTimesGroup = labControl?.get('times') as FormGroup;
+      
+      // Reset all lab weekdays to false first
+      Object.keys(labWeekdaysGroup.controls).forEach(day => {
+        labWeekdaysGroup.get(day)?.setValue(false);
+      });
+      
+      // Set selected lab weekdays and their times
+      cohort.lab.weeklySchedule.forEach(schedule => {
+        labWeekdaysGroup.get(schedule.day)?.setValue(true);
+        
+        const dayTimeGroup = labTimesGroup.get(schedule.day) as FormGroup;
+        dayTimeGroup.patchValue({
+          startTime: this.convertUTCTimeToET(schedule.startTime),
+          endTime: this.convertUTCTimeToET(schedule.endTime)
+        });
+      });
     }
     
     this.cohortForm.patchValue({
@@ -1187,8 +1210,8 @@ export class AdminComponent implements OnInit, OnDestroy {
       
       const weeklySchedule = selectedDays.map(day => ({
         day: day as 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday',
-        startTime: formClass.times[day].startTime,
-        endTime: formClass.times[day].endTime
+        startTime: this.convertETTimeToUTC(formClass.times[day].startTime),
+        endTime: this.convertETTimeToUTC(formClass.times[day].endTime)
       }));
 
       return {
@@ -1205,8 +1228,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     
     const weeklySchedule = selectedDays.map(day => ({
       day: day as 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday',
-      startTime: formLab.times[day].startTime,
-      endTime: formLab.times[day].endTime
+      startTime: this.convertETTimeToUTC(formLab.times[day].startTime),
+      endTime: this.convertETTimeToUTC(formLab.times[day].endTime)
     }));
 
     return {
@@ -1306,13 +1329,13 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   formatClassSchedule(cohortClass: any): string {
     return cohortClass.weeklySchedule
-      .map((schedule: any) => `${schedule.day} ${schedule.startTime}-${schedule.endTime}`)
+      .map((schedule: any) => `${schedule.day} ${this.convertUTCTimeToET(schedule.startTime)}-${this.convertUTCTimeToET(schedule.endTime)} ET`)
       .join(', ');
   }
 
   formatLabSchedule(lab: any): string {
     return lab.weeklySchedule
-      .map((schedule: any) => `${schedule.day} ${schedule.startTime}-${schedule.endTime}`)
+      .map((schedule: any) => `${schedule.day} ${this.convertUTCTimeToET(schedule.startTime)}-${this.convertUTCTimeToET(schedule.endTime)} ET`)
       .join(', ');
   }
 
@@ -1322,16 +1345,92 @@ export class AdminComponent implements OnInit, OnDestroy {
     const [year, month, day] = dateStr.split('-').map(Number);
     const [hours, minutes] = timeStr.split(':').map(Number);
     
-    // Create date object directly with EST values (no timezone interpretation)
-    return new Date(year, month - 1, day, hours, minutes);
+    // Create date treating the input as ET timezone
+    // Using the ISO string format with ET offset
+    const etOffset = this.getETOffset(new Date(year, month - 1, day));
+    const etISOString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00.000${etOffset}`;
+    
+    return new Date(etISOString);
   }
 
-  // Extract time for form display (return as stored)
+  // Get ET timezone offset for a given date (handles DST)
+  private getETOffset(date: Date): string {
+    // Check if date is in DST for ET timezone
+    const january = new Date(date.getFullYear(), 0, 1);
+    const july = new Date(date.getFullYear(), 6, 1);
+    const stdOffset = Math.max(january.getTimezoneOffset(), july.getTimezoneOffset());
+    const isDST = date.getTimezoneOffset() < stdOffset;
+    
+    // Return proper ET offset (EST = -05:00, EDT = -04:00)
+    return isDST ? '-04:00' : '-05:00';
+  }
+
+  // Extract time for form display (convert from UTC back to ET)
   private extractTimeInET(date: Date): string {
-    // Extract time components directly
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+    // Use toLocaleString to convert UTC back to ET timezone
+    const etTime = date.toLocaleString('en-US', {
+      timeZone: 'America/New_York',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    
+    return etTime;
+  }
+
+  // Extract date for form display (convert from UTC back to ET)
+  private extractDateInET(date: Date): string {
+    // Use toLocaleString to get the ET date
+    const etDate = date.toLocaleDateString('en-CA', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    
+    return etDate; // Returns YYYY-MM-DD format
+  }
+
+  // Convert ET time string to UTC time string
+  private convertETTimeToUTC(etTimeStr: string): string {
+    // Create a reference date (today) with the ET time
+    const today = new Date();
+    const [hours, minutes] = etTimeStr.split(':').map(Number);
+    
+    // Get ET offset for today
+    const etOffset = this.getETOffset(today);
+    
+    // Create date string in ET timezone format
+    const etISOString = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00.000${etOffset}`;
+    
+    // Create date with ET timezone
+    const etDate = new Date(etISOString);
+    
+    // Extract UTC time
+    const utcHours = etDate.getUTCHours().toString().padStart(2, '0');
+    const utcMinutes = etDate.getUTCMinutes().toString().padStart(2, '0');
+    
+    return `${utcHours}:${utcMinutes}`;
+  }
+
+  // Convert UTC time string back to ET time string for form display
+  private convertUTCTimeToET(utcTimeStr: string): string {
+    // Create a reference date (today) with the UTC time
+    const today = new Date();
+    const [hours, minutes] = utcTimeStr.split(':').map(Number);
+    
+    // Create UTC date
+    const utcDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes));
+    
+    // Convert to ET timezone
+    const etTime = utcDate.toLocaleString('en-US', {
+      timeZone: 'America/New_York',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    
+    return etTime;
   }
 
   // Format date for multiple timezones using simple conversion
@@ -1360,7 +1459,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       return `${label}: ${dateStr} ${timeStr}`;
     };
     
-    return `${formatDate(ilDate, 'IL')}\n${formatDate(ptDate, 'PT')}\n${formatDate(estDate, 'ET')}`;
+    return `${formatDate(ilDate, 'IL')}\n${formatDate(pstDate, 'PT')}\n${formatDate(estDate, 'ET')}`;
   }
 
   formatRecommendation(recommendation: Application['recommendation']): string {

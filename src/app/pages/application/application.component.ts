@@ -460,33 +460,32 @@ export class ApplicationComponent implements OnInit {
       .join('\n\n');
   }
 
-  // Format a single schedule entry with all timezones using simple conversion
+  // Format schedule entry in user's local timezone
   formatScheduleWithTimezones(day: string, startTime: string, endTime: string): string {
-    // Parse ET times (times are stored as ET)
-    const [startHour, startMin] = startTime.split(':').map(Number);
-    const [endHour, endMin] = endTime.split(':').map(Number);
+    // Times are now stored as UTC, convert to user's local time
+    const localStartTime = this.convertUTCTimeToLocal(startTime);
+    const localEndTime = this.convertUTCTimeToLocal(endTime);
     
-    // Calculate IL times (ET + 7 hours)
-    const ilStartHour = (startHour + 7) % 24;
-    const ilEndHour = (endHour + 7) % 24;
-    
-    // Calculate PT times (ET - 3 hours, handle negative hours)
-    const ptStartHour = startHour - 3 < 0 ? startHour - 3 + 24 : startHour - 3;
-    const ptEndHour = endHour - 3 < 0 ? endHour - 3 + 24 : endHour - 3;
-    
-    // Format times
-    const formatTime = (hour: number, min: number) => {
-      return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
-    };
-    
-    const etStart = formatTime(startHour, startMin);
-    const etEnd = formatTime(endHour, endMin);
-    const ilStart = formatTime(ilStartHour, startMin);
-    const ilEnd = formatTime(ilEndHour, endMin);
-    const ptStart = formatTime(ptStartHour, startMin);
-    const ptEnd = formatTime(ptEndHour, endMin);
+    return `${day}\n${localStartTime} - ${localEndTime} (your local time)`;
+  }
 
-    return `${day}\nIL: ${ilStart}-${ilEnd}\nPT: ${ptStart}-${ptEnd}\nET: ${etStart}-${etEnd}`;
+  // Convert UTC time string to user's local time
+  private convertUTCTimeToLocal(utcTimeStr: string): string {
+    // Create a reference date (today) with the UTC time
+    const today = new Date();
+    const [hours, minutes] = utcTimeStr.split(':').map(Number);
+    
+    // Create UTC date
+    const utcDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes));
+    
+    // Convert to user's local timezone
+    const localTime = utcDate.toLocaleString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    
+    return localTime;
   }
 
 

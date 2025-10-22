@@ -26,8 +26,7 @@
             <div class="cohort-details">
               <p><strong>Cohort:</strong> {{ currentAcceptingCohort()?.number }}</p>
               <div class="deadline-info">
-                <p><strong>Application Deadline:</strong></p>
-                <div class="timezone-display">{{ formatDateWithTimezones(currentAcceptingCohort()?.applicationEndDate) }}</div>
+                <div class="timezone-display">{{ formatDateInUserTimezone(currentAcceptingCohort()?.applicationEndDate) }}</div>
               </div>
               <p><strong>Program Start:</strong>
                 {{ currentAcceptingCohort()?.cohortStartDate | date:'fullDate' }}

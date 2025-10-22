@@ -53,8 +53,7 @@
                 @if (currentAcceptingCohort()) {
                   <p><strong>Good news!</strong> Applications are currently open for {{ currentAcceptingCohort()?.number }}.</p>
                   <div class="deadline-info">
-                    <p><strong>Deadline:</strong></p>
-                    <div class="timezone-display">{{ formatDateWithTimezones(currentAcceptingCohort()?.applicationEndDate) }}</div>
+                    <div class="timezone-display">{{ formatDateInUserTimezone(currentAcceptingCohort()?.applicationEndDate) }}</div>
                   </div>
 
                   <div class="status-action">
