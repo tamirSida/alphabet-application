@@ -670,6 +670,11 @@
                   <i class="fas fa-columns"></i>
                   Columns ({{ visibleCount() }}/{{ totalCount }})
                 </button>
+
+                <button class="columns-button export-button" (click)="openExportModal()" title="Export applications to CSV or Excel">
+                  <i class="fas fa-download"></i>
+                  Export
+                </button>
               </div>
             </div>
 
@@ -1492,6 +1497,124 @@
         <div class="modal-footer">
           <button class="secondary-button" (click)="closeClassSelectionModal()">
             Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Export Applications Modal -->
+  @if (showExportModal()) {
+    <div class="modal-overlay" (click)="closeExportModal()">
+      <div class="modal-content export-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Export Applications</h3>
+          <button class="close-btn" (click)="closeExportModal()" [disabled]="isExporting()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Format -->
+          <div class="export-section">
+            <label class="export-section-label">Format</label>
+            <div class="export-format-toggle">
+              <label class="format-option" [class.active]="exportFormat() === 'xlsx'">
+                <input type="radio" name="export-format" value="xlsx"
+                       [checked]="exportFormat() === 'xlsx'"
+                       (change)="setExportFormat('xlsx')">
+                <i class="fas fa-file-excel"></i> Excel (.xlsx)
+              </label>
+              <label class="format-option" [class.active]="exportFormat() === 'csv'">
+                <input type="radio" name="export-format" value="csv"
+                       [checked]="exportFormat() === 'csv'"
+                       (change)="setExportFormat('csv')">
+                <i class="fas fa-file-csv"></i> CSV
+              </label>
+            </div>
+          </div>
+
+          <!-- Scope -->
+          <div class="export-section">
+            <label class="export-section-label">Scope</label>
+            <label class="scope-option" [class.active]="exportScope() === 'filtered'">
+              <input type="radio" name="export-scope" value="filtered"
+                     [checked]="exportScope() === 'filtered'"
+                     (change)="setExportScope('filtered')">
+              <span>Currently filtered</span>
+              <small>{{ filteredApplications().length }} application(s) match the current table filters</small>
+            </label>
+            <label class="scope-option" [class.active]="exportScope() === 'all'">
+              <input type="radio" name="export-scope" value="all"
+                     [checked]="exportScope() === 'all'"
+                     (change)="setExportScope('all')">
+              <span>All applications</span>
+              <small>{{ applications().length }} application(s) total — ignores table search/filters</small>
+            </label>
+          </div>
+
+          <!-- Cohorts -->
+          <div class="export-section">
+            <div class="export-section-header">
+              <label class="export-section-label">Cohorts</label>
+              <button type="button" class="link-btn" (click)="toggleAllExportCohorts()">
+                {{ exportSelectedCohorts().size === cohorts().length ? 'Deselect all' : 'Select all' }}
+              </button>
+            </div>
+            <div class="columns-picker-grid">
+              @for (cohort of cohorts(); track cohort.cohortId) {
+                <label class="column-option">
+                  <input type="checkbox"
+                         [checked]="exportSelectedCohorts().has(cohort.cohortId)"
+                         (change)="toggleExportCohort(cohort.cohortId)">
+                  <span>{{ cohort.number }}</span>
+                </label>
+              } @empty {
+                <p class="export-empty-hint">No cohorts available.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Columns -->
+          <div class="export-section">
+            <div class="export-section-header">
+              <label class="export-section-label">Columns</label>
+              <button type="button" class="link-btn" (click)="toggleAllExportColumns()">
+                {{ exportSelectedColumns().size === allExportFields.length ? 'Deselect all' : 'Select all' }}
+              </button>
+            </div>
+            <div class="columns-picker-grid">
+              @for (field of allExportFields; track field.key) {
+                <label class="column-option">
+                  <input type="checkbox"
+                         [checked]="exportSelectedColumns().has(field.key)"
+                         (change)="toggleExportColumn(field.key)">
+                  <span>{{ field.label }}</span>
+                </label>
+              }
+            </div>
+          </div>
+
+          <div class="export-summary">
+            <i class="fas fa-info-circle"></i>
+            Will export <strong>{{ exportRowCount() }}</strong> application(s) ×
+            <strong>{{ exportSelectedColumns().size }}</strong> column(s)
+            as <strong>{{ exportFormat() === 'xlsx' ? 'Excel (.xlsx)' : 'CSV' }}</strong>.
+          </div>
+        </div>
+
+        <div class="modal-footer columns-modal-footer">
+          <button class="secondary-button" (click)="closeExportModal()" [disabled]="isExporting()">
+            Cancel
+          </button>
+          <button class="secondary-button primary-action"
+                  (click)="performExport()"
+                  [disabled]="isExporting() || exportRowCount() === 0 || exportSelectedColumns().size === 0">
+            @if (isExporting()) {
+              <i class="fas fa-spinner fa-spin"></i> Generating…
+            } @else {
+              <i class="fas fa-download"></i> Export
+            }
           </button>
         </div>
       </div>

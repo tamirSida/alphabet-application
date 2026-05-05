@@ -53,6 +53,54 @@ export const COLUMN_DEFS: ColumnDef[] = [
     sortValue: () => '' },
 ];
 
+/**
+ * Fields available in the "Export" modal. Same 12 columns as the table pool
+ * (minus Actions, plus Submitted date). Decoupled from COLUMN_DEFS so we can
+ * include xlsx-typed values (real Date for Submitted) and richer flag text.
+ */
+export interface ExportField {
+  key: string;
+  label: string;
+  /** Column width hint for xlsx (in characters). */
+  width?: number;
+  /** Cell type hint — drives xlsx formatting. CSV always stringifies. */
+  type?: 'string' | 'number' | 'date' | 'boolean';
+  /** Returns the exported value for one row. */
+  value: (a: AppRow, ctx: AdminComponent) => string | number | boolean | Date | null | undefined;
+}
+
+export const EXPORT_FIELDS: ExportField[] = [
+  { key: 'name', label: 'Name', width: 24,
+    value: a => `${a.formData?.personalInformation?.firstName ?? ''} ${a.formData?.personalInformation?.lastName ?? ''}`.trim() },
+  { key: 'email', label: 'Email', width: 28,
+    value: a => a.user?.email ?? '' },
+  { key: 'id', label: 'Operator ID', width: 14,
+    value: a => a.operatorId },
+  { key: 'phone', label: 'Phone', width: 18,
+    value: a => a.user?.phone ?? '' },
+  { key: 'country', label: 'Country', width: 10,
+    value: a => a.formData?.serviceAvailability?.countryOfService ?? '' },
+  { key: 'cohortNumber', label: 'Cohort', width: 14,
+    value: a => a.cohort?.number ?? '' },
+  { key: 'assignedClass', label: 'Assigned Class', width: 18,
+    value: a => a.assignedClass ?? '' },
+  { key: 'recommendation', label: 'Recommendation', width: 20,
+    value: a => a.recommendation ?? '' },
+  { key: 'assignedTo', label: 'Assigned To', width: 28,
+    value: a => a.assignedTo ?? '' },
+  { key: 'status', label: 'Status', width: 14,
+    value: a => a.status ?? '' },
+  { key: 'flags', label: 'Flags', width: 24,
+    value: a => {
+      const out: string[] = [];
+      if (a.flags?.englishProficiency) out.push('english');
+      if (a.flags?.combatService) out.push('combat');
+      return out.join(', ');
+    }},
+  { key: 'submittedAt', label: 'Submitted', type: 'date', width: 14,
+    value: a => a.submittedAt ? new Date(a.submittedAt) : null },
+];
+
 @Component({
   selector: 'app-admin',
   standalone: true,
@@ -114,6 +162,16 @@ export class AdminComponent implements OnInit, OnDestroy {
     COLUMN_DEFS.filter(c => this.isVisible(c.key)).reduce((s, c) => s + c.minWidth, 0)
   );
   private persistTimer: any = null;
+
+  // Export modal (CSV / XLSX, scope, cohort & column subset)
+  showExportModal = signal(false);
+  exportFormat = signal<'csv' | 'xlsx'>('xlsx');
+  exportScope = signal<'filtered' | 'all'>('filtered');
+  exportSelectedCohorts = signal<Set<string>>(new Set());
+  exportSelectedColumns = signal<Set<string>>(new Set());
+  isExporting = signal(false);
+  allExportFields = EXPORT_FIELDS;
+  exportRowCount = computed(() => this.getExportRows().length);
 
   // Notes functionality
   showNotesPopup = signal(false);
@@ -1518,6 +1576,191 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.error.set('Failed to save column preferences.');
       this.loadAdminPreferences();
     }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Export to CSV / XLSX
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /** Open the Export modal pre-populated to mirror the admin's current view:
+   *  - Cohorts: all checked
+   *  - Columns: only those currently visible in the table (mirroring the admin's
+   *    own column-picker selection — same idea as "scope = currently filtered"
+   *    for rows). EXPORT_FIELDS that have no matching table column (e.g. the
+   *    Submitted date) start unchecked; the admin can opt them in.
+   *  - Scope: currently filtered
+   *  - Format: xlsx
+   */
+  openExportModal(): void {
+    const visibleTableKeys = new Set(
+      COLUMN_DEFS
+        .filter(c => c.key !== 'actions' && this.isVisible(c.key))
+        .map(c => c.key)
+    );
+    const defaults = EXPORT_FIELDS
+      .filter(f => visibleTableKeys.has(f.key))
+      .map(f => f.key);
+    this.exportSelectedCohorts.set(new Set(this.cohorts().map(c => c.cohortId)));
+    this.exportSelectedColumns.set(new Set(defaults));
+    this.exportScope.set('filtered');
+    this.exportFormat.set('xlsx');
+    this.showExportModal.set(true);
+  }
+
+  closeExportModal(): void {
+    if (this.isExporting()) return; // don't allow close mid-export
+    this.showExportModal.set(false);
+  }
+
+  setExportFormat(fmt: 'csv' | 'xlsx'): void { this.exportFormat.set(fmt); }
+  setExportScope(scope: 'filtered' | 'all'): void { this.exportScope.set(scope); }
+
+  toggleExportColumn(key: string): void {
+    const next = new Set(this.exportSelectedColumns());
+    if (next.has(key)) next.delete(key); else next.add(key);
+    this.exportSelectedColumns.set(next);
+  }
+
+  toggleExportCohort(cohortId: string): void {
+    const next = new Set(this.exportSelectedCohorts());
+    if (next.has(cohortId)) next.delete(cohortId); else next.add(cohortId);
+    this.exportSelectedCohorts.set(next);
+  }
+
+  toggleAllExportColumns(): void {
+    if (this.exportSelectedColumns().size === EXPORT_FIELDS.length) {
+      this.exportSelectedColumns.set(new Set());
+    } else {
+      this.exportSelectedColumns.set(new Set(EXPORT_FIELDS.map(f => f.key)));
+    }
+  }
+
+  toggleAllExportCohorts(): void {
+    const cohorts = this.cohorts();
+    if (this.exportSelectedCohorts().size === cohorts.length) {
+      this.exportSelectedCohorts.set(new Set());
+    } else {
+      this.exportSelectedCohorts.set(new Set(cohorts.map(c => c.cohortId)));
+    }
+  }
+
+  /** Resolve which rows make it into the export based on scope + cohort filter. */
+  private getExportRows(): AppRow[] {
+    const source = this.exportScope() === 'filtered'
+      ? this.filteredApplications()
+      : this.applications();
+    const cohorts = this.exportSelectedCohorts();
+    return source.filter(a => cohorts.has(a.cohortId));
+  }
+
+  async performExport(): Promise<void> {
+    if (this.isExporting()) return;
+    if (this.exportSelectedColumns().size === 0) {
+      this.error.set('Select at least one column to export.');
+      return;
+    }
+    if (this.exportSelectedCohorts().size === 0) {
+      this.error.set('Select at least one cohort to export.');
+      return;
+    }
+
+    this.isExporting.set(true);
+    try {
+      const rows = this.getExportRows();
+      // Preserve EXPORT_FIELDS order (don't sort by checkbox-click sequence)
+      const fields = EXPORT_FIELDS.filter(f => this.exportSelectedColumns().has(f.key));
+      const fileBase = `applications-export-${this.formatDateForFilename(new Date())}`;
+
+      if (this.exportFormat() === 'csv') {
+        const blob = this.generateCsv(rows, fields);
+        this.downloadBlob(blob, `${fileBase}.csv`);
+      } else {
+        const blob = await this.generateXlsx(rows, fields);
+        this.downloadBlob(blob, `${fileBase}.xlsx`);
+      }
+
+      this.success.set(`Exported ${rows.length} application(s).`);
+      setTimeout(() => this.success.set(null), 4000);
+      this.showExportModal.set(false);
+    } catch (err) {
+      console.error('Export failed', err);
+      this.error.set('Export failed. Please try again.');
+    } finally {
+      this.isExporting.set(false);
+    }
+  }
+
+  private formatDateForFilename(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  /** Build a UTF-8 (BOM-prefixed) CSV blob. The BOM makes Excel honor UTF-8 on
+   *  open so non-ASCII names (Hebrew, accents) render correctly. */
+  private generateCsv(rows: AppRow[], fields: ExportField[]): Blob {
+    const escape = (v: any): string => {
+      if (v === null || v === undefined) return '';
+      let s = v instanceof Date ? v.toISOString() : String(v);
+      if (s.includes('"') || s.includes(',') || s.includes('\n') || s.includes('\r')) {
+        s = '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    };
+    const lines: string[] = [];
+    lines.push(fields.map(f => escape(f.label)).join(','));
+    for (const row of rows) {
+      lines.push(fields.map(f => escape(f.value(row, this))).join(','));
+    }
+    // U+FEFF: prepend UTF-8 BOM so Excel honors UTF-8 on open
+    const csv = '﻿' + lines.join('\r\n');
+    return new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  }
+
+  /** Lazy-import write-excel-file so its ~80KB only loads when an admin actually
+   *  exports. The first export pays the chunk-fetch cost; subsequent exports are
+   *  instant from cache. */
+  private async generateXlsx(rows: AppRow[], fields: ExportField[]): Promise<Blob> {
+    const { default: writeXlsxFile } = await import('write-excel-file/browser');
+
+    // Header row — bold + light grey background
+    const header = fields.map(f => ({
+      value: f.label,
+      fontWeight: 'bold' as const,
+      backgroundColor: '#f1f5f9'
+    }));
+
+    // Data rows: build typed cell objects so dates/numbers/bools land as proper
+    // Excel cells (sortable, filterable) instead of strings.
+    const data: any[][] = rows.map(row =>
+      fields.map(f => {
+        const v = f.value(row, this);
+        if (v === null || v === undefined || v === '') return null;
+        if (f.type === 'date' && v instanceof Date) {
+          return { type: Date, value: v, format: 'yyyy-mm-dd' };
+        }
+        if (typeof v === 'number') return { type: Number, value: v };
+        if (typeof v === 'boolean') return { type: Boolean, value: v };
+        return { type: String, value: String(v) };
+      })
+    );
+
+    const sheetData = [header, ...data];
+    const columns = fields.map(f => ({ width: f.width ?? 16 }));
+
+    return await writeXlsxFile(sheetData, { columns, sheet: 'Applications' }).toBlob();
+  }
+
+  /** Programmatically trigger a browser download of `blob` as `filename`.
+   *  Cleans up the object URL after the click resolves. */
+  private downloadBlob(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   formatCohortStatus(status: string): string {
