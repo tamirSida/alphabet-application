@@ -45,7 +45,7 @@
     <div class="step-header">
       <h2>{{ getStepTitle(currentStep()) }}</h2>
       <div class="step-dots">
-        @for (step of [1,2,3,4,5,6,7,8,9]; track step) {
+        @for (step of [1,2,3,4,5,6,7]; track step) {
           <div
             class="step-dot"
             [class.active]="currentStep() === step"
@@ -571,393 +571,8 @@
         </div>
       }
 
-      <!-- Section 4: Skills (1-5 scale) -->
+      <!-- Section 4: Short Answer (was Section 6) -->
       @if (currentStep() === 4) {
-        <div class="form-section" formGroupName="skills">
-          <div class="skills-intro">
-            <p>Rate your skills on a scale of 1-5 • 1: Beginner • 5: Expert</p>
-          </div>
-
-          <div class="skill-item">
-            <label>AI – Daily use of LLM tools (e.g., ChatGPT) *</label>
-            <div class="rating-scale-5">
-              @for (rating of [1,2,3,4,5]; track rating) {
-                <div
-                  class="rating-option"
-                  [class.selected]="applicationForm.get('skills.aiDailyUse')?.value === rating"
-                  (click)="applicationForm.get('skills.aiDailyUse')?.setValue(rating)">
-                  <div class="rating-circle">{{ rating }}</div>
-                  <div class="rating-label">
-                    @switch (rating) {
-                      @case (1) { Never }
-                      @case (2) { Rarely }
-                      @case (3) { Sometimes }
-                      @case (4) { Often }
-                      @case (5) { Daily }
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-
-          <div class="skill-item">
-            <label>Programming *</label>
-            <div class="rating-scale-5">
-              @for (rating of [1,2,3,4,5]; track rating) {
-                <div
-                  class="rating-option"
-                  [class.selected]="applicationForm.get('skills.programming')?.value === rating"
-                  (click)="applicationForm.get('skills.programming')?.setValue(rating)">
-                  <div class="rating-circle">{{ rating }}</div>
-                  <div class="rating-label">
-                    @switch (rating) {
-                      @case (1) { None }
-                      @case (2) { Basic }
-                      @case (3) { Intermediate }
-                      @case (4) { Advanced }
-                      @case (5) { Expert }
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-
-          <div class="skill-item">
-            <label>Product Marketing & Sales Experience *</label>
-            <div class="rating-scale-5">
-              @for (rating of [1,2,3,4,5]; track rating) {
-                <div
-                  class="rating-option"
-                  [class.selected]="applicationForm.get('skills.marketingSales')?.value === rating"
-                  (click)="applicationForm.get('skills.marketingSales')?.setValue(rating)">
-                  <div class="rating-circle">{{ rating }}</div>
-                  <div class="rating-label">
-                    @switch (rating) {
-                      @case (1) { None }
-                      @case (2) { Basic }
-                      @case (3) { Intermediate }
-                      @case (4) { Advanced }
-                      @case (5) { Expert }
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-
-          <div class="skill-item">
-            <label>Leadership Experience *</label>
-            <div class="rating-scale-5">
-              @for (rating of [1,2,3,4,5]; track rating) {
-                <div
-                  class="rating-option"
-                  [class.selected]="applicationForm.get('skills.management')?.value === rating"
-                  (click)="applicationForm.get('skills.management')?.setValue(rating)">
-                  <div class="rating-circle">{{ rating }}</div>
-                  <div class="rating-label">
-                    @switch (rating) {
-                      @case (1) { None }
-                      @case (2) { Basic }
-                      @case (3) { Intermediate }
-                      @case (4) { Advanced }
-                      @case (5) { Expert }
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-
-          <div class="skill-item">
-            <label>Public Speaking & Presentation Skills *</label>
-            <div class="rating-scale-5">
-              @for (rating of [1,2,3,4,5]; track rating) {
-                <div
-                  class="rating-option"
-                  [class.selected]="applicationForm.get('skills.publicSpeaking')?.value === rating"
-                  (click)="applicationForm.get('skills.publicSpeaking')?.setValue(rating)">
-                  <div class="rating-circle">{{ rating }}</div>
-                  <div class="rating-label">
-                    @switch (rating) {
-                      @case (1) { None }
-                      @case (2) { Basic }
-                      @case (3) { Intermediate }
-                      @case (4) { Advanced }
-                      @case (5) { Expert }
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-
-          <div class="other-skill-section" formGroupName="other">
-            <div class="form-group">
-              <label>Other Skill (Optional)</label>
-              <input
-                type="text"
-                formControlName="skill"
-                class="form-input"
-                placeholder="Specify another skill...">
-            </div>
-
-            @if (applicationForm.get('skills.other.skill')?.value) {
-              <div class="skill-item">
-                <label>{{ applicationForm.get('skills.other.skill')?.value }} Rating</label>
-                <div class="rating-scale-5">
-                  @for (rating of [1,2,3,4,5]; track rating) {
-                    <div
-                      class="rating-option"
-                      [class.selected]="applicationForm.get('skills.other.rating')?.value === rating"
-                      (click)="applicationForm.get('skills.other.rating')?.setValue(rating)">
-                      <div class="rating-circle">{{ rating }}</div>
-                      <div class="rating-label">
-                        @switch (rating) {
-                          @case (1) { None }
-                          @case (2) { Basic }
-                          @case (3) { Intermediate }
-                          @case (4) { Advanced }
-                          @case (5) { Expert }
-                        }
-                      </div>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        </div>
-      }
-
-      <!-- Section 5: Personal Qualities (0-10 scale) -->
-      @if (currentStep() === 5) {
-        <div class="form-section" formGroupName="personalQualities">
-          <div class="qualities-intro">
-            <p>Rate each quality from 0 to 10:<br>• 0 means "doesn't describe me at all"<br>• 10 means "describes me perfectly"<br><br>Feel free to justify your answer for each quality.</p>
-          </div>
-
-          <div class="quality-item" formGroupName="proactivePersonality">
-            <label>Proactive Personality *</label>
-            <div class="rating-slider">
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="1"
-                formControlName="rating"
-                class="slider">
-              <div class="slider-labels">
-                <span>0</span>
-                <span>Current: {{ applicationForm.get('personalQualities.proactivePersonality.rating')?.value ?? 'Not set' }}</span>
-                <span>10</span>
-              </div>
-            </div>
-            <textarea
-              formControlName="example"
-              class="form-textarea"
-              rows="3"
-              placeholder="Feel free to justify your answer..."
-              maxlength="600"></textarea>
-            <div class="word-count">
-              {{ getWordCount(applicationForm.get('personalQualities.proactivePersonality.example')?.value) }}/100 words
-            </div>
-          </div>
-
-          <div class="quality-item" formGroupName="persistenceHandleDifficulties">
-            <label>Persistence & Ability to Handle Difficulties *</label>
-            <div class="rating-slider">
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="1"
-                formControlName="rating"
-                class="slider">
-              <div class="slider-labels">
-                <span>0</span>
-                <span>Current: {{ applicationForm.get('personalQualities.persistenceHandleDifficulties.rating')?.value ?? 'Not set' }}</span>
-                <span>10</span>
-              </div>
-            </div>
-            <textarea
-              formControlName="example"
-              class="form-textarea"
-              rows="3"
-              placeholder="Feel free to justify your answer..."
-              maxlength="600"></textarea>
-            <div class="word-count">
-              {{ getWordCount(applicationForm.get('personalQualities.persistenceHandleDifficulties.example')?.value) }}/100 words
-            </div>
-          </div>
-
-          <div class="quality-item" formGroupName="performUnderStress">
-            <label>Ability to Perform Under Stress *</label>
-            <div class="rating-slider">
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="1"
-                formControlName="rating"
-                class="slider">
-              <div class="slider-labels">
-                <span>0</span>
-                <span>Current: {{ applicationForm.get('personalQualities.performUnderStress.rating')?.value ?? 'Not set' }}</span>
-                <span>10</span>
-              </div>
-            </div>
-            <textarea
-              formControlName="example"
-              class="form-textarea"
-              rows="3"
-              placeholder="Feel free to justify your answer..."
-              maxlength="600"></textarea>
-            <div class="word-count">
-              {{ getWordCount(applicationForm.get('personalQualities.performUnderStress.example')?.value) }}/100 words
-            </div>
-          </div>
-
-          <div class="quality-item" formGroupName="independence">
-            <label>Independence *</label>
-            <div class="rating-slider">
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="1"
-                formControlName="rating"
-                class="slider">
-              <div class="slider-labels">
-                <span>0</span>
-                <span>Current: {{ applicationForm.get('personalQualities.independence.rating')?.value ?? 'Not set' }}</span>
-                <span>10</span>
-              </div>
-            </div>
-            <textarea
-              formControlName="example"
-              class="form-textarea"
-              rows="3"
-              placeholder="Feel free to justify your answer..."
-              maxlength="600"></textarea>
-            <div class="word-count">
-              {{ getWordCount(applicationForm.get('personalQualities.independence.example')?.value) }}/100 words
-            </div>
-          </div>
-
-          <div class="quality-item" formGroupName="teamwork">
-            <label>Teamwork *</label>
-            <div class="rating-slider">
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="1"
-                formControlName="rating"
-                class="slider">
-              <div class="slider-labels">
-                <span>0</span>
-                <span>Current: {{ applicationForm.get('personalQualities.teamwork.rating')?.value ?? 'Not set' }}</span>
-                <span>10</span>
-              </div>
-            </div>
-            <textarea
-              formControlName="example"
-              class="form-textarea"
-              rows="3"
-              placeholder="Feel free to justify your answer..."
-              maxlength="600"></textarea>
-            <div class="word-count">
-              {{ getWordCount(applicationForm.get('personalQualities.teamwork.example')?.value) }}/100 words
-            </div>
-          </div>
-
-          <div class="quality-item" formGroupName="mentalFlexibility">
-            <label>Mental Flexibility *</label>
-            <div class="rating-slider">
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="1"
-                formControlName="rating"
-                class="slider">
-              <div class="slider-labels">
-                <span>0</span>
-                <span>Current: {{ applicationForm.get('personalQualities.mentalFlexibility.rating')?.value ?? 'Not set' }}</span>
-                <span>10</span>
-              </div>
-            </div>
-            <textarea
-              formControlName="example"
-              class="form-textarea"
-              rows="3"
-              placeholder="Feel free to justify your answer..."
-              maxlength="600"></textarea>
-            <div class="word-count">
-              {{ getWordCount(applicationForm.get('personalQualities.mentalFlexibility.example')?.value) }}/100 words
-            </div>
-          </div>
-
-          <div class="quality-item" formGroupName="passionForProjects">
-            <label>Passion for Projects You Lead *</label>
-            <div class="rating-slider">
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="1"
-                formControlName="rating"
-                class="slider">
-              <div class="slider-labels">
-                <span>0</span>
-                <span>Current: {{ applicationForm.get('personalQualities.passionForProjects.rating')?.value ?? 'Not set' }}</span>
-                <span>10</span>
-              </div>
-            </div>
-            <textarea
-              formControlName="example"
-              class="form-textarea"
-              rows="3"
-              placeholder="Feel free to justify your answer..."
-              maxlength="600"></textarea>
-            <div class="word-count">
-              {{ getWordCount(applicationForm.get('personalQualities.passionForProjects.example')?.value) }}/100 words
-            </div>
-          </div>
-
-          <div class="quality-item" formGroupName="creativeThinking">
-            <label>Creative Thinking *</label>
-            <div class="rating-slider">
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="1"
-                formControlName="rating"
-                class="slider">
-              <div class="slider-labels">
-                <span>0</span>
-                <span>Current: {{ applicationForm.get('personalQualities.creativeThinking.rating')?.value ?? 'Not set' }}</span>
-                <span>10</span>
-              </div>
-            </div>
-            <textarea
-              formControlName="example"
-              class="form-textarea"
-              rows="3"
-              placeholder="Feel free to justify your answer..."
-              maxlength="600"></textarea>
-            <div class="word-count">
-              {{ getWordCount(applicationForm.get('personalQualities.creativeThinking.example')?.value) }}/100 words
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- Section 6: Short Answer -->
-      @if (currentStep() === 6) {
         <div class="form-section" formGroupName="shortAnswer">
           <div class="form-group">
             <label>Describe a Failure *</label>
@@ -975,8 +590,8 @@
         </div>
       }
 
-      <!-- Section 7: Video Introduction -->
-      @if (currentStep() === 7) {
+      <!-- Section 5: Video Introduction (was Section 7) -->
+      @if (currentStep() === 5) {
         <div class="form-section" formGroupName="videoIntroduction">
           <div class="form-group">
             <label>Video Introduction *</label>
@@ -1006,8 +621,8 @@
         </div>
       }
 
-      <!-- Section 8: Cover Letter -->
-      @if (currentStep() === 8) {
+      <!-- Section 6: Cover Letter (was Section 8) -->
+      @if (currentStep() === 6) {
         <div class="form-section" formGroupName="coverLetter">
           <div class="form-group">
             <label>Tell us anything else</label>
@@ -1024,8 +639,8 @@
         </div>
       }
 
-      <!-- Section 9: Friends -->
-      @if (currentStep() === 9) {
+      <!-- Section 7: Friends (was Section 9) -->
+      @if (currentStep() === 7) {
         <div class="form-section" formGroupName="friends">
           <div class="friends-intro">
             <i class="fas fa-user-friends"></i>

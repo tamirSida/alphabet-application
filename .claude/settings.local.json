@@ -12,7 +12,12 @@
       "mcp__firebase__firebase_read_resources",
       "mcp__firebase__firebase_get_security_rules",
       "Bash(node /tmp/inspect-cohorts.mjs)",
-      "Bash(node inspect-cohorts.mjs)"
+      "Bash(node inspect-cohorts.mjs)",
+      "Bash(awk 'NR==573 || NR==574 || NR==957 || NR==958 || NR==959' /Users/tamirsida/dev/alpahbet-application/src/app/pages/application/application.component.html)",
+      "Bash(sed -i '' '574,957d' src/app/pages/application/application.component.html)",
+      "Bash(sed -n '570,580p' src/app/pages/application/application.component.html)",
+      "Bash(sed -i '' '370,460d' src/app/pages/admin/admin.component.html)",
+      "Bash(sed -n '367,372p' src/app/pages/admin/admin.component.html)"
     ],
     "deny": [],
     "ask": []

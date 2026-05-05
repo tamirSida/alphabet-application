@@ -1314,62 +1314,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
   }
 
-  calculateSkillsScore(skills: any): { score: number; maxScore: number; percentage: number } {
-    if (!skills) return { score: 0, maxScore: 0, percentage: 0 };
-    
-    let totalScore = 0;
-    let maxScore = 0;
-    
-    // Add up all the standard skills (1-5 scale)
-    const standardSkills = ['aiDailyUse', 'programming', 'marketingSales', 'management', 'publicSpeaking'];
-    
-    standardSkills.forEach(skill => {
-      if (skills[skill] !== undefined) {
-        totalScore += skills[skill];
-        maxScore += 5;
-      }
-    });
-    
-    // Add custom skill if present
-    if (skills.other && skills.other.rating !== undefined) {
-      totalScore += skills.other.rating;
-      maxScore += 5;
-    }
-    
-    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
-    
-    return { score: totalScore, maxScore, percentage };
-  }
-
-  calculatePersonalQualitiesScore(personalQualities: any): { score: number; maxScore: number; percentage: number } {
-    if (!personalQualities) return { score: 0, maxScore: 0, percentage: 0 };
-    
-    let totalScore = 0;
-    let maxScore = 0;
-    
-    // All personal qualities are on 0-10 scale
-    const qualities = [
-      'proactivePersonality',
-      'persistenceHandleDifficulties', 
-      'performUnderStress',
-      'independence',
-      'teamwork',
-      'mentalFlexibility',
-      'passionForProjects',
-      'creativeThinking'
-    ];
-    
-    qualities.forEach(quality => {
-      if (personalQualities[quality] && personalQualities[quality].rating !== undefined) {
-        totalScore += personalQualities[quality].rating;
-        maxScore += 10;
-      }
-    });
-    
-    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
-
-    return { score: totalScore, maxScore, percentage };
-  }
+  // (calculateSkillsScore + calculatePersonalQualitiesScore removed alongside
+  //  the Skills Assessment / Personal Qualities sections — see model comments.)
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Configurable + sortable columns

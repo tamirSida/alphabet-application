@@ -45,52 +45,22 @@ export interface ExperienceBackground {
   }; // max 200 words, optional if hasProjectIdea is No
 }
 
-// Section 4: Skills (1-5 scale)
-export interface Skills {
-  aiDailyUse: number; // 1-5
-  programming: number; // 1-5
-  marketingSales: number; // 1-5
-  management: number; // 1-5
-  publicSpeaking: number; // 1-5
-  other?: {
-    skill: string;
-    rating: number; // 1-5
-  };
-}
-
-// Section 5: Personal Qualities (0-10 scale with examples)
-export interface PersonalQuality {
-  rating: number; // 0-10
-  example: string;
-}
-
-export interface PersonalQualities {
-  proactivePersonality: PersonalQuality;
-  persistenceHandleDifficulties: PersonalQuality;
-  performUnderStress: PersonalQuality;
-  independence: PersonalQuality;
-  teamwork: PersonalQuality;
-  mentalFlexibility: PersonalQuality;
-  passionForProjects: PersonalQuality;
-  creativeThinking: PersonalQuality;
-}
-
-// Section 6: Short Answer
+// Section 4: Short Answer
 export interface ShortAnswer {
   failureDescription: string; // max 200 words
 }
 
-// Section 7: Cover Letter
+// Section 5: Cover Letter
 export interface CoverLetter {
   content: string; // max 300 words
 }
 
-// Section 8: Video Introduction
+// Section 6: Video Introduction
 export interface VideoIntroduction {
   videoUrl: string; // YouTube or other platform URL
 }
 
-// Section 9: Friends (optional)
+// Section 7: Friends (optional)
 export interface Friends {
   friend1StudentId?: string;
   friend2StudentId?: string;
@@ -100,12 +70,15 @@ export interface ApplicationFormData {
   personalInformation: PersonalInformation;
   serviceAvailability: ServiceAvailability;
   experienceBackground: ExperienceBackground;
-  skills: Skills;
-  personalQualities: PersonalQualities;
   shortAnswer: ShortAnswer;
   coverLetter: CoverLetter;
   videoIntroduction: VideoIntroduction;
   friends?: Friends;
+  // NOTE: Older applications submitted before the Skills/PersonalQualities
+  // sections were removed still carry `skills` and `personalQualities` keys
+  // in their stored Firestore documents. Those keys are intentionally not
+  // declared on this interface — they're preserved at runtime when reading
+  // legacy docs but no UI renders them and no new submissions write them.
 }
 
 export interface AdminNote {

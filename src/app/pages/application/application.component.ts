@@ -15,7 +15,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 })
 export class ApplicationComponent implements OnInit {
   currentStep = signal(1);
-  totalSteps = 9;
+  totalSteps = 7;
   isLoading = signal(true);
   isSubmitting = signal(false);
   error = signal<string | null>(null);
@@ -111,71 +111,22 @@ export class ApplicationComponent implements OnInit {
         })
       }),
       
-      // Section 4: Skills (1-5 scale)
-      skills: this.fb.group({
-        aiDailyUse: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
-        programming: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
-        marketingSales: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
-        management: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
-        publicSpeaking: [null, [Validators.required, Validators.min(1), Validators.max(5)]],
-        other: this.fb.group({
-          skill: [''],
-          rating: [null, [Validators.min(1), Validators.max(5)]]
-        })
-      }),
-      
-      // Section 5: Personal Qualities (0-10 scale)
-      personalQualities: this.fb.group({
-        proactivePersonality: this.fb.group({
-          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [this.wordCountValidator(100)]]
-        }),
-        persistenceHandleDifficulties: this.fb.group({
-          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [this.wordCountValidator(100)]]
-        }),
-        performUnderStress: this.fb.group({
-          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [this.wordCountValidator(100)]]
-        }),
-        independence: this.fb.group({
-          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [this.wordCountValidator(100)]]
-        }),
-        teamwork: this.fb.group({
-          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [this.wordCountValidator(100)]]
-        }),
-        mentalFlexibility: this.fb.group({
-          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [this.wordCountValidator(100)]]
-        }),
-        passionForProjects: this.fb.group({
-          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [this.wordCountValidator(100)]]
-        }),
-        creativeThinking: this.fb.group({
-          rating: [null, [Validators.required, Validators.min(0), Validators.max(10)]],
-          example: ['', [this.wordCountValidator(100)]]
-        })
-      }),
-      
-      // Section 6: Short Answer
+      // Section 4: Short Answer (was Section 6 — Skills + Personal Qualities removed)
       shortAnswer: this.fb.group({
         failureDescription: ['', [Validators.required, this.wordCountValidator(200)]]
       }),
-      
-      // Section 7: Cover Letter
-      coverLetter: this.fb.group({
-        content: ['', this.wordCountValidator(300)]
-      }),
-      
-      // Section 8: Video Introduction
+
+      // Section 5: Video Introduction (was Section 7)
       videoIntroduction: this.fb.group({
         videoUrl: ['', Validators.required]
       }),
-      
-      // Section 9: Friends (optional)
+
+      // Section 6: Cover Letter (was Section 8)
+      coverLetter: this.fb.group({
+        content: ['', this.wordCountValidator(300)]
+      }),
+
+      // Section 7: Friends (was Section 9, optional)
       friends: this.fb.group({
         friend1StudentId: [''],
         friend2StudentId: ['']
@@ -302,16 +253,12 @@ export class ApplicationComponent implements OnInit {
         return baseValid && !combatProofMissing;
       }
       case 4:
-        return this.applicationForm.get('skills')?.valid || false;
-      case 5:
-        return this.applicationForm.get('personalQualities')?.valid || false;
-      case 6:
         return this.applicationForm.get('shortAnswer')?.valid || false;
-      case 7:
+      case 5:
         return this.applicationForm.get('videoIntroduction')?.valid || false;
-      case 8:
+      case 6:
         return this.applicationForm.get('coverLetter')?.valid || false;
-      case 9:
+      case 7:
         return true; // Friends section is optional
       default:
         return false;
@@ -499,13 +446,11 @@ export class ApplicationComponent implements OnInit {
   getStepTitle(step: number): string {
     const titles = [
       'Personal Information',
-      'Service & Availability', 
+      'Service & Availability',
       'Experience & Background',
-      'Skills Assessment',
-      'Personal Qualities',
       'Short Answer',
       'Video Introduction',
-      'Additional Information',
+      'Cover Letter',
       'Friends (Optional)'
     ];
     return titles[step - 1] || '';
@@ -750,64 +695,6 @@ export class ApplicationComponent implements OnInit {
       errors.push('• Proof of Combat Service documents are required (1-2 files)');
     }
 
-    const skills = this.applicationForm.get('skills');
-    if (skills?.invalid) {
-      const skillNames = {
-        aiDailyUse: 'AI Daily Use',
-        programming: 'Programming',
-        marketingSales: 'Product Marketing & Sales Experience',
-        management: 'Leadership Experience',
-        publicSpeaking: 'Public Speaking & Presentation Skills'
-      };
-      
-      Object.entries(skillNames).forEach(([key, name]) => {
-        const control = skills.get(key);
-        if (control?.hasError('required')) {
-          errors.push(`• ${name} rating is required`);
-        }
-        if (control?.hasError('min') || control?.hasError('max')) {
-          errors.push(`• ${name} rating must be between 1 and 5`);
-        }
-      });
-
-      // Check custom skill
-      const otherSkill = skills.get('other');
-      if (otherSkill?.get('skill')?.value && otherSkill?.get('rating')?.hasError('required')) {
-        errors.push('• Please rate your custom skill');
-      }
-      if (otherSkill?.get('rating')?.hasError('min') || otherSkill?.get('rating')?.hasError('max')) {
-        errors.push('• Custom skill rating must be between 1 and 5');
-      }
-    }
-
-    const qualities = this.applicationForm.get('personalQualities');
-    if (qualities?.invalid) {
-      const qualityNames = {
-        proactivePersonality: 'Proactive Personality',
-        persistenceHandleDifficulties: 'Persistence & Handle Difficulties',
-        performUnderStress: 'Perform Under Stress',
-        independence: 'Independence',
-        teamwork: 'Teamwork',
-        mentalFlexibility: 'Mental Flexibility',
-        passionForProjects: 'Passion for Projects',
-        creativeThinking: 'Creative Thinking'
-      };
-      
-      Object.entries(qualityNames).forEach(([key, name]) => {
-        const qualityGroup = qualities.get(key);
-        if (qualityGroup?.get('rating')?.hasError('required')) {
-          errors.push(`• ${name} rating is required`);
-        }
-        if (qualityGroup?.get('rating')?.hasError('min') || qualityGroup?.get('rating')?.hasError('max')) {
-          errors.push(`• ${name} rating must be between 0 and 10`);
-        }
-        if (qualityGroup?.get('example')?.hasError('wordCount')) {
-          const error = qualityGroup?.get('example')?.errors?.['wordCount'];
-          errors.push(`• ${name} example must be ${error.max} words or less (currently ${error.actual} words)`);
-        }
-      });
-    }
-
     const shortAnswer = this.applicationForm.get('shortAnswer');
     if (shortAnswer?.invalid) {
       if (shortAnswer.get('failureDescription')?.hasError('required')) {
@@ -923,68 +810,7 @@ export class ApplicationComponent implements OnInit {
       });
     }
 
-    // Check Skills (Step 4)
-    const skills = this.applicationForm.get('skills');
-    if (skills?.invalid) {
-      let skillIssues: string[] = [];
-      const skillNames = ['AI Daily Use', 'Programming', 'Marketing & Sales', 'Leadership', 'Public Speaking'];
-      const skillKeys = ['aiDailyUse', 'programming', 'marketingSales', 'management', 'publicSpeaking'];
-      
-      skillKeys.forEach((key, index) => {
-        if (skills.get(key)?.hasError('required')) {
-          skillIssues.push(skillNames[index]);
-        }
-      });
-      
-      // Check custom skill
-      const otherSkill = skills.get('other');
-      if (otherSkill?.get('skill')?.value && otherSkill?.get('rating')?.hasError('required')) {
-        skillIssues.push('Custom Skill Rating');
-      }
-      
-      if (skillIssues.length > 0) {
-        issues.push({
-          step: 4,
-          title: 'Skills Assessment',
-          description: `Missing ratings: ${skillIssues.join(', ')}`,
-          icon: 'fas fa-star'
-        });
-      }
-    }
-
-    // Check Personal Qualities (Step 5)
-    const qualities = this.applicationForm.get('personalQualities');
-    if (qualities?.invalid) {
-      let qualityIssues: string[] = [];
-      const qualityNames = {
-        proactivePersonality: 'Proactive Personality',
-        persistenceHandleDifficulties: 'Persistence',
-        performUnderStress: 'Perform Under Stress',
-        independence: 'Independence',
-        teamwork: 'Teamwork',
-        mentalFlexibility: 'Mental Flexibility',
-        passionForProjects: 'Passion for Projects',
-        creativeThinking: 'Creative Thinking'
-      };
-      
-      Object.entries(qualityNames).forEach(([key, name]) => {
-        const qualityGroup = qualities.get(key);
-        if (qualityGroup?.get('rating')?.hasError('required')) {
-          qualityIssues.push(name);
-        }
-      });
-      
-      if (qualityIssues.length > 0) {
-        issues.push({
-          step: 5,
-          title: 'Personal Qualities',
-          description: `Complete: ${qualityIssues.join(', ')}`,
-          icon: 'fas fa-heart'
-        });
-      }
-    }
-
-    // Check Short Answer (Step 6)
+    // Check Short Answer (Step 4)
     const shortAnswer = this.applicationForm.get('shortAnswer');
     if (shortAnswer?.invalid) {
       let shortIssues: string[] = [];
@@ -994,10 +820,10 @@ export class ApplicationComponent implements OnInit {
       if (shortAnswer.get('failureDescription')?.hasError('wordCount')) {
         shortIssues.push('Failure description (200 words max)');
       }
-      
+
       if (shortIssues.length > 0) {
         issues.push({
-          step: 6,
+          step: 4,
           title: 'Short Answer',
           description: shortIssues.join(', '),
           icon: 'fas fa-edit'
@@ -1005,23 +831,23 @@ export class ApplicationComponent implements OnInit {
       }
     }
 
-    // Check Video Introduction (Step 7)
+    // Check Video Introduction (Step 5)
     const video = this.applicationForm.get('videoIntroduction');
     if (video?.invalid) {
       issues.push({
-        step: 7,
+        step: 5,
         title: 'Video Introduction',
         description: 'Video URL is required',
         icon: 'fas fa-video'
       });
     }
 
-    // Check Additional Information (Step 8)
+    // Check Cover Letter (Step 6)
     const coverLetter = this.applicationForm.get('coverLetter');
     if (coverLetter?.get('content')?.hasError('wordCount')) {
       issues.push({
-        step: 8,
-        title: 'Additional Information',
+        step: 6,
+        title: 'Cover Letter',
         description: 'Content exceeds 300 words',
         icon: 'fas fa-file-text'
       });
