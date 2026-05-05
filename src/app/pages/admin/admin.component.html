@@ -555,66 +555,7 @@
                 <span class="stat-item">
                   Filtered: {{ filteredApplications().length }}
                 </span>
-                @if (canPublishResults() && !isPublishing()) {
-                  <button 
-                    class="primary-button"
-                    (click)="publishResults()"
-                    style="background: #059669; color: white;">
-                    <i class="fas fa-paper-plane"></i>
-                    Publish Results & Send Emails
-                  </button>
-                } @else if (isPublishing()) {
-                  <div class="publishing-container">
-                    <button 
-                      class="primary-button"
-                      disabled
-                      style="background: #6b7280; color: white; cursor: not-allowed;">
-                      @if (isSendingEmails()) {
-                        <i class="fas fa-envelope fa-spin"></i>
-                        Sending Emails... ({{ emailProgress().sent }}/{{ emailProgress().total }})
-                      } @else {
-                        <i class="fas fa-spinner fa-spin"></i>
-                        Publishing Results...
-                      }
-                    </button>
-                    
-                    @if (isSendingEmails()) {
-                      <div class="email-progress">
-                        <div class="progress-bar">
-                          <div class="progress-fill" [style.width.%]="(emailProgress().sent / emailProgress().total) * 100"></div>
-                        </div>
-                        <span class="progress-text">
-                          Sending {{ emailProgress().sent }} of {{ emailProgress().total }} emails
-                        </span>
-                      </div>
-                    }
-                  </div>
-                } @else if (applications().length > 0) {
-                  <span class="stat-item" style="background: #fbbf24; color: #92400e;">
-                    ⚠️ All applications must be accepted or rejected to publish
-                  </span>
-                }
               </div>
-
-              <!-- Publish Status Indicator -->
-              @if (emailErrors().length > 0) {
-                <div class="email-errors">
-                  <h4><i class="fas fa-exclamation-triangle"></i> Email Delivery Issues</h4>
-                  <div class="error-list">
-                    @for (error of emailErrors(); track error.email) {
-                      <div class="error-item">
-                        <strong>{{ error.email }}</strong>: {{ error.error }}
-                      </div>
-                    }
-                  </div>
-                </div>
-              }
-              @if (lastPublishTime()) {
-                <div class="publish-status-indicator">
-                  <i class="fas fa-check-circle"></i>
-                  <span>Results last published {{ getLastPublishDisplay() }}</span>
-                </div>
-              }
             </div>
 
             <!-- Search and Filter Controls -->

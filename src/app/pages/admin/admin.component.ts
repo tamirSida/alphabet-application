@@ -123,14 +123,8 @@ export class AdminComponent implements OnInit, OnDestroy {
   private refreshInterval: any;
   private lastApplicationCount = 0;
   
-  // Publish results state
-  isPublishing = signal(false);
-  lastPublishTime = signal<Date | null>(null);
-  
-  // Email sending state
-  isSendingEmails = signal(false);
-  emailProgress = signal({ sent: 0, total: 0 });
-  emailErrors = signal<Array<{email: string, error: string}>>([]);
+  // (Deferred-publish workflow removed — accept/reject now publishes immediately
+  // and triggers the corresponding email at the call site.)
   
   // Search and filter
   searchTerm = signal('');
@@ -570,21 +564,40 @@ export class AdminComponent implements OnInit, OnDestroy {
     const application = this.pendingApplication();
     if (!application) return;
 
+    // Snapshot prev status BEFORE the DB update so we can detect a fresh accept
+    // (vs. a class reassignment of an already-accepted application).
+    const wasAlreadyAccepted = application.status === 'accepted';
+
     try {
       await this.applicationService.updateApplicationStatus(application.applicationId, 'accepted', className);
-      
-      // Close modal and detail view if open
+
+      // Fire acceptance email only on a fresh transition to accepted.
+      // Class-reassignment of an already-accepted app does NOT re-email
+      // (avoids spamming applicants if admin tweaks the class).
+      let emailSent: boolean | null = null;
+      if (!wasAlreadyAccepted && application.user && application.cohort) {
+        emailSent = await this.sendDecisionEmail(
+          'accepted',
+          application.user,
+          { ...application, status: 'accepted', assignedClass: className },
+          application.cohort
+        );
+      }
+
       this.closeClassSelectionModal();
       if (this.selectedApplication()) {
         this.selectedApplication.set(null);
       }
-      
+
       await this.loadApplications();
-      
-      if (application.status === 'accepted') {
-        this.success.set(`Application reassigned to ${className}!`);
+
+      if (emailSent === false) return; // email-failure error already surfaced
+      if (wasAlreadyAccepted) {
+        this.success.set(`Application reassigned to ${className}.`);
+      } else if (emailSent === true) {
+        this.success.set(`Application accepted, assigned to ${className}, and acceptance email sent.`);
       } else {
-        this.success.set(`Application accepted and assigned to ${className}!`);
+        this.success.set(`Application accepted and assigned to ${className}.`);
       }
     } catch (error) {
       console.error('Error updating application:', error);
@@ -594,18 +607,20 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   async toggleReject(application: Application & { user?: User, cohort?: Cohort }) {
-    // If currently rejected, move back to submitted status
+    // If currently rejected, revert to submitted (no email — applicant already
+    // received the rejection email at the moment of rejection, so this only
+    // walks back the dashboard status. This is a known UX limitation of the
+    // immediate-publish workflow; admins should be deliberate about rejecting.)
     if (application.status === 'rejected') {
       try {
         await this.applicationService.updateApplicationStatus(application.applicationId, 'submitted');
-        
-        // Close detail view if open
+
         if (this.selectedApplication()) {
           this.selectedApplication.set(null);
         }
-        
+
         await this.loadApplications();
-        this.success.set('Application returned to submitted status!');
+        this.success.set('Application returned to submitted status (no email sent).');
       } catch (error) {
         console.error('Error unrejecting application:', error);
         this.error.set('Failed to unreject application.');
@@ -615,15 +630,36 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   async updateApplicationStatus(applicationId: string, status: Application['status']) {
     try {
+      // Snapshot the row BEFORE mutation so we can compare prev status &
+      // grab the (already-enriched) user/cohort for the email.
+      const before = this.applications().find(a => a.applicationId === applicationId);
+      const prevStatus = before?.status;
+
       await this.applicationService.updateApplicationStatus(applicationId, status);
-      
-      // Close detail view if open
+
+      // Fire rejection email on transition to rejected
+      let emailSent: boolean | null = null;
+      if (status === 'rejected' && prevStatus !== 'rejected' && before?.user && before?.cohort) {
+        emailSent = await this.sendDecisionEmail(
+          'rejected',
+          before.user,
+          before as Application,
+          before.cohort
+        );
+      }
+
       if (this.selectedApplication()) {
         this.selectedApplication.set(null);
       }
-      
+
       await this.loadApplications();
-      this.success.set(`Application ${status} successfully!`);
+
+      if (emailSent === false) return; // email-failure error already surfaced
+      if (status === 'rejected' && emailSent === true) {
+        this.success.set('Application rejected and rejection email sent.');
+      } else {
+        this.success.set(`Application ${status} successfully!`);
+      }
     } catch (error) {
       console.error('Error updating application status:', error);
       this.error.set('Failed to update application status.');
@@ -721,136 +757,27 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
   }
 
-  async publishResults() {
-    const apps = this.applications();
-    
-    // Check if all applications are either accepted or rejected
-    const hasUnreviewedApps = apps.some(app => 
-      app.status !== 'accepted' && app.status !== 'rejected'
-    );
-    
-    if (hasUnreviewedApps) {
-      this.error.set('Cannot publish results. All applications must be either accepted or rejected first.');
-      return;
-    }
-    
-    if (apps.length === 0) {
-      this.error.set('No applications found to publish.');
-      return;
-    }
-    
-    const acceptedCount = apps.filter(app => app.status === 'accepted').length;
-    const rejectedCount = apps.filter(app => app.status === 'rejected').length;
-    
-    const confirmMessage = `Are you sure you want to publish results to all ${apps.length} applicant(s)?\n\n` +
-      `• ${acceptedCount} acceptance emails\n` +
-      `• ${rejectedCount} rejection emails\n\n` +
-      `This will update their dashboard status and send emails. This action cannot be undone.`;
-    
-    if (!confirm(confirmMessage)) {
-      return;
-    }
-    
-    this.isPublishing.set(true);
-    this.isSendingEmails.set(true);
-    this.error.set(null);
-    this.emailErrors.set([]);
-    this.emailProgress.set({ sent: 0, total: apps.length });
-    
+  /** Send the appropriate decision email best-effort. Status is already
+   *  persisted at this point, so a failed email surfaces via this.error but
+   *  does NOT roll back the decision. Returns true on send, false on failure. */
+  private async sendDecisionEmail(
+    type: 'accepted' | 'rejected',
+    user: User,
+    application: Application,
+    cohort: Cohort
+  ): Promise<boolean> {
     try {
-      // Step 1: Publish results in database
-      await this.applicationService.publishResults();
-      
-      // Step 2: Send emails
-      const acceptedUsers: Array<{user: User, application: Application}> = [];
-      const rejectedUsers: Array<{user: User, application: Application}> = [];
-      
-      // Get the current cohort for email context
-      const currentCohort = this.cohorts().find(c => c.status === 'accepting_applications' || c.status === 'closed');
-      
-      if (!currentCohort) {
-        throw new Error('No active cohort found for email context');
-      }
-      
-      // Categorize users
-      apps.forEach(app => {
-        if (!app.user) return;
-        
-        const userAppPair = { user: app.user, application: app };
-        if (app.status === 'accepted') {
-          acceptedUsers.push(userAppPair);
-        } else if (app.status === 'rejected') {
-          rejectedUsers.push(userAppPair);
-        }
-      });
-      
-      // Send emails with progress tracking
-      const emailResults = await this.emailService.sendBulkResultsEmails(
-        acceptedUsers,
-        rejectedUsers,
-        currentCohort,
-        (sent, total) => {
-          this.emailProgress.set({ sent, total });
-        }
-      );
-      
-      // Set last publish time
-      this.lastPublishTime.set(new Date());
-      
-      // Handle results
-      if (emailResults.failed.length > 0) {
-        this.emailErrors.set(emailResults.failed);
-        this.success.set(
-          `✅ Results published! ${emailResults.success}/${apps.length} emails sent successfully. ` +
-          `${emailResults.failed.length} emails failed - check details below.`
-        );
+      if (type === 'accepted') {
+        await this.emailService.sendAcceptanceEmail(user, application, cohort);
       } else {
-        this.success.set(
-          `🎉 Successfully published results to all ${apps.length} applicant(s)! ` +
-          `All ${emailResults.success} emails sent successfully! 🎉`
-        );
+        await this.emailService.sendRejectionEmail(user, application, cohort);
       }
-      
-      // Auto-clear success message after 10 seconds
-      setTimeout(() => {
-        this.success.set(null);
-        this.emailErrors.set([]);
-      }, 10000);
-      
-    } catch (error: any) {
-      console.error('Error publishing results:', error);
-      this.error.set(`Failed to publish results: ${error.message || 'Unknown error'}`);
-    } finally {
-      this.isPublishing.set(false);
-      this.isSendingEmails.set(false);
-      this.emailProgress.set({ sent: 0, total: 0 });
+      return true;
+    } catch (err: any) {
+      console.error(`Failed to send ${type} email`, err);
+      this.error.set(`Decision saved, but email to ${user.email} failed: ${err?.message || 'unknown error'}`);
+      return false;
     }
-  }
-
-  canPublishResults(): boolean {
-    const apps = this.applications();
-    if (apps.length === 0) return false;
-    
-    // All applications must be either accepted or rejected
-    return apps.every(app => app.status === 'accepted' || app.status === 'rejected');
-  }
-
-  getLastPublishDisplay(): string {
-    const publishTime = this.lastPublishTime();
-    if (!publishTime) return '';
-    
-    const now = new Date();
-    const diffMs = now.getTime() - publishTime.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMins < 1) return 'just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-    
-    return publishTime.toLocaleDateString();
   }
 
   // Notes functionality

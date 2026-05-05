@@ -127,66 +127,6 @@ export class EmailService {
   }
 
   /**
-   * Send bulk emails for results publication
-   */
-  async sendBulkResultsEmails(
-    acceptedUsers: Array<{user: User, application: Application}>,
-    rejectedUsers: Array<{user: User, application: Application}>,
-    cohort: Cohort,
-    onProgress?: (sent: number, total: number) => void
-  ): Promise<{success: number, failed: Array<{email: string, error: string}>}> {
-    const results = {
-      success: 0,
-      failed: [] as Array<{email: string, error: string}>
-    };
-
-    const total = acceptedUsers.length + rejectedUsers.length;
-    let sent = 0;
-
-    // Send acceptance emails
-    for (const {user, application} of acceptedUsers) {
-      try {
-        await this.sendAcceptanceEmail(user, application, cohort);
-        results.success++;
-        sent++;
-        onProgress?.(sent, total);
-        
-        // Add small delay to avoid rate limiting
-        await this.delay(300);
-      } catch (error: any) {
-        results.failed.push({
-          email: user.email,
-          error: error.message || 'Unknown error'
-        });
-        sent++;
-        onProgress?.(sent, total);
-      }
-    }
-
-    // Send rejection emails
-    for (const {user, application} of rejectedUsers) {
-      try {
-        await this.sendRejectionEmail(user, application, cohort);
-        results.success++;
-        sent++;
-        onProgress?.(sent, total);
-        
-        // Add small delay to avoid rate limiting
-        await this.delay(300);
-      } catch (error: any) {
-        results.failed.push({
-          email: user.email,
-          error: error.message || 'Unknown error'
-        });
-        sent++;
-        onProgress?.(sent, total);
-      }
-    }
-
-    return results;
-  }
-
-  /**
    * Convert plain text to HTML with basic styling
    */
   private convertToHTML(text: string): string {
@@ -262,13 +202,6 @@ export class EmailService {
       month: 'long',
       day: 'numeric'
     }).format(date);
-  }
-
-  /**
-   * Utility delay function
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**

@@ -143,19 +143,24 @@ export class ApplicationService {
   async updateApplicationStatus(applicationId: string, status: Application['status'], assignedClass?: string): Promise<void> {
     const applicationRef = doc(this.firebaseService.firestore, 'applications', applicationId);
     const updateData: any = { status };
-    
+
     if (status === 'accepted' || status === 'rejected') {
       updateData.reviewedAt = new Date();
     }
-    
+
     if (assignedClass) {
       updateData.assignedClass = assignedClass;
     }
-    
+
     await updateDoc(applicationRef, updateData);
-    
-    // DON'T update user status here - only when results are published
-    // This keeps the applicant's dashboard showing "under_review" until admin publishes results
+
+    // Sync user.status so the applicant's dashboard reflects the decision immediately
+    // (the deferred "publish results" workflow has been removed — accept/reject is
+    // now real-time and pairs with an automatic email notification at the call site).
+    const application = await this.getApplication(applicationId);
+    if (application) {
+      await this.userService.updateUserStatus(application.userId, status);
+    }
   }
 
   async deleteApplication(applicationId: string): Promise<void> {
@@ -173,17 +178,6 @@ export class ApplicationService {
     
     // Reset user status to not_submitted
     await this.userService.updateUserStatus(application.userId, 'not_submitted');
-  }
-
-  async publishResults(): Promise<void> {
-    // Get all applications and sync user status
-    const applications = await this.getAllApplications();
-    
-    for (const application of applications) {
-      const userStatus = application.status === 'accepted' ? 'accepted' : 
-                        application.status === 'rejected' ? 'rejected' : 'submitted';
-      await this.userService.updateUserStatus(application.userId, userStatus);
-    }
   }
 
   async updateApplicationNotes(applicationId: string, notes: AdminNote): Promise<void> {
