@@ -37,6 +37,7 @@ export interface ExperienceBackground {
   militaryReleaseDate?: string;
   militaryServiceDescription: string; // max 75 words
   proofOfService: UploadedFile[]; // Required, max 2 files
+  proofOfCombatService?: UploadedFile[]; // Required when combatService === 'Yes', max 2 files
   professionalExperience?: string; // max 150 words, optional
   hasProjectIdea: 'Yes' | 'No'; // New question to address feedback
   projectIdea?: {

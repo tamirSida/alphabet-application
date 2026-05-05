@@ -100,6 +100,10 @@ export class ApplicationComponent implements OnInit {
         militaryReleaseDate: [''],
         militaryServiceDescription: ['', [Validators.required, this.wordCountValidator(75)]],
         proofOfService: this.fb.array([], [Validators.required, Validators.minLength(1), Validators.maxLength(2)]),
+        // Required only when combatService === 'Yes'; that conditional check
+        // lives in getValidationErrors() / form-issues popup since reactive
+        // forms can't easily express cross-field requireds.
+        proofOfCombatService: this.fb.array([], [Validators.maxLength(2)]),
         professionalExperience: ['', this.wordCountValidator(150)],
         hasProjectIdea: ['', Validators.required],
         projectIdea: this.fb.group({
@@ -286,8 +290,17 @@ export class ApplicationComponent implements OnInit {
         const hasEmptyReasons = unavailableClasses.some((item: any) => item.reason.trim() === '');
         const hasOverLimitReasons = unavailableClasses.some((item: any) => this.getWordCount(item.reason) > 80);
         return (serviceGroup?.get('countryOfService')?.valid || false) && !hasEmptyReasons && !hasOverLimitReasons;
-      case 3:
-        return this.applicationForm.get('experienceBackground')?.valid || false;
+      case 3: {
+        const exp = this.applicationForm.get('experienceBackground');
+        const baseValid = exp?.valid || false;
+        // proofOfCombatService is required when combatService === 'Yes' but the
+        // FormArray has no native required validator (the requirement depends on
+        // a sibling field). Re-check it here so users can't advance past Step 3
+        // with combat=Yes and no combat-proof file uploaded.
+        const combatProofMissing = exp?.get('combatService')?.value === 'Yes'
+          && this.getProofOfCombatServiceArray().length === 0;
+        return baseValid && !combatProofMissing;
+      }
       case 4:
         return this.applicationForm.get('skills')?.valid || false;
       case 5:
@@ -539,21 +552,25 @@ export class ApplicationComponent implements OnInit {
   }
 
 
-  // File upload handling
-  async onFileSelected(event: any, fieldPath: string) {
+  // File upload handling — path-driven so we can reuse the same helpers for
+  // proofOfService AND proofOfCombatService. The default fieldPath argument
+  // keeps backwards-compatible with the existing proofOfService template.
+  async onFileSelected(event: any, fieldPath: string = 'experienceBackground.proofOfService') {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    const arr = this.applicationForm.get(fieldPath) as FormArray | null;
+    if (!arr) return;
+
     // Check if we're at the limit for this field
-    const proofArray = this.getProofOfServiceArray();
-    if (proofArray.length >= 2) {
+    if (arr.length >= 2) {
       this.error.set('Maximum 2 files allowed');
       return;
     }
 
-    for (let i = 0; i < Math.min(files.length, 2 - proofArray.length); i++) {
+    for (let i = 0; i < Math.min(files.length, 2 - arr.length); i++) {
       const file = files[i];
-      
+
       // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
         this.error.set(`File ${file.name} is too large. Maximum 5MB per file.`);
@@ -569,20 +586,24 @@ export class ApplicationComponent implements OnInit {
 
       try {
         this.isLoading.set(true);
-        
-        // Upload to Firebase Storage
+
+        // Upload to Firebase Storage. Subfolder reflects which field this is for
+        // so combat-proof and service-proof don't clobber each other in storage.
         const timestamp = Date.now();
         const userId = this.authService.currentUser()?.uid;
         const fileName = `${timestamp}_${file.name}`;
-        const filePath = `proofs-of-service/${userId}/${fileName}`;
-        
+        const subfolder = fieldPath.endsWith('proofOfCombatService')
+          ? 'proofs-of-combat-service'
+          : 'proofs-of-service';
+        const filePath = `${subfolder}/${userId}/${fileName}`;
+
         // Create storage reference and upload
         const storageRef = ref(this.firebaseService.storage, filePath);
         const snapshot = await uploadBytes(storageRef, file);
         const downloadURL = await getDownloadURL(snapshot.ref);
-        
+
         // Add to form array
-        proofArray.push(this.fb.group({
+        arr.push(this.fb.group({
           fileUrl: downloadURL,
           fileName: file.name
         }));
@@ -604,15 +625,21 @@ export class ApplicationComponent implements OnInit {
     return this.applicationForm.get('experienceBackground.proofOfService') as FormArray;
   }
 
-  // Remove file from array
-  removeFile(index: number) {
-    const proofArray = this.getProofOfServiceArray();
-    proofArray.removeAt(index);
+  // Get proof of combat service FormArray (parallel to getProofOfServiceArray)
+  getProofOfCombatServiceArray(): FormArray {
+    return this.applicationForm.get('experienceBackground.proofOfCombatService') as FormArray;
   }
 
-  // Check if we can add more files
-  canAddMoreFiles(): boolean {
-    return this.getProofOfServiceArray().length < 2;
+  // Remove file from a given upload field's array
+  removeFile(index: number, fieldPath: string = 'experienceBackground.proofOfService') {
+    const arr = this.applicationForm.get(fieldPath) as FormArray | null;
+    arr?.removeAt(index);
+  }
+
+  // Check if we can add more files to a given upload field's array
+  canAddMoreFiles(fieldPath: string = 'experienceBackground.proofOfService'): boolean {
+    const arr = this.applicationForm.get(fieldPath) as FormArray | null;
+    return (arr?.length ?? 0) < 2;
   }
 
   // Get detailed validation errors
@@ -712,6 +739,15 @@ export class ApplicationComponent implements OnInit {
         const error = experience.get('professionalExperience')?.errors?.['wordCount'];
         errors.push(`• Professional Experience must be ${error.max} words or less (currently ${error.actual} words)`);
       }
+    }
+
+    // Conditional: Proof of Combat Service is required only when combatService === 'Yes'.
+    // The underlying FormArray has no native required validator (since the requirement
+    // depends on a sibling field), so this check has to run independent of the
+    // experience.invalid block above.
+    if (experience?.get('combatService')?.value === 'Yes'
+        && this.getProofOfCombatServiceArray().length === 0) {
+      errors.push('• Proof of Combat Service documents are required (1-2 files)');
     }
 
     const skills = this.applicationForm.get('skills');
@@ -852,14 +888,14 @@ export class ApplicationComponent implements OnInit {
 
     // Check Experience & Background (Step 3)
     const experience = this.applicationForm.get('experienceBackground');
+    let expIssues: string[] = [];
     if (experience?.invalid) {
-      let expIssues: string[] = [];
       if (experience.get('combatService')?.hasError('required')) expIssues.push('Combat Service');
       if (experience.get('militaryServiceDescription')?.hasError('required')) expIssues.push('Military Description');
       if (experience.get('militaryServiceDescription')?.hasError('wordCount')) expIssues.push('Military Description (75 words max)');
       if (experience.get('proofOfService')?.hasError('required')) expIssues.push('Proof of Service Files');
       if (experience.get('hasProjectIdea')?.hasError('required')) expIssues.push('Project Idea Selection');
-      
+
       // Check project idea if "Yes" was selected
       const hasProjectIdea = experience.get('hasProjectIdea')?.value;
       if (hasProjectIdea === 'Yes') {
@@ -867,19 +903,24 @@ export class ApplicationComponent implements OnInit {
         if (projectDesc?.hasError('required')) expIssues.push('Project Description');
         if (projectDesc?.hasError('wordCount')) expIssues.push('Project Description (200 words max)');
       }
-      
+
       if (experience.get('professionalExperience')?.hasError('wordCount')) {
         expIssues.push('Professional Experience (150 words max)');
       }
-      
-      if (expIssues.length > 0) {
-        issues.push({
-          step: 3,
-          title: 'Experience & Background',
-          description: `Issues: ${expIssues.join(', ')}`,
-          icon: 'fas fa-briefcase'
-        });
-      }
+    }
+    // Conditional combat-proof requirement — lives outside the experience.invalid
+    // gate because the FormArray itself has no native required validator.
+    if (experience?.get('combatService')?.value === 'Yes'
+        && this.getProofOfCombatServiceArray().length === 0) {
+      expIssues.push('Proof of Combat Service Files');
+    }
+    if (expIssues.length > 0) {
+      issues.push({
+        step: 3,
+        title: 'Experience & Background',
+        description: `Issues: ${expIssues.join(', ')}`,
+        icon: 'fas fa-briefcase'
+      });
     }
 
     // Check Skills (Step 4)
