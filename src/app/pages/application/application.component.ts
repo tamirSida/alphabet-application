@@ -342,6 +342,56 @@ export class ApplicationComponent implements OnInit {
     return this.applicationForm.get('serviceAvailability.commitToBoth')?.value || false;
   }
 
+  /** Label shown on the "commit" option, pluralized based on the cohort's class count.
+   *  - 0/1 classes → "I can commit to the class" (singular)
+   *  - 2 classes   → "I can commit to both classes"
+   *  - 3+ classes  → "I can commit to all classes"
+   *  Used both in the template and in the related validator error message so
+   *  the on-screen wording and the error stay in sync. */
+  commitOptionLabel(): string {
+    const count = this.cohort()?.classes?.length ?? 0;
+    if (count <= 1) return 'I can commit to the class';
+    if (count === 2) return 'I can commit to both classes';
+    return 'I can commit to all classes';
+  }
+
+  // ── Single-class cohort UX ─────────────────────────────────────────────────
+  // For cohorts with exactly one class, the multi-class checkbox+reason flow
+  // collapses into two clean toggles: "I can commit" / "I cannot commit + why".
+  // Helpers below drive that branch in the template.
+
+  isSingleClassCohort(): boolean {
+    return (this.cohort()?.classes?.length ?? 0) === 1;
+  }
+
+  /** True iff the user has selected the "I cannot commit" option for the only class. */
+  singleClassDeclined(): boolean {
+    if (!this.isSingleClassCohort()) return false;
+    if (this.canCommitToBoth()) return false;
+    const onlyClassId = this.cohort()!.classes[0].classId;
+    const unavailable = this.applicationForm.get('serviceAvailability.unavailableClasses')?.value || [];
+    return unavailable.some((item: any) => item.classId === onlyClassId);
+  }
+
+  /** Choose the "I can commit to this class" option in the single-class flow. */
+  singleClassCommit() {
+    this.applicationForm.get('serviceAvailability.commitToBoth')?.setValue(true);
+    this.applicationForm.get('serviceAvailability.unavailableClasses')?.setValue([]);
+  }
+
+  /** Choose the "I cannot commit to this class" option in the single-class flow.
+   *  Preserves any reason already typed in case the user toggles back and forth. */
+  singleClassDecline() {
+    if (!this.isSingleClassCohort()) return;
+    const onlyClassId = this.cohort()!.classes[0].classId;
+    const existing = this.applicationForm.get('serviceAvailability.unavailableClasses')?.value || [];
+    const prev = existing.find((item: any) => item.classId === onlyClassId);
+    this.applicationForm.get('serviceAvailability.commitToBoth')?.setValue(false);
+    this.applicationForm.get('serviceAvailability.unavailableClasses')?.setValue([
+      { classId: onlyClassId, reason: prev?.reason ?? '' }
+    ]);
+  }
+
   toggleCommitToBoth() {
     const currentValue = this.canCommitToBoth();
     this.applicationForm.get('serviceAvailability.commitToBoth')?.setValue(!currentValue);
@@ -601,8 +651,17 @@ export class ApplicationComponent implements OnInit {
       const totalClasses = this.cohort()?.classes?.length || 0;
       
       // Validate that user has made a clear choice
-      if (!commitToBoth && unavailableClasses.length === totalClasses) {
-        errors.push('• You cannot mark all classes as unavailable. Either select classes you can attend or choose "I can commit to both"');
+      if (totalClasses === 1) {
+        // Single-class cohort: must explicitly pick "I can commit" or
+        // "I cannot commit". Both are valid endings; only "no choice" fails here.
+        // The empty-reason check below will catch "decline but didn't explain".
+        if (!commitToBoth && unavailableClasses.length === 0) {
+          errors.push('• Please indicate whether you can commit to the class.');
+        }
+      } else if (!commitToBoth && unavailableClasses.length === totalClasses) {
+        // Multi-class: marking every class unavailable without picking
+        // "commit-to-all" is contradictory.
+        errors.push(`• You cannot mark all classes as unavailable. Either select classes you can attend or choose "${this.commitOptionLabel()}"`);
       }
       
       // Check unavailable classes reasons
