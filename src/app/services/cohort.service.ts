@@ -167,30 +167,22 @@ export class CohortService {
     } as Cohort;
   }
 
+  /** Returns the cohort whose application window contains "now".
+   *
+   *  Uses date arithmetic via getAllCohorts() (which recalculates status on
+   *  every read) instead of a Firestore `where('status', '==', ...)` query
+   *  against the stored field. The stored `status` field is set at creation
+   *  time and not always refreshed when dates change — relying on it caused
+   *  new applicants to be linked to a previous cohort. If multiple cohorts
+   *  overlap (shouldn't happen, but guard anyway), prefer the one whose
+   *  application window started most recently. */
   async getCurrentAcceptingCohort(): Promise<Cohort | null> {
-    const q = query(
-      collection(this.firebaseService.firestore, 'cohorts'),
-      where('status', '==', 'accepting_applications'),
-      limit(1)
-    );
-
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) {
-      return null;
-    }
-
-    const docData = querySnapshot.docs[0];
-    const data = docData.data();
-    return {
-      cohortId: docData.id,
-      ...data,
-      applicationStartDate: data['applicationStartDate']?.toDate ? data['applicationStartDate'].toDate() : new Date(data['applicationStartDate']),
-      applicationEndDate: data['applicationEndDate']?.toDate ? data['applicationEndDate'].toDate() : new Date(data['applicationEndDate']),
-      cohortStartDate: data['cohortStartDate']?.toDate ? data['cohortStartDate'].toDate() : new Date(data['cohortStartDate']),
-      cohortEndDate: data['cohortEndDate']?.toDate ? data['cohortEndDate'].toDate() : new Date(data['cohortEndDate']),
-      classes: data['classes'] || []
-    } as Cohort;
+    const cohorts = await this.getAllCohorts();
+    const now = new Date();
+    const matches = cohorts
+      .filter(c => now >= c.applicationStartDate && now <= c.applicationEndDate)
+      .sort((a, b) => b.applicationStartDate.getTime() - a.applicationStartDate.getTime());
+    return matches[0] ?? null;
   }
 
   async updateCohortStatus(cohortId: string, status: Cohort['status']): Promise<void> {
@@ -198,9 +190,26 @@ export class CohortService {
     await updateDoc(cohortRef, { status });
   }
 
-  async updateCohort(cohortId: string, updates: Partial<Omit<Cohort, 'cohortId' | 'status'>>): Promise<void> {
+  /** Update any cohort field. Status is auto-derived from the (possibly new)
+   *  date fields and persisted alongside the update — defense in depth so any
+   *  legacy consumer reading the stored `status` field stays correct. */
+  async updateCohort(cohortId: string, updates: Partial<Omit<Cohort, 'cohortId'>>): Promise<void> {
     const cohortRef = doc(this.firebaseService.firestore, 'cohorts', cohortId);
-    await updateDoc(cohortRef, updates);
+
+    // Merge the update with current values to recompute status against the final dates.
+    const existing = await this.getCohort(cohortId);
+    const finalUpdates: any = { ...updates };
+    if (existing) {
+      const merged = { ...existing, ...updates };
+      finalUpdates.status = this.calculateCohortStatus(
+        merged.applicationStartDate,
+        merged.applicationEndDate,
+        merged.cohortStartDate,
+        merged.cohortEndDate
+      );
+    }
+
+    await updateDoc(cohortRef, finalUpdates);
   }
 
   async deleteCohort(cohortId: string): Promise<void> {

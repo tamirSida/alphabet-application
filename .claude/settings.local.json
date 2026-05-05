@@ -3,7 +3,16 @@
     "allow": [
       "Bash(cp:*)",
       "Bash(grep:*)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "mcp__firebase__firebase_get_environment",
+      "mcp__firebase__firebase_update_environment",
+      "mcp__firebase__firebase_list_projects",
+      "mcp__firebase__firebase_get_project",
+      "mcp__firebase__firebase_login",
+      "mcp__firebase__firebase_read_resources",
+      "mcp__firebase__firebase_get_security_rules",
+      "Bash(node /tmp/inspect-cohorts.mjs)",
+      "Bash(node inspect-cohorts.mjs)"
     ],
     "deny": [],
     "ask": []
