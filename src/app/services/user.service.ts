@@ -18,7 +18,7 @@ import {
 } from 'firebase/firestore';
 import { Observable, from, map, switchMap } from 'rxjs';
 import { FirebaseService } from './firebase.service';
-import { User, CreateUserRequest } from '../models';
+import { User, CreateUserRequest, AdminPreferences } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -121,6 +121,11 @@ export class UserService {
   async updateUserStatus(uid: string, status: User['status']): Promise<void> {
     const userRef = doc(this.firebaseService.firestore, 'users', uid);
     await updateDoc(userRef, { status });
+  }
+
+  async updateAdminPreferences(uid: string, prefs: AdminPreferences): Promise<void> {
+    const userRef = doc(this.firebaseService.firestore, 'users', uid);
+    await updateDoc(userRef, { adminPreferences: prefs });
   }
 
   async linkApplication(uid: string, applicationId: string): Promise<void> {

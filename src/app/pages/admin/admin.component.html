@@ -665,6 +665,11 @@
                     <option [value]="admin.email">{{ admin.email }}</option>
                   }
                 </select>
+
+                <button class="columns-button" (click)="openColumnsModal()" title="Configure visible columns">
+                  <i class="fas fa-columns"></i>
+                  Columns ({{ visibleCount() }}/{{ totalCount }})
+                </button>
               </div>
             </div>
 
@@ -682,141 +687,255 @@
             } @else {
               <!-- Applications Table -->
               <div class="table-container">
-                <table class="applications-table">
+                <table class="applications-table" [style.min-width.px]="tableMinWidth()">
                   <thead>
                     <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>ID</th>
-                      <th>Country</th>
-                      <th>Assigned Class</th>
-                      <th>Recommendation</th>
-                      <th>Assigned To</th>
-                      <th>Status</th>
-                      <th>Submitted</th>
-                      <th>Flags</th>
-                      <th>Actions</th>
+                      <!-- Name (locked, always visible) -->
+                      <th class="col-name sortable" (click)="setSort('name')">
+                        <span>Name</span>
+                        <i class="fas"
+                           [class.fa-sort]="sortColumn() !== 'name'"
+                           [class.fa-sort-up]="sortColumn() === 'name' && sortDirection() === 'asc'"
+                           [class.fa-sort-down]="sortColumn() === 'name' && sortDirection() === 'desc'"></i>
+                      </th>
+                      @if (isVisible('email')) {
+                        <th class="col-email sortable" (click)="setSort('email')">
+                          <span>Email</span>
+                          <i class="fas"
+                             [class.fa-sort]="sortColumn() !== 'email'"
+                             [class.fa-sort-up]="sortColumn() === 'email' && sortDirection() === 'asc'"
+                             [class.fa-sort-down]="sortColumn() === 'email' && sortDirection() === 'desc'"></i>
+                        </th>
+                      }
+                      @if (isVisible('id')) {
+                        <th class="col-id sortable" (click)="setSort('id')">
+                          <span>ID</span>
+                          <i class="fas"
+                             [class.fa-sort]="sortColumn() !== 'id'"
+                             [class.fa-sort-up]="sortColumn() === 'id' && sortDirection() === 'asc'"
+                             [class.fa-sort-down]="sortColumn() === 'id' && sortDirection() === 'desc'"></i>
+                        </th>
+                      }
+                      @if (isVisible('phone')) {
+                        <th class="col-phone sortable" (click)="setSort('phone')">
+                          <span>Phone</span>
+                          <i class="fas"
+                             [class.fa-sort]="sortColumn() !== 'phone'"
+                             [class.fa-sort-up]="sortColumn() === 'phone' && sortDirection() === 'asc'"
+                             [class.fa-sort-down]="sortColumn() === 'phone' && sortDirection() === 'desc'"></i>
+                        </th>
+                      }
+                      @if (isVisible('country')) {
+                        <th class="col-country sortable" (click)="setSort('country')">
+                          <span>Country</span>
+                          <i class="fas"
+                             [class.fa-sort]="sortColumn() !== 'country'"
+                             [class.fa-sort-up]="sortColumn() === 'country' && sortDirection() === 'asc'"
+                             [class.fa-sort-down]="sortColumn() === 'country' && sortDirection() === 'desc'"></i>
+                        </th>
+                      }
+                      @if (isVisible('cohortNumber')) {
+                        <th class="col-cohortNumber sortable" (click)="setSort('cohortNumber')">
+                          <span>Cohort</span>
+                          <i class="fas"
+                             [class.fa-sort]="sortColumn() !== 'cohortNumber'"
+                             [class.fa-sort-up]="sortColumn() === 'cohortNumber' && sortDirection() === 'asc'"
+                             [class.fa-sort-down]="sortColumn() === 'cohortNumber' && sortDirection() === 'desc'"></i>
+                        </th>
+                      }
+                      @if (isVisible('assignedClass')) {
+                        <th class="col-assignedClass sortable" (click)="setSort('assignedClass')">
+                          <span>Assigned Class</span>
+                          <i class="fas"
+                             [class.fa-sort]="sortColumn() !== 'assignedClass'"
+                             [class.fa-sort-up]="sortColumn() === 'assignedClass' && sortDirection() === 'asc'"
+                             [class.fa-sort-down]="sortColumn() === 'assignedClass' && sortDirection() === 'desc'"></i>
+                        </th>
+                      }
+                      @if (isVisible('recommendation')) {
+                        <th class="col-recommendation sortable" (click)="setSort('recommendation')">
+                          <span>Recommendation</span>
+                          <i class="fas"
+                             [class.fa-sort]="sortColumn() !== 'recommendation'"
+                             [class.fa-sort-up]="sortColumn() === 'recommendation' && sortDirection() === 'asc'"
+                             [class.fa-sort-down]="sortColumn() === 'recommendation' && sortDirection() === 'desc'"></i>
+                        </th>
+                      }
+                      @if (isVisible('assignedTo')) {
+                        <th class="col-assignedTo sortable" (click)="setSort('assignedTo')">
+                          <span>Assigned To</span>
+                          <i class="fas"
+                             [class.fa-sort]="sortColumn() !== 'assignedTo'"
+                             [class.fa-sort-up]="sortColumn() === 'assignedTo' && sortDirection() === 'asc'"
+                             [class.fa-sort-down]="sortColumn() === 'assignedTo' && sortDirection() === 'desc'"></i>
+                        </th>
+                      }
+                      @if (isVisible('status')) {
+                        <th class="col-status sortable" (click)="setSort('status')">
+                          <span>Status</span>
+                          <i class="fas"
+                             [class.fa-sort]="sortColumn() !== 'status'"
+                             [class.fa-sort-up]="sortColumn() === 'status' && sortDirection() === 'asc'"
+                             [class.fa-sort-down]="sortColumn() === 'status' && sortDirection() === 'desc'"></i>
+                        </th>
+                      }
+                      @if (isVisible('flags')) {
+                        <th class="col-flags sortable" (click)="setSort('flags')">
+                          <span>Flags</span>
+                          <i class="fas"
+                             [class.fa-sort]="sortColumn() !== 'flags'"
+                             [class.fa-sort-up]="sortColumn() === 'flags' && sortDirection() === 'asc'"
+                             [class.fa-sort-down]="sortColumn() === 'flags' && sortDirection() === 'desc'"></i>
+                        </th>
+                      }
+                      <!-- Actions (locked, always visible, not sortable) -->
+                      <th class="col-actions">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (application of filteredApplications(); track application.applicationId) {
                       <tr class="table-row" [class.has-flags]="application.flags.englishProficiency || application.flags.combatService" (click)="viewApplication(application)" style="cursor: pointer;">
-                        <td>
+                        <td class="col-name">
                           <div class="name-cell">
-                            {{ application.formData.personalInformation.firstName || '' }} 
+                            {{ application.formData.personalInformation.firstName || '' }}
                             {{ application.formData.personalInformation.lastName || '' }}
                           </div>
                         </td>
-                        <td>
-                          <div class="email-cell">
-                            {{ application.user?.email || 'Unknown' }}
-                          </div>
-                        </td>
-                        <td>
-                          <div class="id-cell">
-                            {{ application.operatorId }}
-                          </div>
-                        </td>
-                        <td>
-                          <div class="country-cell">
-                            {{ application.formData.serviceAvailability.countryOfService }}
-                          </div>
-                        </td>
-                        <td>
-                          <div class="assigned-class-cell">
-                            {{ application.assignedClass || '-' }}
-                          </div>
-                        </td>
-                        <td>
-                          <div class="recommendation-cell">
-                            <select 
-                              [value]="application.recommendation || 'none'"
-                              (change)="updateRecommendation(application.applicationId, $any($event.target).value)"
-                              (click)="$event.stopPropagation()"
-                              class="inline-select recommendation-select"
-                              [ngClass]="getRecommendationClass(application.recommendation)">
-                              <option value="none">None</option>
-                              <option value="recommend_accept">Accept</option>
-                              <option value="recommend_reject">Reject</option>
-                              <option value="need_fix">Fix</option>
-                            </select>
-                          </div>
-                        </td>
-                        <td>
-                          <div class="assigned-to-cell">
-                            <select 
-                              (change)="updateAssignedTo(application.applicationId, $any($event.target).value || null)"
-                              (click)="$event.stopPropagation()"
-                              [class]="'inline-select assigned-to-select' + (application.assignedTo ? ' has-assignment' : '')"
-                              [ngStyle]="getAssignedToStyle(application.assignedTo)">
-                              <option value="" [selected]="!application.assignedTo">Unassigned</option>
-                              @for (admin of admins(); track admin.email) {
-                                <option [value]="admin.email" [selected]="application.assignedTo === admin.email">{{ admin.email }}</option>
-                              }
-                            </select>
-                          </div>
-                        </td>
-                        <td>
-                          @if (application.status === 'accepted' && application.assignedClass) {
-                            <span class="status-badge table-status status-accepted">
-                              {{ application.assignedClass }}
-                            </span>
-                          } @else {
-                            <span [class]="'status-badge table-status ' + getStatusClass(application.status)">
-                              {{ application.status | titlecase }}
-                            </span>
-                          }
-                        </td>
-                        <td>
-                          <div class="date-cell">
-                            {{ application.submittedAt | date:'M/d/yy' }}
-                          </div>
-                        </td>
-                        <td>
-                          <div class="flags-cell">
-                            @if (application.flags.englishProficiency || application.flags.combatService) {
-                              <i class="fas fa-flag flag-icon" title="Has red flags"></i>
+                        @if (isVisible('email')) {
+                          <td class="col-email">
+                            <div class="email-cell">
+                              {{ application.user?.email || 'Unknown' }}
+                            </div>
+                          </td>
+                        }
+                        @if (isVisible('id')) {
+                          <td class="col-id">
+                            <div class="id-cell">
+                              {{ application.operatorId }}
+                            </div>
+                          </td>
+                        }
+                        @if (isVisible('phone')) {
+                          <td class="col-phone">
+                            <div class="phone-cell">
+                              {{ application.user?.phone || '-' }}
+                            </div>
+                          </td>
+                        }
+                        @if (isVisible('country')) {
+                          <td class="col-country">
+                            <div class="country-cell">
+                              {{ application.formData.serviceAvailability.countryOfService }}
+                            </div>
+                          </td>
+                        }
+                        @if (isVisible('cohortNumber')) {
+                          <td class="col-cohortNumber">
+                            <div class="cohort-cell">
+                              {{ application.cohort?.number || '-' }}
+                            </div>
+                          </td>
+                        }
+                        @if (isVisible('assignedClass')) {
+                          <td class="col-assignedClass">
+                            <div class="assigned-class-cell">
+                              {{ application.assignedClass || '-' }}
+                            </div>
+                          </td>
+                        }
+                        @if (isVisible('recommendation')) {
+                          <td class="col-recommendation">
+                            <div class="recommendation-cell">
+                              <select
+                                [value]="application.recommendation || 'none'"
+                                (change)="updateRecommendation(application.applicationId, $any($event.target).value)"
+                                (click)="$event.stopPropagation()"
+                                class="inline-select recommendation-select"
+                                [ngClass]="getRecommendationClass(application.recommendation)">
+                                <option value="none">None</option>
+                                <option value="recommend_accept">Accept</option>
+                                <option value="recommend_reject">Reject</option>
+                                <option value="need_fix">Fix</option>
+                              </select>
+                            </div>
+                          </td>
+                        }
+                        @if (isVisible('assignedTo')) {
+                          <td class="col-assignedTo">
+                            <div class="assigned-to-cell">
+                              <select
+                                (change)="updateAssignedTo(application.applicationId, $any($event.target).value || null)"
+                                (click)="$event.stopPropagation()"
+                                [class]="'inline-select assigned-to-select' + (application.assignedTo ? ' has-assignment' : '')"
+                                [ngStyle]="getAssignedToStyle(application.assignedTo)">
+                                <option value="" [selected]="!application.assignedTo">Unassigned</option>
+                                @for (admin of admins(); track admin.email) {
+                                  <option [value]="admin.email" [selected]="application.assignedTo === admin.email">{{ admin.email }}</option>
+                                }
+                              </select>
+                            </div>
+                          </td>
+                        }
+                        @if (isVisible('status')) {
+                          <td class="col-status">
+                            @if (application.status === 'accepted' && application.assignedClass) {
+                              <span class="status-badge table-status status-accepted">
+                                {{ application.assignedClass }}
+                              </span>
+                            } @else {
+                              <span [class]="'status-badge table-status ' + getStatusClass(application.status)">
+                                {{ application.status | titlecase }}
+                              </span>
                             }
-                          </div>
-                        </td>
-                        <td>
+                          </td>
+                        }
+                        @if (isVisible('flags')) {
+                          <td class="col-flags">
+                            <div class="flags-cell">
+                              @if (application.flags.englishProficiency || application.flags.combatService) {
+                                <i class="fas fa-flag flag-icon" title="Has red flags"></i>
+                              }
+                            </div>
+                          </td>
+                        }
+                        <td class="col-actions">
                           <div class="actions-cell">
                             <!-- Accept/Reject Toggle -->
                             @if (application.status === 'accepted') {
-                              <button 
+                              <button
                                 class="table-action-btn accept-btn active"
                                 (click)="$event.stopPropagation(); acceptApplication(application)"
                                 title="Accepted - Click to reassign class">
                                 <i class="fas fa-check"></i>
                               </button>
                             } @else {
-                              <button 
+                              <button
                                 class="table-action-btn accept-btn"
                                 (click)="$event.stopPropagation(); acceptApplication(application)"
                                 title="Accept">
                                 <i class="fas fa-check"></i>
                               </button>
                             }
-                            
+
                             @if (application.status === 'rejected') {
-                              <button 
+                              <button
                                 class="table-action-btn reject-btn active"
                                 (click)="$event.stopPropagation(); toggleReject(application)"
                                 title="Rejected - Click to unreject">
                                 <i class="fas fa-times"></i>
                               </button>
                             } @else {
-                              <button 
+                              <button
                                 class="table-action-btn reject-btn"
                                 (click)="$event.stopPropagation(); updateApplicationStatus(application.applicationId, 'rejected')"
                                 title="Reject">
                                 <i class="fas fa-times"></i>
                               </button>
                             }
-                            
+
                             <!-- Quick Class Assignment for Accepted Applications -->
                             @if (application.status === 'accepted' && application.assignedClass) {
-                              <button 
+                              <button
                                 class="table-action-btn class-btn"
                                 (click)="$event.stopPropagation(); reassignClass(application)"
                                 title="Currently assigned to {{ application.assignedClass }} - Click to reassign">
@@ -824,9 +943,9 @@
                                 <small>{{ application.assignedClass }}</small>
                               </button>
                             }
-                            
+
                             <!-- Delete Button -->
-                            <button 
+                            <button
                               class="table-action-btn"
                               (click)="$event.stopPropagation(); deleteApplication(application.applicationId)"
                               title="Delete Application"
@@ -1373,6 +1492,46 @@
         <div class="modal-footer">
           <button class="secondary-button" (click)="closeClassSelectionModal()">
             Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Configure Columns Modal -->
+  @if (showColumnsModal()) {
+    <div class="modal-overlay" (click)="closeColumnsModal()">
+      <div class="modal-content columns-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Configure Columns</h3>
+          <button class="close-btn" (click)="closeColumnsModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <p>Show or hide columns in the applications table. Name and Actions are always shown.</p>
+          <div class="columns-picker-grid">
+            @for (col of allColumns; track col.key) {
+              <label class="column-option" [class.locked]="col.locked">
+                <input
+                  type="checkbox"
+                  [checked]="isVisible(col.key)"
+                  [disabled]="col.locked"
+                  (change)="toggleColumn(col.key)">
+                <span>{{ col.label }}</span>
+                @if (col.locked) { <small>(locked)</small> }
+              </label>
+            }
+          </div>
+        </div>
+
+        <div class="modal-footer columns-modal-footer">
+          <button class="secondary-button" (click)="resetColumnsToDefault()">
+            <i class="fas fa-undo"></i> Reset to default
+          </button>
+          <button class="secondary-button" (click)="closeColumnsModal()">
+            Done
           </button>
         </div>
       </div>

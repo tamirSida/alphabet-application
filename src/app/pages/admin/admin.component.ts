@@ -1,9 +1,57 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService, UserService, ApplicationService, CohortService, EmailService } from '../../services';
-import { User, Application, Cohort } from '../../models';
+import { User, Application, Cohort, AdminPreferences } from '../../models';
+
+// Row shape used in the admin Applications table (Application enriched with user + cohort)
+type AppRow = Application & { user?: User; cohort?: Cohort };
+
+export interface ColumnDef {
+  key: string;
+  label: string;
+  /** When true the column cannot be hidden via the picker. */
+  locked?: boolean;
+  /** When false the header is not click-sortable (e.g. actions column). */
+  sortable: boolean;
+  /** Per-column min-width in px; replaces the previous :nth-child rules. */
+  minWidth: number;
+  /** Returns a primitive used for sort. Nullish/empty values are pushed to the end. */
+  sortValue: (a: AppRow, ctx: AdminComponent) => string | number | null | undefined;
+}
+
+/**
+ * Single source of truth for the admin Applications table columns.
+ * DOM order = order of this array. Keep in sync with the table headers/cells
+ * in admin.component.html and the .col-{key} CSS rules in admin.component.css.
+ */
+export const COLUMN_DEFS: ColumnDef[] = [
+  { key: 'name', label: 'Name', locked: true, sortable: true, minWidth: 140,
+    sortValue: a => `${a.formData?.personalInformation?.firstName ?? ''} ${a.formData?.personalInformation?.lastName ?? ''}`.trim().toLowerCase() },
+  { key: 'email', label: 'Email', sortable: true, minWidth: 180,
+    sortValue: a => a.user?.email?.toLowerCase() ?? '' },
+  { key: 'id', label: 'ID', sortable: true, minWidth: 100,
+    sortValue: a => a.operatorId ?? '' },
+  { key: 'phone', label: 'Phone', sortable: true, minWidth: 130,
+    sortValue: a => a.user?.phone ?? '' },
+  { key: 'country', label: 'Country', sortable: true, minWidth: 80,
+    sortValue: a => a.formData?.serviceAvailability?.countryOfService ?? '' },
+  { key: 'cohortNumber', label: 'Cohort', sortable: true, minWidth: 90,
+    sortValue: a => a.cohort?.number ?? '' },
+  { key: 'assignedClass', label: 'Assigned Class', sortable: true, minWidth: 120,
+    sortValue: a => a.assignedClass ?? '' },
+  { key: 'recommendation', label: 'Recommendation', sortable: true, minWidth: 160,
+    sortValue: a => a.recommendation ?? 'none' },
+  { key: 'assignedTo', label: 'Assigned To', sortable: true, minWidth: 170,
+    sortValue: a => a.assignedTo ?? '' },
+  { key: 'status', label: 'Status', sortable: true, minWidth: 110,
+    sortValue: a => a.status ?? '' },
+  { key: 'flags', label: 'Flags', sortable: true, minWidth: 80,
+    sortValue: a => (a.flags?.englishProficiency ? 1 : 0) + (a.flags?.combatService ? 1 : 0) },
+  { key: 'actions', label: 'Actions', locked: true, sortable: false, minWidth: 200,
+    sortValue: () => '' },
+];
 
 @Component({
   selector: 'app-admin',
@@ -51,6 +99,21 @@ export class AdminComponent implements OnInit, OnDestroy {
   pendingApplication = signal<(Application & { user?: User, cohort?: Cohort }) | null>(null);
   classSelectionModalTitle = signal('');
   classSelectionModalSubtitle = signal('');
+
+  // Configurable + sortable columns (per-admin, persisted on user doc)
+  allColumns = COLUMN_DEFS;
+  totalCount = COLUMN_DEFS.length;
+  hiddenColumns = signal<Set<string>>(new Set());
+  sortColumn = signal<string | null>(null);
+  sortDirection = signal<'asc' | 'desc'>('asc');
+  showColumnsModal = signal(false);
+  visibleCount = computed(() =>
+    COLUMN_DEFS.filter(c => this.isVisible(c.key)).length
+  );
+  tableMinWidth = computed(() =>
+    COLUMN_DEFS.filter(c => this.isVisible(c.key)).reduce((s, c) => s + c.minWidth, 0)
+  );
+  private persistTimer: any = null;
 
   // Notes functionality
   showNotesPopup = signal(false);
@@ -109,8 +172,9 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
 
     await this.loadData();
+    this.loadAdminPreferences();
     this.isLoading.set(false);
-    
+
     // Start auto-refresh for applications view
     this.startAutoRefresh();
     
@@ -187,30 +251,42 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   private async loadApplications() {
-    // Load cohorts and admins first to ensure we have class data and admin list
-    await Promise.all([
+    // Fetch cohorts, admins, applicants, and applications all in parallel.
+    // Previously the loop did `await getUserData()` + `await getCohort()` once per
+    // application sequentially → 1 + 2N Firestore round-trips. Now: 4 reads total
+    // (applications + cohorts + admins + applicants), joined in memory via Maps.
+    const [applications, applicants] = await Promise.all([
+      this.applicationService.getAllApplications(),
+      this.userService.getAllApplicants(),
       this.loadCohorts(),
       this.loadAdmins()
     ]);
-    
-    const applications = await this.applicationService.getAllApplications();
-    
-    const enrichedApplications = [];
 
-    for (const app of applications) {
-      const [user, cohort] = await Promise.all([
-        this.userService.getUserData(app.userId),
-        this.cohortService.getCohort(app.cohortId)
-      ]);
+    const userMap = new Map(applicants.map(u => [u.uid, u]));
+    const cohortMap = new Map(this.cohorts().map(c => [c.cohortId, c]));
 
-      const enrichedApp = {
-        ...app,
-        user: user || undefined,
-        cohort: cohort || undefined
-      };
-      
-      enrichedApplications.push(enrichedApp);
+    // Edge case: an application whose user isn't in the applicant set (e.g. role
+    // was changed to admin after submitting). Backfill those individually so the
+    // table still has email/phone for them. Typically zero round-trips.
+    const orphanIds = Array.from(new Set(
+      applications
+        .map(a => a.userId)
+        .filter((uid): uid is string => !!uid && !userMap.has(uid))
+    ));
+    if (orphanIds.length > 0) {
+      const orphanUsers = await Promise.all(
+        orphanIds.map(uid => this.userService.getUserData(uid))
+      );
+      orphanUsers.forEach((u, i) => {
+        if (u) userMap.set(orphanIds[i], u);
+      });
     }
+
+    const enrichedApplications = applications.map(app => ({
+      ...app,
+      user: userMap.get(app.userId) || undefined,
+      cohort: cohortMap.get(app.cohortId) || undefined
+    }));
 
     this.applications.set(enrichedApplications);
     this.lastApplicationCount = enrichedApplications.length; // Track count for auto-refresh
@@ -321,7 +397,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       filtered = filtered.filter(app => app.assignedTo === assignedTo);
     }
 
-    this.filteredApplications.set(filtered);
+    this.filteredApplications.set(this.sortApplications(filtered));
   }
 
   updateSearch(term: string) {
@@ -1306,8 +1382,142 @@ export class AdminComponent implements OnInit, OnDestroy {
     });
     
     const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
-    
+
     return { score: totalScore, maxScore, percentage };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Configurable + sortable columns
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /** True if a column is visible in the current admin's view. Locked columns are
+   *  always visible regardless of stored prefs (self-healing if prefs are corrupt). */
+  isVisible(key: string): boolean {
+    const def = COLUMN_DEFS.find(c => c.key === key);
+    if (def?.locked) return true;
+    return !this.hiddenColumns().has(key);
+  }
+
+  /** Toggle a column's visibility. No-op for locked columns. If the currently
+   *  active sort column gets hidden, the sort is cleared. Persists (debounced). */
+  toggleColumn(key: string): void {
+    const def = COLUMN_DEFS.find(c => c.key === key);
+    if (!def || def.locked) return;
+    const next = new Set(this.hiddenColumns());
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+      // Hiding the currently sorted column → clear the sort so the indicator
+      // doesn't disappear silently with rows still in mystery order.
+      if (this.sortColumn() === key) {
+        this.sortColumn.set(null);
+      }
+    }
+    this.hiddenColumns.set(next);
+    this.filterApplications();
+    this.schedulePersist();
+  }
+
+  /** Three-state sort cycle on a column header: none → asc → desc → none.
+   *  Clicking a different column starts at asc. Skips non-sortable columns. */
+  setSort(key: string): void {
+    const def = COLUMN_DEFS.find(c => c.key === key);
+    if (!def || !def.sortable) return;
+    if (this.sortColumn() !== key) {
+      this.sortColumn.set(key);
+      this.sortDirection.set('asc');
+    } else if (this.sortDirection() === 'asc') {
+      this.sortDirection.set('desc');
+    } else {
+      // desc → clear
+      this.sortColumn.set(null);
+      this.sortDirection.set('asc');
+    }
+    this.filterApplications();
+    this.schedulePersist();
+  }
+
+  /** Sort the rows by the active sort column/direction. Nullish/empty values
+   *  always sink to the bottom regardless of direction. */
+  private sortApplications(rows: AppRow[]): AppRow[] {
+    const key = this.sortColumn();
+    if (!key) return rows;
+    const def = COLUMN_DEFS.find(c => c.key === key);
+    if (!def) return rows;
+    const dir = this.sortDirection() === 'asc' ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      const va = def.sortValue(a, this);
+      const vb = def.sortValue(b, this);
+      const aNull = va === null || va === undefined || va === '';
+      const bNull = vb === null || vb === undefined || vb === '';
+      if (aNull && bNull) return 0;
+      if (aNull) return 1;
+      if (bNull) return -1;
+      if (va! < vb!) return -1 * dir;
+      if (va! > vb!) return 1 * dir;
+      return 0;
+    });
+  }
+
+  openColumnsModal(): void {
+    this.showColumnsModal.set(true);
+  }
+
+  closeColumnsModal(): void {
+    this.showColumnsModal.set(false);
+  }
+
+  /** Restore default visibility (all columns shown) and clear the sticky sort. */
+  resetColumnsToDefault(): void {
+    this.hiddenColumns.set(new Set());
+    this.sortColumn.set(null);
+    this.sortDirection.set('asc');
+    this.filterApplications();
+    this.schedulePersist();
+  }
+
+  /** Read prefs from the cached user doc (already fetched by AuthService).
+   *  Safe when adminPreferences is missing — defaults to all visible, no sort. */
+  private loadAdminPreferences(): void {
+    const prefs = this.authService.userData()?.adminPreferences?.applicationsTable;
+    this.hiddenColumns.set(new Set(prefs?.hiddenColumns ?? []));
+    this.sortColumn.set(prefs?.sortColumn ?? null);
+    this.sortDirection.set(prefs?.sortDirection ?? 'asc');
+    this.filterApplications();
+  }
+
+  /** Coalesce rapid clicks (e.g. toggling several checkboxes in a row) into
+   *  one Firestore write. */
+  private schedulePersist(): void {
+    if (this.persistTimer) clearTimeout(this.persistTimer);
+    this.persistTimer = setTimeout(() => {
+      this.persistTimer = null;
+      this.persistAdminPreferences();
+    }, 400);
+  }
+
+  /** Optimistic write: signals already updated → persist async →
+   *  on failure, surface error and revert from last-known userData. */
+  private async persistAdminPreferences(): Promise<void> {
+    const uid = this.authService.currentUser()?.uid;
+    if (!uid) return;
+    const snapshot: AdminPreferences = {
+      applicationsTable: {
+        hiddenColumns: Array.from(this.hiddenColumns()),
+        sortColumn: this.sortColumn(),
+        sortDirection: this.sortDirection(),
+      }
+    };
+    try {
+      await this.userService.updateAdminPreferences(uid, snapshot);
+      // Refresh cached userData so a re-read in another tab/view sees the new prefs.
+      await this.authService.refreshUserData();
+    } catch (err) {
+      console.error('Failed to persist admin preferences', err);
+      this.error.set('Failed to save column preferences.');
+      this.loadAdminPreferences();
+    }
   }
 
   formatCohortStatus(status: string): string {
