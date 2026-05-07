@@ -368,6 +368,23 @@
               }
 
 
+              <!-- Program Goal Section -->
+              @if (selectedApplication()?.formData?.programGoal?.goal) {
+                <div class="info-section">
+                  <h3>Program Goal</h3>
+                  <div class="info-item-vertical">
+                    <label>My goal in this program is:</label>
+                    <span>{{ getProgramGoalLabel(selectedApplication()?.formData?.programGoal?.goal) }}</span>
+                  </div>
+                  @if (selectedApplication()?.formData?.programGoal?.mindset) {
+                    <div class="info-item-vertical">
+                      <label>Mindset:</label>
+                      <span>{{ getProgramMindsetLabel(selectedApplication()?.formData?.programGoal?.mindset) }}</span>
+                    </div>
+                  }
+                </div>
+              }
+
               <!-- Short Answer Section -->
               @if (selectedApplication()?.formData?.shortAnswer?.failureDescription) {
                 <div class="info-section">
@@ -406,21 +423,29 @@
                 </div>
               }
 
-              <!-- Friends Section -->
-              @if (selectedApplication()?.formData?.friends?.friend1StudentId || selectedApplication()?.formData?.friends?.friend2StudentId) {
+              <!-- Friends Section.
+                   Renders the email when present (current shape) and falls back to
+                   the legacy operator-ID field for applications submitted before
+                   this section was simplified to email. -->
+              @if (
+                selectedApplication()?.formData?.friends?.friend1Email ||
+                selectedApplication()?.formData?.friends?.friend2Email ||
+                selectedApplication()?.formData?.friends?.friend1StudentId ||
+                selectedApplication()?.formData?.friends?.friend2StudentId
+              ) {
                 <div class="info-section">
                   <h3>Friends in Program</h3>
                   <div class="info-grid">
-                    @if (selectedApplication()?.formData?.friends?.friend1StudentId) {
+                    @if (selectedApplication()?.formData?.friends?.friend1Email || selectedApplication()?.formData?.friends?.friend1StudentId) {
                       <div class="info-item">
                         <label>Friend 1:</label>
-                        <span>{{ selectedApplication()?.formData?.friends?.friend1StudentId }}</span>
+                        <span>{{ selectedApplication()?.formData?.friends?.friend1Email || selectedApplication()?.formData?.friends?.friend1StudentId }}</span>
                       </div>
                     }
-                    @if (selectedApplication()?.formData?.friends?.friend2StudentId) {
+                    @if (selectedApplication()?.formData?.friends?.friend2Email || selectedApplication()?.formData?.friends?.friend2StudentId) {
                       <div class="info-item">
                         <label>Friend 2:</label>
-                        <span>{{ selectedApplication()?.formData?.friends?.friend2StudentId }}</span>
+                        <span>{{ selectedApplication()?.formData?.friends?.friend2Email || selectedApplication()?.formData?.friends?.friend2StudentId }}</span>
                       </div>
                     }
                   </div>

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService, CohortService, ApplicationService, UserService, FirebaseService } from '../../services';
-import { Cohort, ApplicationFormData, CreateApplicationRequest, CohortClass } from '../../models';
+import { Cohort, ApplicationFormData, CreateApplicationRequest, CohortClass, ProgramGoalChoice, PROGRAM_GOALS_REQUIRING_MINDSET } from '../../models';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 @Component({
@@ -15,7 +15,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 })
 export class ApplicationComponent implements OnInit {
   currentStep = signal(1);
-  totalSteps = 7;
+  totalSteps = 8;
   isLoading = signal(true);
   isSubmitting = signal(false);
   error = signal<string | null>(null);
@@ -23,13 +23,10 @@ export class ApplicationComponent implements OnInit {
   
   cohort = signal<Cohort | null>(null);
   applicationForm!: FormGroup;
-  
-  // Friend validation
-  friend1ValidationState = signal<'idle' | 'loading' | 'valid' | 'invalid'>('idle');
-  friend2ValidationState = signal<'idle' | 'loading' | 'valid' | 'invalid'>('idle');
-  friend1Name = signal<string>('');
-  friend2Name = signal<string>('');
-  
+
+  // (Friend lookup-by-Operator-ID machinery was removed when the friends
+  // field was simplified to plain email inputs.)
+
   // Drag and drop state
   isDragOver = signal(false);
   
@@ -111,25 +108,34 @@ export class ApplicationComponent implements OnInit {
         })
       }),
       
-      // Section 4: Short Answer (was Section 6 — Skills + Personal Qualities removed)
+      // Section 4: Program Goal (single multiple-choice question + a follow-up
+      // "mindset" question that only applies when goal is (c) or (d). Mindset is
+      // conditionally required — handled in isCurrentStepValid() / validators.
+      programGoal: this.fb.group({
+        goal: ['', Validators.required],
+        mindset: ['']
+      }),
+
+      // Section 5: Short Answer
       shortAnswer: this.fb.group({
         failureDescription: ['', [Validators.required, this.wordCountValidator(200)]]
       }),
 
-      // Section 5: Video Introduction (was Section 7)
+      // Section 6: Video Introduction
       videoIntroduction: this.fb.group({
         videoUrl: ['', Validators.required]
       }),
 
-      // Section 6: Cover Letter (was Section 8)
+      // Section 7: Cover Letter
       coverLetter: this.fb.group({
         content: ['', this.wordCountValidator(300)]
       }),
 
-      // Section 7: Friends (was Section 9, optional)
+      // Section 8: Friends (optional). Simplified from Operator-ID lookups to
+      // plain email inputs — admins can match emails against the user pool.
       friends: this.fb.group({
-        friend1StudentId: [''],
-        friend2StudentId: ['']
+        friend1Email: ['', Validators.email],
+        friend2Email: ['', Validators.email]
       })
     });
 
@@ -155,6 +161,15 @@ export class ApplicationComponent implements OnInit {
         projectIdeaGroup?.get('description')?.setValue('');
       }
       projectIdeaGroup?.updateValueAndValidity();
+    });
+
+    // Clear the mindset answer when the goal moves away from a value that
+    // requires it. Prevents stale data if the applicant changes their mind.
+    this.applicationForm.get('programGoal.goal')?.valueChanges.subscribe(goal => {
+      if (!PROGRAM_GOALS_REQUIRING_MINDSET.has(goal as ProgramGoalChoice)) {
+        const mindset = this.applicationForm.get('programGoal.mindset');
+        if (mindset?.value) mindset.setValue('');
+      }
     });
   }
 
@@ -252,13 +267,23 @@ export class ApplicationComponent implements OnInit {
           && this.getProofOfCombatServiceArray().length === 0;
         return baseValid && !combatProofMissing;
       }
-      case 4:
-        return this.applicationForm.get('shortAnswer')?.valid || false;
+      case 4: {
+        const pg = this.applicationForm.get('programGoal');
+        const baseValid = pg?.valid || false;
+        // Mindset is conditionally required when goal is (c) or (d). The
+        // FormControl itself has no required validator (the requirement is
+        // sibling-dependent), so re-check it explicitly here.
+        const mindsetMissing = this.requiresMindset()
+          && !pg?.get('mindset')?.value;
+        return baseValid && !mindsetMissing;
+      }
       case 5:
-        return this.applicationForm.get('videoIntroduction')?.valid || false;
+        return this.applicationForm.get('shortAnswer')?.valid || false;
       case 6:
-        return this.applicationForm.get('coverLetter')?.valid || false;
+        return this.applicationForm.get('videoIntroduction')?.valid || false;
       case 7:
+        return this.applicationForm.get('coverLetter')?.valid || false;
+      case 8:
         return true; // Friends section is optional
       default:
         return false;
@@ -402,26 +427,10 @@ export class ApplicationComponent implements OnInit {
     
     try {
       const formData: ApplicationFormData = this.applicationForm.value;
-      
-      // Validate friend IDs if provided
-      const friendIds = [
-        formData.friends?.friend1StudentId,
-        formData.friends?.friend2StudentId
-      ].filter(id => id && id.trim() !== '');
 
-      if (friendIds.length > 0) {
-        // Simple format validation - actual user existence will be checked by admin
-        for (const friendId of friendIds) {
-          if (friendId) {
-            const formattedId = friendId.replace(/\D/g, '');
-            if (formattedId.length !== 9) {
-              this.error.set(`Invalid friend ID format: ${friendId}. Please use ####-###-### format.`);
-              return;
-            }
-          }
-        }
-      }
-      
+      // Friend emails are validated by Validators.email on the form controls;
+      // no extra format check needed here.
+
       const request: CreateApplicationRequest = {
         cohortId: this.cohort()!.cohortId,
         formData
@@ -443,11 +452,20 @@ export class ApplicationComponent implements OnInit {
   }
 
   // Helper methods for UI
+  /** True iff the currently-selected Program Goal triggers the mindset follow-up.
+   *  Used by the template to conditionally render the second radio group on Step 4
+   *  and by the validators to make mindset conditionally required. */
+  requiresMindset(): boolean {
+    const goal = this.applicationForm.get('programGoal.goal')?.value as ProgramGoalChoice;
+    return PROGRAM_GOALS_REQUIRING_MINDSET.has(goal);
+  }
+
   getStepTitle(step: number): string {
     const titles = [
       'Personal Information',
       'Service & Availability',
       'Experience & Background',
+      'Program Goal',
       'Short Answer',
       'Video Introduction',
       'Cover Letter',
@@ -695,6 +713,15 @@ export class ApplicationComponent implements OnInit {
       errors.push('• Proof of Combat Service documents are required (1-2 files)');
     }
 
+    const programGoal = this.applicationForm.get('programGoal');
+    if (programGoal?.get('goal')?.hasError('required')) {
+      errors.push('• Please select your goal in this program');
+    }
+    // Mindset is conditionally required (only when goal is c or d).
+    if (this.requiresMindset() && !programGoal?.get('mindset')?.value) {
+      errors.push('• Please select the mindset that best describes you');
+    }
+
     const shortAnswer = this.applicationForm.get('shortAnswer');
     if (shortAnswer?.invalid) {
       if (shortAnswer.get('failureDescription')?.hasError('required')) {
@@ -810,7 +837,21 @@ export class ApplicationComponent implements OnInit {
       });
     }
 
-    // Check Short Answer (Step 4)
+    // Check Program Goal (Step 4)
+    const programGoal = this.applicationForm.get('programGoal');
+    const goalIssues: string[] = [];
+    if (programGoal?.get('goal')?.hasError('required')) goalIssues.push('Goal selection');
+    if (this.requiresMindset() && !programGoal?.get('mindset')?.value) goalIssues.push('Mindset selection');
+    if (goalIssues.length > 0) {
+      issues.push({
+        step: 4,
+        title: 'Program Goal',
+        description: goalIssues.join(', '),
+        icon: 'fas fa-bullseye'
+      });
+    }
+
+    // Check Short Answer (Step 5)
     const shortAnswer = this.applicationForm.get('shortAnswer');
     if (shortAnswer?.invalid) {
       let shortIssues: string[] = [];
@@ -823,7 +864,7 @@ export class ApplicationComponent implements OnInit {
 
       if (shortIssues.length > 0) {
         issues.push({
-          step: 4,
+          step: 5,
           title: 'Short Answer',
           description: shortIssues.join(', '),
           icon: 'fas fa-edit'
@@ -831,22 +872,22 @@ export class ApplicationComponent implements OnInit {
       }
     }
 
-    // Check Video Introduction (Step 5)
+    // Check Video Introduction (Step 6)
     const video = this.applicationForm.get('videoIntroduction');
     if (video?.invalid) {
       issues.push({
-        step: 5,
+        step: 6,
         title: 'Video Introduction',
         description: 'Video URL is required',
         icon: 'fas fa-video'
       });
     }
 
-    // Check Cover Letter (Step 6)
+    // Check Cover Letter (Step 7)
     const coverLetter = this.applicationForm.get('coverLetter');
     if (coverLetter?.get('content')?.hasError('wordCount')) {
       issues.push({
-        step: 6,
+        step: 7,
         title: 'Cover Letter',
         description: 'Content exceeds 300 words',
         icon: 'fas fa-file-text'
@@ -877,83 +918,6 @@ export class ApplicationComponent implements OnInit {
   // Get placeholder text for date inputs
   getDatePlaceholder(): string {
     return this.dateFormat() === 'mm/dd' ? 'mm/dd/yyyy' : 'dd/mm/yyyy';
-  }
-
-  // Validate friend student ID and fetch name
-  async validateFriendId(studentId: string, friendNumber: 1 | 2) {
-    if (!studentId || studentId.length < 9) {
-      this.resetFriendValidation(friendNumber);
-      return;
-    }
-
-    // Extract digits only for database lookup
-    const digitsOnly = studentId.replace(/\D/g, '');
-    if (digitsOnly.length !== 9) {
-      this.setFriendValidation(friendNumber, 'invalid', '');
-      return;
-    }
-
-    // Set loading state
-    this.setFriendValidation(friendNumber, 'loading', '');
-
-    try {
-      // Search for user by operator ID (using digits only)
-      const user = await this.userService.getUserByOperatorId(digitsOnly);
-      
-      if (user) {
-        // Show name if available, otherwise show email
-        const displayName = (user.firstName && user.lastName) 
-          ? `${user.firstName} ${user.lastName}`
-          : user.email;
-        this.setFriendValidation(friendNumber, 'valid', displayName);
-      } else {
-        this.setFriendValidation(friendNumber, 'invalid', '');
-      }
-    } catch (error) {
-      console.error('Error validating friend ID:', error);
-      this.setFriendValidation(friendNumber, 'invalid', '');
-    }
-  }
-
-  private setFriendValidation(friendNumber: 1 | 2, state: 'idle' | 'loading' | 'valid' | 'invalid', name: string) {
-    if (friendNumber === 1) {
-      this.friend1ValidationState.set(state);
-      this.friend1Name.set(name);
-    } else {
-      this.friend2ValidationState.set(state);
-      this.friend2Name.set(name);
-    }
-  }
-
-  private resetFriendValidation(friendNumber: 1 | 2) {
-    this.setFriendValidation(friendNumber, 'idle', '');
-  }
-
-  // Format student ID as user types
-  formatStudentId(event: any, friendNumber: 1 | 2) {
-    const input = event.target;
-    let value = input.value.replace(/\D/g, ''); // Remove non-digits
-    
-    // Add dashes: ####-###-###
-    if (value.length >= 4) {
-      value = value.substring(0, 4) + '-' + value.substring(4);
-    }
-    if (value.length >= 8) {
-      value = value.substring(0, 8) + '-' + value.substring(8, 11);
-    }
-    
-    input.value = value;
-    
-    // Update form control
-    const controlName = friendNumber === 1 ? 'friend1StudentId' : 'friend2StudentId';
-    this.applicationForm.get(`friends.${controlName}`)?.setValue(value);
-    
-    // Validate if complete
-    if (value.length === 11) {
-      this.validateFriendId(value, friendNumber);
-    } else {
-      this.resetFriendValidation(friendNumber);
-    }
   }
 
   // Drag and drop event handlers

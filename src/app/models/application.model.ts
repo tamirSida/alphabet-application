@@ -45,14 +45,53 @@ export interface ExperienceBackground {
   }; // max 200 words, optional if hasProjectIdea is No
 }
 
-// Section 4: Short Answer
-export interface ShortAnswer {
-  failureDescription: string; // max 200 words
+// Section 4: Program Goal — single multiple-choice question. The chosen value
+// is stored as a descriptive enum (not 'a'|'b'|'c'|'d') so analysts reading
+// the export / Firestore can interpret without a key.
+export type ProgramGoalChoice =
+  | 'just_to_learn'
+  | 'find_cofounders'
+  | 'find_idea_and_start'
+  | 'launch_existing';
+
+/** Follow-up "mindset" question — only collected when the applicant picks
+ *  goals (c) or (d) (find_idea_and_start or launch_existing). Helps cohort
+ *  organizers know who's open to building a team with other participants. */
+export type ProgramMindsetChoice =
+  | 'open_to_cofounders'
+  | 'closed_team';
+
+/** True iff a given Program Goal value triggers the mindset follow-up.
+ *  Single source of truth used by the form, validators, admin detail, and export. */
+export const PROGRAM_GOALS_REQUIRING_MINDSET: ReadonlySet<ProgramGoalChoice> =
+  new Set<ProgramGoalChoice>(['find_idea_and_start', 'launch_existing']);
+
+export interface ProgramGoal {
+  goal: ProgramGoalChoice;
+  /** Only set when `goal` is one of PROGRAM_GOALS_REQUIRING_MINDSET. Optional
+   *  on the type so legacy applications and the (a)/(b) goal answers parse cleanly. */
+  mindset?: ProgramMindsetChoice;
 }
 
-// Section 5: Cover Letter
-export interface CoverLetter {
-  content: string; // max 300 words
+/** Single source of truth for human-readable Program Goal labels. Used by the
+ *  application form radio options, the admin detail view, and the data export
+ *  so all three render identical wording. */
+export const PROGRAM_GOAL_LABELS: Record<ProgramGoalChoice, string> = {
+  just_to_learn: 'Just to learn.',
+  find_cofounders: 'To find co-founders to start a company with after the program.',
+  find_idea_and_start: 'To find an idea and immediately start a company after the program.',
+  launch_existing: 'To launch an existing idea or business with lessons learned from this program.',
+};
+
+/** Human-readable mindset labels — same role as PROGRAM_GOAL_LABELS. */
+export const PROGRAM_MINDSET_LABELS: Record<ProgramMindsetChoice, string> = {
+  open_to_cofounders: "I'd like to find co-founders through this program and/or would be willing to continue working with people from this program",
+  closed_team: 'I have an existing team and would not be willing to have others join us after the program.',
+};
+
+// Section 5: Short Answer
+export interface ShortAnswer {
+  failureDescription: string; // max 200 words
 }
 
 // Section 6: Video Introduction
@@ -60,9 +99,20 @@ export interface VideoIntroduction {
   videoUrl: string; // YouTube or other platform URL
 }
 
-// Section 7: Friends (optional)
+// Section 7: Cover Letter
+export interface CoverLetter {
+  content: string; // max 300 words
+}
+
+// Section 8: Friends (optional)
 export interface Friends {
+  friend1Email?: string;
+  friend2Email?: string;
+  /** @deprecated Older applications were collected using Operator IDs before
+   *  the field was simplified to email. Kept on the type so legacy Firestore
+   *  documents still parse cleanly. New submissions only write friend{1,2}Email. */
   friend1StudentId?: string;
+  /** @deprecated See friend1StudentId. */
   friend2StudentId?: string;
 }
 
@@ -70,9 +120,10 @@ export interface ApplicationFormData {
   personalInformation: PersonalInformation;
   serviceAvailability: ServiceAvailability;
   experienceBackground: ExperienceBackground;
+  programGoal: ProgramGoal;
   shortAnswer: ShortAnswer;
-  coverLetter: CoverLetter;
   videoIntroduction: VideoIntroduction;
+  coverLetter: CoverLetter;
   friends?: Friends;
   // NOTE: Older applications submitted before the Skills/PersonalQualities
   // sections were removed still carry `skills` and `personalQualities` keys

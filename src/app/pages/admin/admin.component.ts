@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService, UserService, ApplicationService, CohortService, EmailService } from '../../services';
-import { User, Application, Cohort, AdminPreferences } from '../../models';
+import { User, Application, Cohort, AdminPreferences, PROGRAM_GOAL_LABELS, ProgramGoalChoice, PROGRAM_MINDSET_LABELS, ProgramMindsetChoice } from '../../models';
 
 // Row shape used in the admin Applications table (Application enriched with user + cohort)
 type AppRow = Application & { user?: User; cohort?: Cohort };
@@ -99,6 +99,16 @@ export const EXPORT_FIELDS: ExportField[] = [
     }},
   { key: 'submittedAt', label: 'Submitted', type: 'date', width: 14,
     value: a => a.submittedAt ? new Date(a.submittedAt) : null },
+  { key: 'programGoal', label: 'Program Goal', width: 60,
+    value: a => {
+      const goal = a.formData?.programGoal?.goal;
+      return goal ? (PROGRAM_GOAL_LABELS[goal as ProgramGoalChoice] ?? goal) : '';
+    }},
+  { key: 'programMindset', label: 'Program Mindset', width: 60,
+    value: a => {
+      const m = a.formData?.programGoal?.mindset;
+      return m ? (PROGRAM_MINDSET_LABELS[m as ProgramMindsetChoice] ?? m) : '';
+    }},
 ];
 
 @Component({
@@ -1316,6 +1326,19 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   // (calculateSkillsScore + calculatePersonalQualitiesScore removed alongside
   //  the Skills Assessment / Personal Qualities sections — see model comments.)
+
+  /** Human-readable label for an applicant's Program Goal selection.
+   *  Falls back to '-' for legacy applications that don't have this field. */
+  getProgramGoalLabel(value: string | null | undefined): string {
+    if (!value) return '-';
+    return PROGRAM_GOAL_LABELS[value as ProgramGoalChoice] ?? value;
+  }
+
+  /** Human-readable label for the conditional mindset follow-up. */
+  getProgramMindsetLabel(value: string | null | undefined): string {
+    if (!value) return '-';
+    return PROGRAM_MINDSET_LABELS[value as ProgramMindsetChoice] ?? value;
+  }
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Configurable + sortable columns

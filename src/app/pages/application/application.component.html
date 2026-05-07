@@ -45,7 +45,7 @@
     <div class="step-header">
       <h2>{{ getStepTitle(currentStep()) }}</h2>
       <div class="step-dots">
-        @for (step of [1,2,3,4,5,6,7]; track step) {
+        @for (step of [1,2,3,4,5,6,7,8]; track step) {
           <div
             class="step-dot"
             [class.active]="currentStep() === step"
@@ -117,7 +117,7 @@
 
           <div class="friend-note">
             <i class="fas fa-users"></i>
-            <p><strong>Friend Matching:</strong> Share your Student ID with up to two friends if you want us to try to place you together (no guarantees).</p>
+            <p><strong>Friend Matching:</strong> On the last step you can add up to two friends' emails if you want us to try to place you together (no guarantees).</p>
           </div>
         </div>
       }
@@ -571,8 +571,96 @@
         </div>
       }
 
-      <!-- Section 4: Short Answer (was Section 6) -->
+      <!-- Section 4: Program Goal -->
       @if (currentStep() === 4) {
+        <div class="form-section" formGroupName="programGoal">
+          <div class="form-group">
+            <label>My goal in this program is *</label>
+            <p class="field-description">Please choose the one that best fits. Your answer will be shared with the other participants in this program.</p>
+            <div class="radio-group">
+              <div class="radio-option">
+                <input
+                  type="radio"
+                  id="goal-just-to-learn"
+                  formControlName="goal"
+                  value="just_to_learn">
+                <label for="goal-just-to-learn">
+                  <span class="radio-circle"></span>
+                  <span class="radio-text">Just to learn.</span>
+                </label>
+              </div>
+              <div class="radio-option">
+                <input
+                  type="radio"
+                  id="goal-find-cofounders"
+                  formControlName="goal"
+                  value="find_cofounders">
+                <label for="goal-find-cofounders">
+                  <span class="radio-circle"></span>
+                  <span class="radio-text">To find co-founders to start a company with after the program.</span>
+                </label>
+              </div>
+              <div class="radio-option">
+                <input
+                  type="radio"
+                  id="goal-find-idea"
+                  formControlName="goal"
+                  value="find_idea_and_start">
+                <label for="goal-find-idea">
+                  <span class="radio-circle"></span>
+                  <span class="radio-text">To find an idea and immediately start a company after the program.</span>
+                </label>
+              </div>
+              <div class="radio-option">
+                <input
+                  type="radio"
+                  id="goal-launch-existing"
+                  formControlName="goal"
+                  value="launch_existing">
+                <label for="goal-launch-existing">
+                  <span class="radio-circle"></span>
+                  <span class="radio-text">To launch an existing idea or business with lessons learned from this program.</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Follow-up: only shown when goal is (c) or (d) -->
+          @if (requiresMindset()) {
+            <div class="form-group">
+              <label>Mark which best describes your mindset *</label>
+              <p class="field-description">Your answer will be shared with the other participants in this program.</p>
+              <div class="radio-group">
+                <div class="radio-option">
+                  <input
+                    type="radio"
+                    id="mindset-open"
+                    formControlName="mindset"
+                    value="open_to_cofounders">
+                  <label for="mindset-open">
+                    <span class="radio-circle"></span>
+                    <span class="radio-text">I'd like to find co-founders through this program and/or would be willing to continue working with people from this program</span>
+                  </label>
+                </div>
+                <div class="radio-option">
+                  <input
+                    type="radio"
+                    id="mindset-closed"
+                    formControlName="mindset"
+                    value="closed_team">
+                  <label for="mindset-closed">
+                    <span class="radio-circle"></span>
+                    <span class="radio-text">I have an existing team and would not be willing to have others join us after the program.</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Section 5: Short Answer -->
+      @if (currentStep() === 5) {
         <div class="form-section" formGroupName="shortAnswer">
           <div class="form-group">
             <label>Describe a Failure *</label>
@@ -590,8 +678,8 @@
         </div>
       }
 
-      <!-- Section 5: Video Introduction (was Section 7) -->
-      @if (currentStep() === 5) {
+      <!-- Section 6: Video Introduction -->
+      @if (currentStep() === 6) {
         <div class="form-section" formGroupName="videoIntroduction">
           <div class="form-group">
             <label>Video Introduction *</label>
@@ -621,8 +709,8 @@
         </div>
       }
 
-      <!-- Section 6: Cover Letter (was Section 8) -->
-      @if (currentStep() === 6) {
+      <!-- Section 7: Cover Letter -->
+      @if (currentStep() === 7) {
         <div class="form-section" formGroupName="coverLetter">
           <div class="form-group">
             <label>Tell us anything else</label>
@@ -639,92 +727,40 @@
         </div>
       }
 
-      <!-- Section 7: Friends (was Section 9) -->
-      @if (currentStep() === 7) {
+      <!-- Section 8: Friends -->
+      @if (currentStep() === 8) {
         <div class="form-section" formGroupName="friends">
           <div class="friends-intro">
             <i class="fas fa-user-friends"></i>
             <div>
               <h3>Friends (Optional)</h3>
-              <p>If you're signing up with friends, enter their Operator IDs below. We'll do our best to place you together, but it's not guaranteed.</p>
+              <p>If you're signing up with friends, enter their email addresses below. We'll do our best to place you together, but it's not guaranteed.</p>
             </div>
           </div>
 
           <div class="form-group">
-            <label>Friend #1 Operator ID</label>
+            <label>Friend #1 Email</label>
             <input
-              type="text"
-              formControlName="friend1StudentId"
+              type="email"
+              formControlName="friend1Email"
               class="form-input"
-              [class.input-valid]="friend1ValidationState() === 'valid'"
-              [class.input-invalid]="friend1ValidationState() === 'invalid'"
-              placeholder="####-###-### (9 digits)"
-              pattern="[0-9]{4}-[0-9]{3}-[0-9]{3}"
-              maxlength="11"
-              (input)="formatStudentId($event, 1)">
-            
-            @if (friend1ValidationState() === 'loading') {
-              <div class="validation-message loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Validating...</span>
-              </div>
-            }
-            
-            @if (friend1ValidationState() === 'valid') {
-              <div class="validation-message valid">
-                <i class="fas fa-check-circle"></i>
-                <span>{{ friend1Name() }}</span>
-              </div>
-            }
-            
-            @if (friend1ValidationState() === 'invalid') {
-              <div class="validation-message invalid">
-                <i class="fas fa-exclamation-circle"></i>
-                <span>Invalid ID - make sure this user has signed up</span>
-              </div>
-            }
-            
-            @if (friend1ValidationState() === 'idle') {
-              <small class="form-help">Format: ####-###-###</small>
+              placeholder="friend@example.com"
+              autocomplete="off">
+            @if (applicationForm.get('friends.friend1Email')?.hasError('email')) {
+              <small class="form-help error">Please enter a valid email address.</small>
             }
           </div>
 
           <div class="form-group">
-            <label>Friend #2 Operator ID</label>
+            <label>Friend #2 Email</label>
             <input
-              type="text"
-              formControlName="friend2StudentId"
+              type="email"
+              formControlName="friend2Email"
               class="form-input"
-              [class.input-valid]="friend2ValidationState() === 'valid'"
-              [class.input-invalid]="friend2ValidationState() === 'invalid'"
-              placeholder="####-###-### (9 digits)"
-              pattern="[0-9]{4}-[0-9]{3}-[0-9]{3}"
-              maxlength="11"
-              (input)="formatStudentId($event, 2)">
-            
-            @if (friend2ValidationState() === 'loading') {
-              <div class="validation-message loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Validating...</span>
-              </div>
-            }
-            
-            @if (friend2ValidationState() === 'valid') {
-              <div class="validation-message valid">
-                <i class="fas fa-check-circle"></i>
-                <span>{{ friend2Name() }}</span>
-              </div>
-            }
-            
-            @if (friend2ValidationState() === 'invalid') {
-              <div class="validation-message invalid">
-                <i class="fas fa-exclamation-circle"></i>
-                <span>Invalid ID - make sure this user has signed up</span>
-              </div>
-            }
-            
-            @if (friend2ValidationState() === 'idle') {
-              <small class="form-help">Format: ####-###-###</small>
+              placeholder="friend@example.com"
+              autocomplete="off">
+            @if (applicationForm.get('friends.friend2Email')?.hasError('email')) {
+              <small class="form-help error">Please enter a valid email address.</small>
             }
           </div>
 
