@@ -36,7 +36,11 @@ export interface ExperienceBackground {
   militaryDraftDate?: string;
   militaryReleaseDate?: string;
   militaryServiceDescription: string; // max 75 words
-  proofOfService: UploadedFile[]; // Required, max 2 files
+  /** @deprecated Older applications collected a generic "Proof of Military
+   *  Service" upload before the field was narrowed to combat service only.
+   *  Kept on the type so legacy Firestore documents still parse cleanly.
+   *  New submissions write proofOfCombatService instead. */
+  proofOfService?: UploadedFile[];
   proofOfCombatService?: UploadedFile[]; // Required when combatService === 'Yes', max 2 files
   professionalExperience?: string; // max 150 words, optional
   hasProjectIdea: 'Yes' | 'No'; // New question to address feedback

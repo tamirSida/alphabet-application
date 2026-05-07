@@ -299,10 +299,30 @@
                   }
                 </div>
 
-                <!-- Proof of Service Files -->
+                <!-- Proof of Combat Service (current field). -->
+                @if (selectedApplication()?.formData?.experienceBackground?.proofOfCombatService?.length) {
+                  <div class="info-item-vertical">
+                    <label>Proof of Combat Service:</label>
+                    <div class="uploaded-files-list">
+                      @for (file of selectedApplication()?.formData?.experienceBackground?.proofOfCombatService; track $index) {
+                        <div class="uploaded-file-display">
+                          <i class="fas fa-file-alt"></i>
+                          <a [href]="file.fileUrl" target="_blank" rel="noopener noreferrer">
+                            {{ file.fileName }}
+                          </a>
+                          <i class="fas fa-external-link-alt"></i>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- Legacy: older applications uploaded a generic Proof of Military
+                     Service before the field was narrowed to combat-only. Show those
+                     files when present so historical records remain reviewable. -->
                 @if (selectedApplication()?.formData?.experienceBackground?.proofOfService?.length) {
                   <div class="info-item-vertical">
-                    <label>Proof of Military Service:</label>
+                    <label>Proof of Military Service (legacy):</label>
                     <div class="uploaded-files-list">
                       @for (file of selectedApplication()?.formData?.experienceBackground?.proofOfService; track $index) {
                         <div class="uploaded-file-display">
@@ -314,11 +334,6 @@
                         </div>
                       }
                     </div>
-                  </div>
-                } @else {
-                  <div class="info-item-vertical">
-                    <label>Proof of Military Service:</label>
-                    <span class="long-text-content missing-data">No files uploaded</span>
                   </div>
                 }
               </div>

@@ -388,47 +388,58 @@
             </div>
           </div>
 
+          <!-- Proof of Combat Service — required for every applicant (1-2 files). -->
           <div class="form-group">
-            <label>Proof of Military Service *</label>
-            <p class="field-description">Upload 1-2 documents proving your military service (PDF, JPG, JPEG, PNG accepted)</p>
+            <label>Proof of Combat Service *</label>
+            <p class="field-description">
+              Please upload a copy of your combat military proof.
+              @if (applicationForm.get('serviceAvailability.countryOfService')?.value === 'IL') {
+                For Israeli combat veterans we are looking for "תעודת לוחם" or a Form 830.
+              } @else if (applicationForm.get('serviceAvailability.countryOfService')?.value === 'US') {
+                For the US, any record brief or certificate of release form that shows fighter service.
+              } @else {
+                For Israeli combat veterans we are looking for "תעודת לוחם" or a Form 830.
+                For the US, any record brief or certificate of release form that shows fighter service.
+              }
+            </p>
 
             <!-- Show uploaded files -->
-            @for (fileControl of getProofOfServiceArray().controls; track $index) {
+            @for (fileControl of getProofOfCombatServiceArray().controls; track $index) {
               <div class="uploaded-file">
                 <i class="fas fa-file-alt"></i>
                 <span>{{ fileControl.get('fileName')?.value }}</span>
                 <button
                   type="button"
                   class="remove-file"
-                  (click)="removeFile($index)">
+                  (click)="removeFile($index, 'experienceBackground.proofOfCombatService')">
                   <i class="fas fa-times"></i>
                 </button>
               </div>
             }
 
             <!-- Upload area (show if we can add more files) -->
-            @if (canAddMoreFiles()) {
-              <div 
-                class="file-upload-area" 
+            @if (canAddMoreFiles('experienceBackground.proofOfCombatService')) {
+              <div
+                class="file-upload-area"
                 [class.drag-over]="isDragOver()"
-                (click)="fileInput.click()"
+                (click)="combatProofInput.click()"
                 (dragover)="onDragOver($event)"
                 (dragleave)="onDragLeave($event)"
-                (drop)="onFileDrop($event, 'experienceBackground.proofOfService')">
+                (drop)="onFileDrop($event, 'experienceBackground.proofOfCombatService')">
                 <input
-                  #fileInput
+                  #combatProofInput
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
                   multiple
                   style="display: none;"
-                  (change)="onFileSelected($event, 'experienceBackground.proofOfService')">
+                  (change)="onFileSelected($event, 'experienceBackground.proofOfCombatService')">
                 <div class="upload-placeholder">
                   <i class="fas fa-cloud-upload-alt"></i>
                   <p>
-                    @if (getProofOfServiceArray().length === 0) {
-                      Click to upload or drag & drop proof of service
+                    @if (getProofOfCombatServiceArray().length === 0) {
+                      Click to upload or drag & drop proof of combat service
                     } @else {
-                      Add another file ({{ getProofOfServiceArray().length }}/2)
+                      Add another file ({{ getProofOfCombatServiceArray().length }}/2)
                     }
                   </p>
                   <small>PDF, JPG, JPEG, PNG (max 5MB each)</small>
@@ -436,76 +447,10 @@
               </div>
             }
 
-            @if (getProofOfServiceArray().length === 0) {
-              <small class="form-help error">At least one proof of service document is required</small>
+            @if (getProofOfCombatServiceArray().length === 0) {
+              <small class="form-help error">At least one proof of combat service document is required</small>
             }
           </div>
-
-          <!-- Proof of Combat Service — only relevant when the user served in combat. -->
-          @if (applicationForm.get('experienceBackground.combatService')?.value === 'Yes') {
-            <div class="form-group">
-              <label>Proof of Combat Service *</label>
-              <p class="field-description">
-                Please respond to this email with a copy of your combat military proof.
-                @if (applicationForm.get('serviceAvailability.countryOfService')?.value === 'IL') {
-                  For Israeli combat veterans we are looking for "תעודת לוחם" or a Form 830.
-                } @else if (applicationForm.get('serviceAvailability.countryOfService')?.value === 'US') {
-                  For the US, any record brief or certificate of release form that shows fighter service.
-                } @else {
-                  For Israeli combat veterans we are looking for "תעודת לוחם" or a Form 830.
-                  For the US, any record brief or certificate of release form that shows fighter service.
-                }
-              </p>
-
-              <!-- Show uploaded files -->
-              @for (fileControl of getProofOfCombatServiceArray().controls; track $index) {
-                <div class="uploaded-file">
-                  <i class="fas fa-file-alt"></i>
-                  <span>{{ fileControl.get('fileName')?.value }}</span>
-                  <button
-                    type="button"
-                    class="remove-file"
-                    (click)="removeFile($index, 'experienceBackground.proofOfCombatService')">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-              }
-
-              <!-- Upload area (show if we can add more files) -->
-              @if (canAddMoreFiles('experienceBackground.proofOfCombatService')) {
-                <div
-                  class="file-upload-area"
-                  [class.drag-over]="isDragOver()"
-                  (click)="combatProofInput.click()"
-                  (dragover)="onDragOver($event)"
-                  (dragleave)="onDragLeave($event)"
-                  (drop)="onFileDrop($event, 'experienceBackground.proofOfCombatService')">
-                  <input
-                    #combatProofInput
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    multiple
-                    style="display: none;"
-                    (change)="onFileSelected($event, 'experienceBackground.proofOfCombatService')">
-                  <div class="upload-placeholder">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p>
-                      @if (getProofOfCombatServiceArray().length === 0) {
-                        Click to upload or drag & drop proof of combat service
-                      } @else {
-                        Add another file ({{ getProofOfCombatServiceArray().length }}/2)
-                      }
-                    </p>
-                    <small>PDF, JPG, JPEG, PNG (max 5MB each)</small>
-                  </div>
-                </div>
-              }
-
-              @if (getProofOfCombatServiceArray().length === 0) {
-                <small class="form-help error">At least one proof of combat service document is required</small>
-              }
-            </div>
-          }
 
           <div class="form-group">
             <label>Professional Experience</label>
