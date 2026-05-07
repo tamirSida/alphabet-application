@@ -37,13 +37,15 @@ export class EmailService {
     try {
       const classSchedule = this.formatClassSchedule(cohort, application.assignedClass);
       const classDays = this.getClassDays(cohort, application.assignedClass);
-      
+      const classStartDate = this.getClassStartDate(cohort, application.assignedClass);
+
       const templateData = {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         className: application.assignedClass || '',
         classDays: classDays,
         classSchedule: classSchedule,
+        classStartDate: classStartDate,
         applicationId: application.applicationId,
         operatorId: user.operatorId
       };
@@ -183,13 +185,49 @@ export class EmailService {
    */
   private formatClassSchedule(cohort: Cohort, assignedClass?: string): string {
     if (!assignedClass) return 'Schedule will be provided soon';
-    
+
     const classInfo = cohort.classes?.find(c => c.name === assignedClass);
     if (!classInfo) return 'Schedule will be provided soon';
 
     return classInfo.weeklySchedule
       .map(schedule => `${schedule.day}: ${schedule.startTime} - ${schedule.endTime}`)
       .join('\n');
+  }
+
+  /**
+   * Resolve the start date for a specific class within a cohort. The cohort
+   * has a single cohortStartDate (the Monday of the first week, by convention)
+   * — this helper finds the first occurrence of the assigned class's primary
+   * day-of-week ON or AFTER that date, so e.g. a Tuesday class returns the
+   * Tuesday of the first week even if the cohort itself begins on Monday.
+   * Falls back to the cohort's start date if class info is missing.
+   */
+  private getClassStartDate(cohort: Cohort, assignedClass?: string): string {
+    if (!cohort?.cohortStartDate) return 'TBD';
+    const cohortStart = cohort.cohortStartDate instanceof Date
+      ? cohort.cohortStartDate
+      : new Date(cohort.cohortStartDate);
+
+    const classInfo = assignedClass
+      ? cohort.classes?.find(c => c.name === assignedClass)
+      : undefined;
+    const firstDay = classInfo?.weeklySchedule?.[0]?.day;
+
+    const dayMap: Record<string, number> = {
+      Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3,
+      Thursday: 4, Friday: 5, Saturday: 6
+    };
+    const targetDay = firstDay ? dayMap[firstDay] : undefined;
+
+    let result = new Date(cohortStart);
+    if (targetDay !== undefined) {
+      // Walk forward to the first occurrence of the class's day-of-week.
+      // Bounded loop (max 7 iterations) so this can never run away.
+      for (let i = 0; i < 7 && result.getDay() !== targetDay; i++) {
+        result.setDate(result.getDate() + 1);
+      }
+    }
+    return this.formatDate(result);
   }
 
   /**

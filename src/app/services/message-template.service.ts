@@ -65,6 +65,7 @@ Operator ID: [operatorId]`;
     className: string;
     classDays: string;
     classSchedule: string;
+    classStartDate: string;
     applicationId: string;
     operatorId: string;
   }): Promise<{subject: string, body: string}> {
@@ -108,6 +109,7 @@ Operator ID: [operatorId]`;
     result = result.replace(/\[Applicant Name\]/g, `${data['firstName']} ${data['lastName']}`);
     result = result.replace(/\[Class A\/Class B\]/g, data['className'] || 'Your Class');
     result = result.replace(/\[Monday\/Tuesday\]/g, data['classDays'] || 'Class Days');
+    result = result.replace(/\[DATE 1\/DATE2\]/g, data['classStartDate'] || 'TBD');
     result = result.replace(/\[applicationId\]/g, data['applicationId'] || '');
     result = result.replace(/\[operatorId\]/g, data['operatorId'] || '');
     result = result.replace(/\[className\]/g, data['className'] || '');

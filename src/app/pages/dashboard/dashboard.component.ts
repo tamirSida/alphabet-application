@@ -161,23 +161,49 @@ export class DashboardComponent implements OnInit, OnDestroy {
     
     // Find the assigned class details
     const assignedClass = cohort.classes?.find(c => c.name === application.assignedClass);
-    
+
     // Format class schedule
     let classDays = 'TBD';
     let classSchedule = 'TBD';
-    
+    let classStartDate = 'TBD';
+
     if (assignedClass && assignedClass.weeklySchedule.length > 0) {
       classDays = assignedClass.weeklySchedule.map(s => s.day).join(', ');
       const times = assignedClass.weeklySchedule.map(s => `${s.startTime}-${s.endTime}`);
       classSchedule = Array.from(new Set(times)).join(', ');
+
+      // Compute the first occurrence of the class's primary day-of-week on/after
+      // the cohort start date. Mirrors EmailService.getClassStartDate so the
+      // dashboard and the email show the same date.
+      const cohortStart = cohort.cohortStartDate instanceof Date
+        ? cohort.cohortStartDate
+        : new Date(cohort.cohortStartDate);
+      const dayMap: Record<string, number> = {
+        Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3,
+        Thursday: 4, Friday: 5, Saturday: 6
+      };
+      const targetDay = dayMap[assignedClass.weeklySchedule[0].day];
+      const result = new Date(cohortStart);
+      if (targetDay !== undefined) {
+        for (let i = 0; i < 7 && result.getDay() !== targetDay; i++) {
+          result.setDate(result.getDate() + 1);
+        }
+      }
+      classStartDate = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Jerusalem',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).format(result);
     }
-    
+
     const {body} = await this.messageTemplateService.getAcceptedMessage({
       firstName: application.formData.personalInformation.firstName,
       lastName: application.formData.personalInformation.lastName,
       className: application.assignedClass || 'TBD',
       classDays,
       classSchedule,
+      classStartDate,
       applicationId: application.applicationId,
       operatorId: user.operatorId
     });

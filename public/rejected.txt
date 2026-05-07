@@ -1,6 +1,6 @@
-Subject: Application Decision – Alpha-Bet Entrepreneurship School
+Subject: Application Decision – Alpha-Bet Entrepreneurship Program
 
-Dear [Applicant Name],
+Hi [Applicant Name],
 
 Thank you for your interest in the **Alpha-Bet Program** and for the time and effort you invested in your application. After careful consideration, we regret to inform you that we are unable to offer you a place in this semester.
 
@@ -9,9 +9,7 @@ This decision was not an easy one, as we received a highly competitive pool of a
 We sincerely value your interest in **Alpha-Bet** and your interest in pursuing entrepreneurship. We hope to have the opportunity to review your application again in the future.
 
 **📩 Stay Informed**<br>
-If you would like to receive updates about the next semester, including key dates and application details, please [click here to join our mailing list](mailto:info@alphabet.versionbravo.com?subject=Mailing%20List%20Signup).
+If you would like to receive updates about the next semester, including key dates and application details, please [click here to join our mailing list / stay informed](mailto:info@alphabet.versionbravo.com?subject=Mailing%20List%20Signup).
 
 With appreciation,<br>
 **The Alpha-Bet Program Team**
-
-**Operator ID:** {operatorId}
