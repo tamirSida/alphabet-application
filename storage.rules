@@ -1,14 +1,32 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Proof of service documents
-    match /proofs-of-service/{userId}/{allPaths=**} {
-      // Allow authenticated users to upload their own files
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      // Allow admins to read all files
-      allow read: if request.auth != null && 
+
+    // ─── Helpers ────────────────────────────────────────────────────────────
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return request.auth != null &&
         exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
         get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ─── Application uploads ────────────────────────────────────────────────
+    // Legacy "Proof of Military Service" — kept readable so admins can still
+    // open files attached to applications submitted before the field was
+    // narrowed to combat-only. Writes still permitted for owner during
+    // resubmissions / edits, but the form no longer creates new ones here.
+    match /proofs-of-service/{userId}/{allPaths=**} {
+      allow read, write: if isOwner(userId);
+      allow read: if isAdmin();
+    }
+
+    // Current "Proof of Combat Service" — required for every applicant.
+    match /proofs-of-combat-service/{userId}/{allPaths=**} {
+      allow read, write: if isOwner(userId);
+      allow read: if isAdmin();
     }
   }
 }
