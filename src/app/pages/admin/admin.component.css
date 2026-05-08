@@ -212,6 +212,69 @@
 }
 .columns-button:hover { border-color: #3b82f6; background: #f8fafc; }
 .columns-button i { color: #6b7280; }
+
+/* Filters button: same shape as Columns; gets a small numeric badge for active filters */
+.filter-button { position: relative; }
+.filter-button i.fa-filter { color: #6b7280; }
+.filter-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 0.35rem;
+  margin-left: 0.4rem;
+  background: #3b82f6;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 9px;
+}
+
+/* Filters modal sections */
+.modal-content.filters-modal { max-width: 520px; }
+.filter-section { margin-bottom: 1rem; }
+.filter-section:last-child { margin-bottom: 0; }
+.filter-section-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.4rem;
+}
+.filter-section select {
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.9rem;
+  color: #374151;
+  cursor: pointer;
+}
+.filter-section select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Filters modal — empty state when no filterable columns are visible */
+.filters-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 1rem;
+  gap: 0.75rem;
+}
+.filters-empty-state > i {
+  font-size: 2rem;
+  color: #9ca3af;
+}
+.filters-empty-state h4 { margin: 0; color: #374151; font-size: 1rem; font-weight: 600; }
+.filters-empty-state p { margin: 0; color: #6b7280; font-size: 0.9rem; max-width: 360px; }
 .filter-controls select { 
   padding: 0.75rem 1rem; 
   border: 1px solid #d1d5db; 

@@ -143,6 +143,31 @@ export class AdminComponent implements OnInit, OnDestroy {
   classFilter = signal<string>('all');
   recommendationFilter = signal<string>('all');
   assignedToFilter = signal<string>('all');
+  cohortFilter = signal<string>('all');
+  /** Flags filter: 'all' (no filter), 'has' (any red flag), 'none' (clean). */
+  flagsFilter = signal<'all' | 'has' | 'none'>('all');
+
+  // Filters modal — single "Filters" button in the toolbar opens a panel that
+  // exposes one filter control per visible column, matching the Columns button pattern.
+  showFiltersModal = signal(false);
+  /** Count of filters currently set to non-default values, for the toolbar badge. */
+  activeFilterCount = computed(() => {
+    let n = 0;
+    if (this.statusFilter() !== 'all') n++;
+    if (this.countryFilter() !== 'all') n++;
+    if (this.cohortFilter() !== 'all') n++;
+    if (this.classFilter() !== 'all') n++;
+    if (this.recommendationFilter() !== 'all') n++;
+    if (this.assignedToFilter() !== 'all') n++;
+    if (this.flagsFilter() !== 'all') n++;
+    return n;
+  });
+  /** Number of column-paired filters that are currently available (= column visible).
+   *  When zero, the Filters modal shows an empty-state instead of just a description. */
+  availableFilterCount = computed(() => {
+    const keys = ['status', 'country', 'cohortNumber', 'assignedClass', 'recommendation', 'assignedTo', 'flags'];
+    return keys.filter(k => this.isVisible(k)).length;
+  });
   selectedApplication = signal<(Application & { user?: User, cohort?: Cohort }) | null>(null);
   availableClasses = signal<string[]>([]);
   
@@ -413,17 +438,28 @@ export class AdminComponent implements OnInit, OnDestroy {
     const classFilter = this.classFilter();
     const recommendation = this.recommendationFilter();
     const assignedTo = this.assignedToFilter();
+    const cohort = this.cohortFilter();
+    const flags = this.flagsFilter();
 
     let filtered = apps;
 
-    // Apply search filter
+    // Apply search filter — covers Name, Email, ID, and Phone columns so
+    // those four don't need their own per-column text inputs.
     if (search) {
-      filtered = filtered.filter(app => 
-        app.user?.email?.toLowerCase().includes(search) ||
-        app.user?.operatorId?.toLowerCase().includes(search) ||
-        `${app.user?.email?.split('@')[0] || ''}`.toLowerCase().includes(search) ||
-        app.operatorId.toLowerCase().includes(search)
-      );
+      filtered = filtered.filter(app => {
+        const fn = app.formData?.personalInformation?.firstName?.toLowerCase() ?? '';
+        const ln = app.formData?.personalInformation?.lastName?.toLowerCase() ?? '';
+        const fullName = `${fn} ${ln}`.trim();
+        return (
+          fullName.includes(search) ||
+          fn.includes(search) ||
+          ln.includes(search) ||
+          (app.user?.email?.toLowerCase() ?? '').includes(search) ||
+          (app.user?.phone?.toLowerCase() ?? '').includes(search) ||
+          (app.user?.operatorId?.toLowerCase() ?? '').includes(search) ||
+          app.operatorId.toLowerCase().includes(search)
+        );
+      });
     }
 
     // Apply status filter
@@ -459,6 +495,19 @@ export class AdminComponent implements OnInit, OnDestroy {
       filtered = filtered.filter(app => app.assignedTo === assignedTo);
     }
 
+    // Apply cohort filter
+    if (cohort !== 'all') {
+      filtered = filtered.filter(app => app.cohortId === cohort);
+    }
+
+    // Apply flags filter
+    if (flags !== 'all') {
+      filtered = filtered.filter(app => {
+        const hasAnyFlag = !!(app.flags?.englishProficiency || app.flags?.combatService);
+        return flags === 'has' ? hasAnyFlag : !hasAnyFlag;
+      });
+    }
+
     this.filteredApplications.set(this.sortApplications(filtered));
   }
 
@@ -489,6 +538,16 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   updateAssignedToFilter(assignedTo: string) {
     this.assignedToFilter.set(assignedTo);
+    this.filterApplications();
+  }
+
+  updateCohortFilter(cohortId: string) {
+    this.cohortFilter.set(cohortId);
+    this.filterApplications();
+  }
+
+  updateFlagsFilter(value: string) {
+    this.flagsFilter.set(value as 'all' | 'has' | 'none');
     this.filterApplications();
   }
 
@@ -1353,7 +1412,9 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   /** Toggle a column's visibility. No-op for locked columns. If the currently
-   *  active sort column gets hidden, the sort is cleared. Persists (debounced). */
+   *  active sort column gets hidden, the sort is cleared. Filters tied to a
+   *  hidden column are also reset so they can't silently shrink the result set
+   *  while their dropdown is invisible. Persists (debounced). */
   toggleColumn(key: string): void {
     const def = COLUMN_DEFS.find(c => c.key === key);
     if (!def || def.locked) return;
@@ -1367,10 +1428,28 @@ export class AdminComponent implements OnInit, OnDestroy {
       if (this.sortColumn() === key) {
         this.sortColumn.set(null);
       }
+      // Reset any filter tied to this column → matches the toolbar visibility
+      // (filter dropdowns are gated on isVisible(...) in the template).
+      this.resetFilterForColumn(key);
     }
     this.hiddenColumns.set(next);
     this.filterApplications();
     this.schedulePersist();
+  }
+
+  /** Reset the filter (if any) that's logically paired with a given column. */
+  private resetFilterForColumn(key: string): void {
+    switch (key) {
+      case 'status': this.statusFilter.set('all'); break;
+      case 'country': this.countryFilter.set('all'); break;
+      case 'assignedClass': this.classFilter.set('all'); break;
+      case 'recommendation': this.recommendationFilter.set('all'); break;
+      case 'assignedTo': this.assignedToFilter.set('all'); break;
+      case 'cohortNumber': this.cohortFilter.set('all'); break;
+      case 'flags': this.flagsFilter.set('all'); break;
+      // Other columns (name/email/id/phone/actions) are covered by the global
+      // search box (or have no associated filter), so nothing to reset here.
+    }
   }
 
   /** Three-state sort cycle on a column header: none → asc → desc → none.
@@ -1429,6 +1508,23 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.sortDirection.set('asc');
     this.filterApplications();
     this.schedulePersist();
+  }
+
+  // ── Filters modal (parallel to columns picker — opens a panel with one
+  //    filter control per visible column) ──
+  openFiltersModal(): void { this.showFiltersModal.set(true); }
+  closeFiltersModal(): void { this.showFiltersModal.set(false); }
+
+  /** Clear every filter back to "all". */
+  resetAllFilters(): void {
+    this.statusFilter.set('all');
+    this.countryFilter.set('all');
+    this.cohortFilter.set('all');
+    this.classFilter.set('all');
+    this.recommendationFilter.set('all');
+    this.assignedToFilter.set('all');
+    this.flagsFilter.set('all');
+    this.filterApplications();
   }
 
   /** Read prefs from the cached user doc (already fetched by AuthService).
