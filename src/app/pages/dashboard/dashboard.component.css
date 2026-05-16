@@ -45,7 +45,7 @@
 }
 
 .logo {
-  height: 40px;
+  height: 72px;
   width: auto;
   filter: brightness(0) invert(1);
 }
@@ -398,16 +398,16 @@
   .dashboard-header {
     padding: 1.5rem 1rem;
   }
-  
+
   .header-top {
     position: static;
     margin-bottom: 2rem;
   }
-  
+
   .logo-section {
     justify-content: center;
   }
-  
+
   .header-content {
     flex-direction: column;
     align-items: center;
@@ -415,29 +415,29 @@
     margin-top: 0;
     text-align: center;
   }
-  
+
   .user-info {
     text-align: center;
   }
-  
+
   .user-info h1 {
     font-size: 1.5rem;
   }
-  
+
   .dashboard-main {
     padding: 1rem;
   }
-  
+
   .action-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .status-card,
   .action-card,
   .info-section {
     padding: 1.5rem;
   }
-  
+
   .operator-id {
     font-size: 0.8rem;
   }
@@ -579,7 +579,7 @@
   .countdown-display {
     gap: 0.4rem;
   }
-  
+
   .time-unit {
     font-size: 1rem;
     padding: 0.3rem 0.5rem;
