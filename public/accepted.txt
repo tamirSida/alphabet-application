@@ -2,24 +2,20 @@ Subject: Welcome to the Alpha-Bet Entrepreneurship Program
 
 Hi [Applicant Name],
 
-We are excited to inform you that your application to the Alpha-Bet Program has been **ACCEPTED**. Welcome to **{className}**, set to begin on **{classStartDate}**.
+We are excited to inform you that your application to the Alpha-Bet Program has been **ACCEPTED**. Welcome to **Class#002**, set to begin on **Monday, June 22nd 2026**.
 
 **📅 Class Schedule**
-**Lesson:** {classDays}
-**Time:** {lessonTime}
-**Lab:** {labDays}
-**Time:** {labTime}
+**Lesson:** Mondays
+**Time:** 8am - 10:30am PST / 11am - 1:30pm EST / 6pm - 8:30pm IST
+**Lab:** Thursdays
+**Time:** 8am - 10am PST / 11am - 1pm EST / 6pm - 8pm IST
 
 **✅ Next Steps**
-To confirm your place in the program, please email eden@thevetted.vc within **12 hours** and ensure you make the program fee payment via [PayPal](https://www.paypal.com/paypalme/AlphaBetbyVetted) within **36 hours** of this acceptance email. (if paying US dollar, $200 / if paying Israel shekel, 500₪)
-
-Complete this [Operator Insight Form](https://forms.gle/FquiP92S9HSv7tws9) to help prepare you to form a team.
-
-Read through the attached Operator Handbook and complete the tasks in your checklist before the first lesson.
-
-Begin preparing for a dynamic and rewarding learning experience.
-
-For any questions, please reach out to Eden, our program manager. Eden@thevetted.vc
+1. To confirm your place in the program, please email eden@thevetted.vc within **12 hours** and ensure you make the program fee payment via [PayPal](https://www.paypal.com/paypalme/AlphaBetbyVetted) within **36 hours** of this acceptance email. (if paying US dollar, $200 / if paying Israel shekel, 500₪)
+2. Complete this [Operator Insight Form](https://forms.gle/FquiP92S9HSv7tws9) to help prepare you to form a team: https://forms.gle/FquiP92S9HSv7tws9
+3. Read through the attached Operator Handbook and complete the tasks in your checklist before the first lesson.
+4. Begin preparing for a dynamic and rewarding learning experience.
+5. For any questions, please reach out to Eden, our program manager. Eden@thevetted.vc
 
 Most importantly, welcome to the **Vetted community**. This is an amazing network of entrepreneurs, Veterans, industry professionals who all share a common mission of helping the next generation of Veterans succeed in their professional careers. We look forward to having you as a meaningful part of that community.
 

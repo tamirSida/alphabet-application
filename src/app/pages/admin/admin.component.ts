@@ -820,21 +820,19 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Send the appropriate decision email best-effort. Status is already
-   *  persisted at this point, so a failed email surfaces via this.error but
-   *  does NOT roll back the decision. Returns true on send, false on failure. */
+  /** Send the acceptance email best-effort. Status is already persisted at this
+   *  point, so a failed email surfaces via this.error but does NOT roll back the
+   *  decision. Returns true on send, false on failure.
+   *  NOTE: Rejections intentionally send NO email — there is deliberately no
+   *  rejection branch here so a rejection can never trigger an email. */
   private async sendDecisionEmail(
-    type: 'accepted' | 'rejected',
+    type: 'accepted',
     user: User,
     application: Application,
     cohort: Cohort
   ): Promise<boolean> {
     try {
-      if (type === 'accepted') {
-        await this.emailService.sendAcceptanceEmail(user, application, cohort);
-      } else {
-        await this.emailService.sendRejectionEmail(user, application, cohort);
-      }
+      await this.emailService.sendAcceptanceEmail(user, application, cohort);
       return true;
     } catch (err: any) {
       console.error(`Failed to send ${type} email`, err);
