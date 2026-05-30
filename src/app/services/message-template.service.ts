@@ -94,8 +94,9 @@ Operator ID: [operatorId]`;
     const bodyLines = lines.filter(line => !line.startsWith('Subject:'));
     let body = bodyLines.join('\n').trim();
     
-    // Replace variables in both subject and body
-    const processedSubject = this.replaceTemplateVars(subject, data);
+    // Subject is plain text — only substitute variables, no HTML formatting/wrapping.
+    const processedSubject = this.replaceVars(subject, data);
+    // Body gets full markdown→HTML conversion.
     const processedBody = this.replaceTemplateVars(body, data);
     
     return {
@@ -104,9 +105,11 @@ Operator ID: [operatorId]`;
     };
   }
 
-  private replaceTemplateVars(template: string, data: Record<string, string>): string {
+  /** Substitute template variables only — no HTML conversion. Used for the
+   *  subject line (plain text) and as the first step for the body. */
+  private replaceVars(template: string, data: Record<string, string>): string {
     let result = template;
-    
+
     // Replace square bracket variables [Applicant Name] -> firstName lastName
     result = result.replace(/\[Applicant Name\]/g, `${data['firstName']} ${data['lastName']}`);
     result = result.replace(/\[Class A\/Class B\]/g, data['className'] || 'Your Class');
@@ -115,13 +118,19 @@ Operator ID: [operatorId]`;
     result = result.replace(/\[applicationId\]/g, data['applicationId'] || '');
     result = result.replace(/\[operatorId\]/g, data['operatorId'] || '');
     result = result.replace(/\[className\]/g, data['className'] || '');
-    
+
     // Replace curly brace variables {firstName} etc
     Object.keys(data).forEach(key => {
       const placeholder = `{${key}}`;
       result = result.replace(new RegExp(placeholder, 'g'), data[key] || '');
     });
-    
+
+    return result;
+  }
+
+  private replaceTemplateVars(template: string, data: Record<string, string>): string {
+    let result = this.replaceVars(template, data);
+
     // Convert markdown-style formatting to HTML
     result = result.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold text
     result = result.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>'); // Links
