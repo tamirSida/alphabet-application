@@ -51,12 +51,21 @@ export class EmailService {
       };
       
       const {subject, body} = await this.messageTemplateService.getAcceptedMessage(templateData);
-      
+
+      // Operator Handbook lives in public/email-attachments and is served at the
+      // site root. Resend downloads it from `path` at send time; `filename` is
+      // what the recipient sees. encodeURIComponent handles the spaces/brackets.
+      const attachmentFile = 'Alpha-Bet Operator-Handbook-[Class 002-2026].pdf';
+
       const emailData = {
         from: this.config.fromEmail,
         to: user.email,
         subject: subject,
-        text: body
+        html: body,
+        attachments: [{
+          path: `${window.location.origin}/email-attachments/${encodeURIComponent(attachmentFile)}`,
+          filename: attachmentFile
+        }]
       };
 
       const response = await fetch(this.config.apiUrl, {

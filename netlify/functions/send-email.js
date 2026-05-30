@@ -65,7 +65,8 @@ exports.handler = async (event, context) => {
         from: emailData.from,
         to: emailData.to,
         subject: emailData.subject,
-        ...(emailData.html ? { html: emailData.html } : { text: emailData.text })
+        ...(emailData.html ? { html: emailData.html } : { text: emailData.text }),
+        ...(emailData.attachments ? { attachments: emailData.attachments } : {})
       })
     });
 

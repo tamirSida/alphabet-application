@@ -699,23 +699,9 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   async updateApplicationStatus(applicationId: string, status: Application['status']) {
     try {
-      // Snapshot the row BEFORE mutation so we can compare prev status &
-      // grab the (already-enriched) user/cohort for the email.
-      const before = this.applications().find(a => a.applicationId === applicationId);
-      const prevStatus = before?.status;
-
+      // Rejection emails are intentionally NOT sent — rejected applicants
+      // receive no email. (Acceptance emails are still sent from selectClass.)
       await this.applicationService.updateApplicationStatus(applicationId, status);
-
-      // Fire rejection email on transition to rejected
-      let emailSent: boolean | null = null;
-      if (status === 'rejected' && prevStatus !== 'rejected' && before?.user && before?.cohort) {
-        emailSent = await this.sendDecisionEmail(
-          'rejected',
-          before.user,
-          before as Application,
-          before.cohort
-        );
-      }
 
       if (this.selectedApplication()) {
         this.selectedApplication.set(null);
@@ -723,12 +709,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
       await this.loadApplications();
 
-      if (emailSent === false) return; // email-failure error already surfaced
-      if (status === 'rejected' && emailSent === true) {
-        this.success.set('Application rejected and rejection email sent.');
-      } else {
-        this.success.set(`Application ${status} successfully!`);
-      }
+      this.success.set(`Application ${status} successfully!`);
     } catch (error) {
       console.error('Error updating application status:', error);
       this.error.set('Failed to update application status.');
