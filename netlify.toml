@@ -3,6 +3,12 @@
   publish = "dist/alpahbet-application/browser"
   functions = "netlify/functions"
 
+# Bundle email attachments with the function so it can read & base64-encode them
+# server-side (Resend can't fetch a localhost URL, and inbound function payloads
+# are size-limited — so we don't ship the file through the browser).
+[functions]
+  included_files = ["public/email-attachments/**"]
+
 [build.environment]
   NODE_VERSION = "22"
 

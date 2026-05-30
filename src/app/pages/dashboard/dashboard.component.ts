@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService, ApplicationService, CohortService, UserService } from '../../services';
 import { MessageTemplateService } from '../../services/message-template.service';
+import { scheduleDays, scheduleTime } from '../../services/schedule-format.util';
 import { Application, Cohort, User } from '../../models';
 
 @Component({
@@ -159,22 +160,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     
     if (!user || !application || !cohort) return;
     
-    // Find the assigned class details
+    // Find the assigned class details. Mirrors EmailService.sendAcceptanceEmail
+    // so the dashboard and the email show the same class/lab schedule.
     const assignedClass = cohort.classes?.find(c => c.name === application.assignedClass);
+    const classDays = scheduleDays(assignedClass?.weeklySchedule);
+    const lessonTime = scheduleTime(assignedClass?.weeklySchedule);
+    const labDays = scheduleDays(cohort.lab?.weeklySchedule);
+    const labTime = scheduleTime(cohort.lab?.weeklySchedule);
 
-    // Format class schedule
-    let classDays = 'TBD';
-    let classSchedule = 'TBD';
+    // Compute the first occurrence of the class's primary day-of-week on/after
+    // the cohort start date. Mirrors EmailService.getClassStartDate.
     let classStartDate = 'TBD';
-
     if (assignedClass && assignedClass.weeklySchedule.length > 0) {
-      classDays = assignedClass.weeklySchedule.map(s => s.day).join(', ');
-      const times = assignedClass.weeklySchedule.map(s => `${s.startTime}-${s.endTime}`);
-      classSchedule = Array.from(new Set(times)).join(', ');
-
-      // Compute the first occurrence of the class's primary day-of-week on/after
-      // the cohort start date. Mirrors EmailService.getClassStartDate so the
-      // dashboard and the email show the same date.
       const cohortStart = cohort.cohortStartDate instanceof Date
         ? cohort.cohortStartDate
         : new Date(cohort.cohortStartDate);
@@ -191,6 +188,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
       classStartDate = new Intl.DateTimeFormat('en-US', {
         timeZone: 'Asia/Jerusalem',
+        weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -202,7 +200,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       lastName: application.formData.personalInformation.lastName,
       className: application.assignedClass || 'TBD',
       classDays,
-      classSchedule,
+      lessonTime,
+      labDays,
+      labTime,
       classStartDate,
       applicationId: application.applicationId,
       operatorId: user.operatorId

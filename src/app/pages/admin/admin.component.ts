@@ -174,6 +174,8 @@ export class AdminComponent implements OnInit, OnDestroy {
   // Class selection modal
   showClassSelectionModal = signal(false);
   pendingApplication = signal<(Application & { user?: User, cohort?: Cohort }) | null>(null);
+  // Class options for the pending application's OWN cohort (not the global list).
+  pendingClassOptions = signal<string[]>([]);
   classSelectionModalTitle = signal('');
   classSelectionModalSubtitle = signal('');
 
@@ -595,16 +597,26 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   async acceptApplication(application: Application & { user?: User, cohort?: Cohort }) {
-    const availableClasses = this.availableClasses();
-    
-    if (availableClasses.length === 0) {
-      this.error.set('No classes available for assignment.');
+    // Pull the classes from THIS application's own cohort (as defined in cohort
+    // management) — not the global aggregate across every cohort.
+    const cohortClasses = (application.cohort?.classes || [])
+      .map(c => c.name)
+      .filter(name => this.isValidClassName(name));
+
+    if (cohortClasses.length === 0) {
+      this.error.set('No classes available for assignment in this cohort.');
       return;
     }
-    
-    // Open class selection modal
+
     this.pendingApplication.set(application);
-    
+    this.pendingClassOptions.set(cohortClasses);
+
+    // Single-class cohort: nothing to choose — assign straight to that class.
+    if (cohortClasses.length === 1 && application.status !== 'accepted') {
+      await this.selectClass(cohortClasses[0]);
+      return;
+    }
+
     if (application.status === 'accepted') {
       this.classSelectionModalTitle.set('Reassign Class');
       this.classSelectionModalSubtitle.set(`Reassign ${application.formData.personalInformation.firstName} ${application.formData.personalInformation.lastName} to a different class:`);
@@ -612,7 +624,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.classSelectionModalTitle.set('Accept Application');
       this.classSelectionModalSubtitle.set(`Accept ${application.formData.personalInformation.firstName} ${application.formData.personalInformation.lastName} and assign to a class:`);
     }
-    
+
     this.showClassSelectionModal.set(true);
   }
 
@@ -625,6 +637,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   closeClassSelectionModal() {
     this.showClassSelectionModal.set(false);
     this.pendingApplication.set(null);
+    this.pendingClassOptions.set([]);
     this.classSelectionModalTitle.set('');
     this.classSelectionModalSubtitle.set('');
   }

@@ -2,13 +2,13 @@ Subject: Welcome to the Alpha-Bet Entrepreneurship Program
 
 Hi [Applicant Name],
 
-We are excited to inform you that your application to the Alpha-Bet Program has been **ACCEPTED**. Welcome to **Class#002**, set to begin on **Monday, June 22nd 2026**.
+We are excited to inform you that your application to the Alpha-Bet Program has been **ACCEPTED**. Welcome to **{className}**, set to begin on **{classStartDate}**.
 
 **📅 Class Schedule**
-**Lesson:** Mondays
-**Time:** 8am - 10:30am PST / 11am - 1:30pm EST / 6pm - 8:30pm IST
-**Lab:** Thursdays
-**Time:** 8am - 10am PST / 11am - 1pm EST / 6pm - 8pm IST
+**Lesson:** {classDays}
+**Time:** {lessonTime}
+**Lab:** {labDays}
+**Time:** {labTime}
 
 **✅ Next Steps**
 To confirm your place in the program, please email eden@thevetted.vc within **12 hours** and ensure you make the program fee payment via [PayPal](https://www.paypal.com/paypalme/AlphaBetbyVetted) within **36 hours** of this acceptance email. (if paying US dollar, $200 / if paying Israel shekel, 500₪)

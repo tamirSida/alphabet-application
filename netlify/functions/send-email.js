@@ -1,4 +1,42 @@
 const fetch = require('node-fetch');
+const fs = require('fs');
+const path = require('path');
+
+/**
+ * Resolve attachments into the shape Resend expects.
+ * Each incoming attachment may be one of:
+ *   - { filename, file }    -> a repo-relative path (e.g. "public/email-attachments/x.pdf")
+ *                              that we read from disk and base64-encode server-side.
+ *   - { filename, content } -> already base64, passed straight through.
+ *   - { filename, path }    -> a hosted URL Resend will fetch itself.
+ * A `file` that can't be read is skipped (logged) so the email still sends.
+ */
+function resolveAttachments(attachments) {
+  if (!Array.isArray(attachments)) return [];
+  const resolved = [];
+  for (const att of attachments) {
+    if (att && att.file) {
+      // included_files in netlify.toml preserves the repo-relative path; cwd is
+      // the bundle root both under `netlify dev` and in production.
+      const candidates = [
+        path.join(process.cwd(), att.file),
+        path.join(__dirname, '..', '..', att.file)
+      ];
+      const found = candidates.find(p => fs.existsSync(p));
+      if (!found) {
+        console.error('Attachment file not found, skipping:', att.file);
+        continue;
+      }
+      resolved.push({
+        filename: att.filename || path.basename(found),
+        content: fs.readFileSync(found).toString('base64')
+      });
+    } else if (att && (att.content || att.path)) {
+      resolved.push(att);
+    }
+  }
+  return resolved;
+}
 
 exports.handler = async (event, context) => {
   // Only allow POST requests
@@ -54,6 +92,9 @@ exports.handler = async (event, context) => {
       };
     }
 
+    // Read any local-file attachments off disk and base64-encode them.
+    const attachments = resolveAttachments(emailData.attachments);
+
     // Send email via Resend API
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -66,7 +107,7 @@ exports.handler = async (event, context) => {
         to: emailData.to,
         subject: emailData.subject,
         ...(emailData.html ? { html: emailData.html } : { text: emailData.text }),
-        ...(emailData.attachments ? { attachments: emailData.attachments } : {})
+        ...(attachments.length ? { attachments } : {})
       })
     });
 

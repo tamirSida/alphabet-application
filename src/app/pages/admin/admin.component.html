@@ -1340,8 +1340,8 @@
           <p>{{ classSelectionModalSubtitle() }}</p>
           
           <div class="class-selection-grid">
-            @for (className of availableClasses(); track className) {
-              <button 
+            @for (className of pendingClassOptions(); track className) {
+              <button
                 class="class-option-btn"
                 [class.current-class]="className === pendingApplication()?.assignedClass"
                 (click)="selectClass(className)">

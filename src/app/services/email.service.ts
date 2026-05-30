@@ -3,6 +3,7 @@ import { User } from '../models/user.model';
 import { Application } from '../models/application.model';
 import { Cohort } from '../models/cohort.model';
 import { MessageTemplateService } from './message-template.service';
+import { scheduleDays, scheduleTime } from './schedule-format.util';
 import { environment } from '../../environments/environment';
 
 export interface EmailConfig {
@@ -35,8 +36,14 @@ export class EmailService {
     cohort: Cohort
   ): Promise<void> {
     try {
-      const classSchedule = this.formatClassSchedule(cohort, application.assignedClass);
-      const classDays = this.getClassDays(cohort, application.assignedClass);
+      // Pull the assigned class's own schedule + the cohort-wide lab schedule so
+      // the email reflects the actual assignment (works for single- or multi-class
+      // cohorts — the assigned class is simply the only class when there's one).
+      const assignedClassInfo = cohort.classes?.find(c => c.name === application.assignedClass);
+      const classDays = scheduleDays(assignedClassInfo?.weeklySchedule);
+      const lessonTime = scheduleTime(assignedClassInfo?.weeklySchedule);
+      const labDays = scheduleDays(cohort.lab?.weeklySchedule);
+      const labTime = scheduleTime(cohort.lab?.weeklySchedule);
       const classStartDate = this.getClassStartDate(cohort, application.assignedClass);
 
       const templateData = {
@@ -44,7 +51,9 @@ export class EmailService {
         lastName: user.lastName || '',
         className: application.assignedClass || '',
         classDays: classDays,
-        classSchedule: classSchedule,
+        lessonTime: lessonTime,
+        labDays: labDays,
+        labTime: labTime,
         classStartDate: classStartDate,
         applicationId: application.applicationId,
         operatorId: user.operatorId
@@ -52,9 +61,9 @@ export class EmailService {
       
       const {subject, body} = await this.messageTemplateService.getAcceptedMessage(templateData);
 
-      // Operator Handbook lives in public/email-attachments and is served at the
-      // site root. Resend downloads it from `path` at send time; `filename` is
-      // what the recipient sees. encodeURIComponent handles the spaces/brackets.
+      // Operator Handbook is bundled with the Netlify function (see netlify.toml
+      // included_files). The function reads it from disk and base64-encodes it
+      // server-side; `filename` is what the recipient sees.
       const attachmentFile = 'Alpha-Bet Operator-Handbook-[Class 002-2026].pdf';
 
       const emailData = {
@@ -63,7 +72,7 @@ export class EmailService {
         subject: subject,
         html: body,
         attachments: [{
-          path: `${window.location.origin}/email-attachments/${encodeURIComponent(attachmentFile)}`,
+          file: `public/email-attachments/${attachmentFile}`,
           filename: attachmentFile
         }]
       };
@@ -177,33 +186,6 @@ export class EmailService {
   }
 
   /**
-   * Get class days for a specific class
-   */
-  private getClassDays(cohort: Cohort, assignedClass?: string): string {
-    if (!assignedClass) return 'TBD';
-    
-    const classInfo = cohort.classes?.find(c => c.name === assignedClass);
-    if (!classInfo || !classInfo.weeklySchedule) return 'TBD';
-
-    const days = classInfo.weeklySchedule.map(schedule => schedule.day);
-    return days.join(', ');
-  }
-
-  /**
-   * Format class schedule for email
-   */
-  private formatClassSchedule(cohort: Cohort, assignedClass?: string): string {
-    if (!assignedClass) return 'Schedule will be provided soon';
-
-    const classInfo = cohort.classes?.find(c => c.name === assignedClass);
-    if (!classInfo) return 'Schedule will be provided soon';
-
-    return classInfo.weeklySchedule
-      .map(schedule => `${schedule.day}: ${schedule.startTime} - ${schedule.endTime}`)
-      .join('\n');
-  }
-
-  /**
    * Resolve the start date for a specific class within a cohort. The cohort
    * has a single cohortStartDate (the Monday of the first week, by convention)
    * — this helper finds the first occurrence of the assigned class's primary
@@ -245,6 +227,7 @@ export class EmailService {
   private formatDate(date: Date): string {
     return new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Jerusalem',
+      weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric'
