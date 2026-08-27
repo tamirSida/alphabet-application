@@ -64,7 +64,7 @@ export class EmailService {
       // Operator Handbook is bundled with the Netlify function (see netlify.toml
       // included_files). The function reads it from disk and base64-encodes it
       // server-side; `filename` is what the recipient sees.
-      const attachmentFile = 'Alpha-Bet Operator-Handbook-[Class 002-2026].pdf';
+      const attachmentFile = 'Alpha-Bet Operator-Handbook-[Class 003].pdf';
 
       const emailData = {
         from: this.config.fromEmail,
