@@ -654,6 +654,15 @@
                              [class.fa-sort-down]="sortColumn() === 'flags' && sortDirection() === 'desc'"></i>
                         </th>
                       }
+                      @if (isVisible('submittedAt')) {
+                        <th class="col-submittedAt sortable" (click)="setSort('submittedAt')">
+                          <span>Submitted</span>
+                          <i class="fas"
+                             [class.fa-sort]="sortColumn() !== 'submittedAt'"
+                             [class.fa-sort-up]="sortColumn() === 'submittedAt' && sortDirection() === 'asc'"
+                             [class.fa-sort-down]="sortColumn() === 'submittedAt' && sortDirection() === 'desc'"></i>
+                        </th>
+                      }
                       <!-- Actions (locked, always visible, not sortable) -->
                       <th class="col-actions">Actions</th>
                     </tr>
@@ -762,6 +771,13 @@
                                 <i class="fas fa-flag flag-icon" title="Has red flags"></i>
                               }
                             </div>
+                          </td>
+                        }
+                        @if (isVisible('submittedAt')) {
+                          <td class="col-submittedAt">
+                            <span class="submitted-cell" [title]="application.submittedAt | date:'medium'">
+                              {{ formatTimestamp(application.submittedAt) }}
+                            </span>
                           </td>
                         }
                         <td class="col-actions">
@@ -1587,6 +1603,33 @@
                 <option value="has">Has flags</option>
                 <option value="none">No flags</option>
               </select>
+            </div>
+          }
+
+          @if (isVisible('submittedAt')) {
+            <div class="filter-section">
+              <label class="filter-section-label">Submitted</label>
+              <div class="date-range-filter">
+                <label class="date-range-label" for="submitted-from">From</label>
+                <input
+                  id="submitted-from"
+                  type="date"
+                  [value]="submittedFromFilter()"
+                  [max]="submittedToFilter() || null"
+                  (change)="updateSubmittedFromFilter($any($event.target).value)" />
+                <label class="date-range-label" for="submitted-to">To</label>
+                <input
+                  id="submitted-to"
+                  type="date"
+                  [value]="submittedToFilter()"
+                  [min]="submittedFromFilter() || null"
+                  (change)="updateSubmittedToFilter($any($event.target).value)" />
+              </div>
+              @if (submittedFromFilter() || submittedToFilter()) {
+                <button class="link-button" (click)="updateSubmittedFromFilter(''); updateSubmittedToFilter('')">
+                  Clear dates
+                </button>
+              }
             </div>
           }
         </div>

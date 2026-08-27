@@ -57,6 +57,10 @@ export const COLUMN_DEFS: ColumnDef[] = [
     sortValue: a => a.status ?? '' },
   { key: 'flags', label: 'Flags', sortable: true, minWidth: 80,
     sortValue: a => (a.flags?.englishProficiency ? 1 : 0) + (a.flags?.combatService ? 1 : 0) },
+  { key: 'submittedAt', label: 'Submitted', sortable: true, minWidth: 120,
+    // Sort on the raw epoch, not the humanised "3d ago" label, so ordering is
+    // chronological rather than alphabetical.
+    sortValue: a => a.submittedAt ? new Date(a.submittedAt).getTime() : null },
   { key: 'actions', label: 'Actions', locked: true, sortable: false, minWidth: 200,
     sortValue: () => '' },
 ];
@@ -154,6 +158,11 @@ export class AdminComponent implements OnInit, OnDestroy {
   cohortFilter = signal<string>('all');
   /** Flags filter: 'all' (no filter), 'has' (any red flag), 'none' (clean). */
   flagsFilter = signal<'all' | 'has' | 'none'>('all');
+  /** Submission-date range, as "YYYY-MM-DD" from <input type="date">.
+   *  Empty string means that end of the range is open. Both bounds are
+   *  inclusive and compared against the admin's local calendar day. */
+  submittedFromFilter = signal<string>('');
+  submittedToFilter = signal<string>('');
 
   // Filters modal — single "Filters" button in the toolbar opens a panel that
   // exposes one filter control per visible column, matching the Columns button pattern.
@@ -168,12 +177,13 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (this.recommendationFilter() !== 'all') n++;
     if (this.assignedToFilter() !== 'all') n++;
     if (this.flagsFilter() !== 'all') n++;
+    if (this.submittedFromFilter() || this.submittedToFilter()) n++;
     return n;
   });
   /** Number of column-paired filters that are currently available (= column visible).
    *  When zero, the Filters modal shows an empty-state instead of just a description. */
   availableFilterCount = computed(() => {
-    const keys = ['status', 'country', 'cohortNumber', 'assignedClass', 'recommendation', 'assignedTo', 'flags'];
+    const keys = ['status', 'country', 'cohortNumber', 'assignedClass', 'recommendation', 'assignedTo', 'flags', 'submittedAt'];
     return keys.filter(k => this.isVisible(k)).length;
   });
   selectedApplication = signal<(Application & { user?: User, cohort?: Cohort }) | null>(null);
@@ -518,6 +528,21 @@ export class AdminComponent implements OnInit, OnDestroy {
       });
     }
 
+    // Apply submission-date range. Bounds are inclusive whole days: "to" is
+    // pushed to the end of its day so an application submitted at 14:00 on the
+    // end date is not excluded.
+    const from = this.submittedFromFilter();
+    const to = this.submittedToFilter();
+    if (from || to) {
+      const fromMs = from ? new Date(`${from}T00:00:00`).getTime() : -Infinity;
+      const toMs = to ? new Date(`${to}T23:59:59.999`).getTime() : Infinity;
+      filtered = filtered.filter(app => {
+        if (!app.submittedAt) return false;
+        const t = new Date(app.submittedAt).getTime();
+        return !isNaN(t) && t >= fromMs && t <= toMs;
+      });
+    }
+
     this.filteredApplications.set(this.sortApplications(filtered));
   }
 
@@ -558,6 +583,16 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   updateFlagsFilter(value: string) {
     this.flagsFilter.set(value as 'all' | 'has' | 'none');
+    this.filterApplications();
+  }
+
+  updateSubmittedFromFilter(value: string) {
+    this.submittedFromFilter.set(value);
+    this.filterApplications();
+  }
+
+  updateSubmittedToFilter(value: string) {
+    this.submittedToFilter.set(value);
     this.filterApplications();
   }
 
@@ -1452,6 +1487,10 @@ export class AdminComponent implements OnInit, OnDestroy {
       case 'assignedTo': this.assignedToFilter.set('all'); break;
       case 'cohortNumber': this.cohortFilter.set('all'); break;
       case 'flags': this.flagsFilter.set('all'); break;
+      case 'submittedAt':
+        this.submittedFromFilter.set('');
+        this.submittedToFilter.set('');
+        break;
       // Other columns (name/email/id/phone/actions) are covered by the global
       // search box (or have no associated filter), so nothing to reset here.
     }
@@ -1529,6 +1568,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.recommendationFilter.set('all');
     this.assignedToFilter.set('all');
     this.flagsFilter.set('all');
+    this.submittedFromFilter.set('');
+    this.submittedToFilter.set('');
     this.filterApplications();
   }
 

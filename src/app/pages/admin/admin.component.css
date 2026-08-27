@@ -340,7 +340,48 @@
 .applications-table th.col-assignedTo,            .applications-table td.col-assignedTo            { min-width: 170px; }
 .applications-table th.col-status,                .applications-table td.col-status                { min-width: 110px; }
 .applications-table th.col-flags,                 .applications-table td.col-flags                 { min-width: 80px; }
+.applications-table th.col-submittedAt,           .applications-table td.col-submittedAt           { min-width: 120px; }
 .applications-table th.col-actions,               .applications-table td.col-actions               { min-width: 200px; }
+
+/* Submitted cell: humanised relative time, full timestamp on hover. */
+.submitted-cell {
+  white-space: nowrap;
+  color: #475569;
+  font-size: 0.875rem;
+}
+
+/* Date-range control inside the Filters modal. */
+.date-range-filter {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.date-range-label {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.date-range-filter input[type="date"] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+}
+
+.link-button {
+  margin-top: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0;
+  color: #2563eb;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
 
 /* Sortable header behavior */
 .applications-table th.sortable { cursor: pointer; user-select: none; transition: background 0.15s ease; }
