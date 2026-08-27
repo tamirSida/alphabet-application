@@ -5,11 +5,6 @@ import { Injectable } from '@angular/core';
 })
 export class MessageTemplateService {
   private acceptedTemplate: string = '';
-  /** Dashboard variant of the acceptance copy. Identical wording to the email,
-   *  except the class/lab schedule is driven by live cohort data instead of
-   *  being hardcoded — the dashboard can afford that because it renders at
-   *  view time, whereas the email is frozen when it is sent. */
-  private acceptedDashboardTemplate: string = '';
   private rejectedTemplate: string = '';
   private templatesLoaded: boolean = false;
 
@@ -20,25 +15,16 @@ export class MessageTemplateService {
   private async loadTemplates() {
     try {
       // Load template files from root directory
-      const [acceptedResponse, acceptedDashboardResponse, rejectedResponse] = await Promise.all([
+      const [acceptedResponse, rejectedResponse] = await Promise.all([
         fetch('/accepted.txt'),
-        fetch('/accepted_dashboard.txt'),
         fetch('/rejected.txt')
       ]);
 
       if (acceptedResponse.ok) {
         this.acceptedTemplate = await acceptedResponse.text();
       }
-      if (acceptedDashboardResponse.ok) {
-        this.acceptedDashboardTemplate = await acceptedDashboardResponse.text();
-      }
       if (rejectedResponse.ok) {
         this.rejectedTemplate = await rejectedResponse.text();
-      }
-      // If the dashboard variant is missing for any reason, fall back to the
-      // email copy rather than rendering an empty status card.
-      if (!this.acceptedDashboardTemplate) {
-        this.acceptedDashboardTemplate = this.acceptedTemplate;
       }
       
       this.templatesLoaded = true;
@@ -87,24 +73,6 @@ Operator ID: [operatorId]`;
   }): Promise<{subject: string, body: string}> {
     await this.waitForTemplates();
     return this.processTemplate(this.acceptedTemplate, data);
-  }
-
-  /** Acceptance copy for the applicant dashboard — same wording as the email,
-   *  but with the schedule resolved from the cohort at render time. */
-  async getAcceptedDashboardMessage(data: {
-    firstName: string;
-    lastName: string;
-    className: string;
-    classDays: string;
-    lessonTime: string;
-    labDays: string;
-    labTime: string;
-    classStartDate: string;
-    applicationId: string;
-    operatorId: string;
-  }): Promise<{subject: string, body: string}> {
-    await this.waitForTemplates();
-    return this.processTemplate(this.acceptedDashboardTemplate, data);
   }
 
   async getRejectedMessage(data: {

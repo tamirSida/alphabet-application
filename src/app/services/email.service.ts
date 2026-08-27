@@ -43,9 +43,9 @@ export class EmailService {
       const assignedClassInfo = cohort.classes?.find(c => c.name === application.assignedClass);
       // Every schedule string is anchored to the date that session first runs,
       // so DST is resolved against the real date rather than a fixed offset.
-      const classDays = scheduleDays(assignedClassInfo?.weeklySchedule);
+      const classDays = scheduleDays(assignedClassInfo?.weeklySchedule, true);
       const lessonTime = scheduleTime(assignedClassInfo?.weeklySchedule, cohort.cohortStartDate);
-      const labDays = scheduleDays(cohort.lab?.weeklySchedule);
+      const labDays = scheduleDays(cohort.lab?.weeklySchedule, true);
       const labTime = scheduleTime(cohort.lab?.weeklySchedule, cohort.cohortStartDate);
       const classStartDate = this.getClassStartDate(cohort, application.assignedClass);
 

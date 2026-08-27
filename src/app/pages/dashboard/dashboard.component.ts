@@ -164,9 +164,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Uses the same shared helpers as EmailService.sendAcceptanceEmail so the
     // dashboard and the acceptance email can never disagree.
     const assignedClass = cohort.classes?.find(c => c.name === application.assignedClass);
-    const classDays = scheduleDays(assignedClass?.weeklySchedule);
+    const classDays = scheduleDays(assignedClass?.weeklySchedule, true);
     const lessonTime = scheduleTime(assignedClass?.weeklySchedule, cohort.cohortStartDate);
-    const labDays = scheduleDays(cohort.lab?.weeklySchedule);
+    const labDays = scheduleDays(cohort.lab?.weeklySchedule, true);
     const labTime = scheduleTime(cohort.lab?.weeklySchedule, cohort.cohortStartDate);
 
     const occurrence = scheduleFirstOccurrence(assignedClass?.weeklySchedule, cohort.cohortStartDate);
@@ -174,7 +174,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ? formatLongDateInZone(occurrence, PROGRAM_TIME_ZONE)
       : 'TBD';
 
-    const {body} = await this.messageTemplateService.getAcceptedDashboardMessage({
+    const {body} = await this.messageTemplateService.getAcceptedMessage({
       firstName: application.formData.personalInformation.firstName,
       lastName: application.formData.personalInformation.lastName,
       className: application.assignedClass || 'TBD',

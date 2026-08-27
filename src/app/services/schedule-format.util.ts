@@ -20,10 +20,21 @@ import {
   PROGRAM_TIME_ZONE,
 } from './timezone.util';
 
-/** Distinct day names from a weekly schedule, e.g. "Monday" or "Monday, Wednesday". */
-export function scheduleDays(weeklySchedule?: ZonedScheduleEntry[]): string {
+/**
+ * Distinct day names from a weekly schedule.
+ *
+ * `plural` renders them as recurring days — "Mondays", "Mondays, Wednesdays" —
+ * which is how the acceptance copy refers to a weekly session. Every English
+ * weekday pluralises with a bare "s", so no irregular-case table is needed.
+ */
+export function scheduleDays(
+  weeklySchedule?: ZonedScheduleEntry[],
+  plural = false,
+): string {
   const days = (weeklySchedule || []).map(s => s.day).filter(Boolean);
-  return days.length ? Array.from(new Set(days)).join(', ') : 'TBD';
+  if (!days.length) return 'TBD';
+  const unique = Array.from(new Set(days));
+  return (plural ? unique.map(d => `${d}s`) : unique).join(', ');
 }
 
 /**
