@@ -12,7 +12,6 @@ import {
   formatDateTimeInZone,
   entryTimeZone,
 } from '../../services/timezone.util';
-import { formatFullSchedule } from '../../services/schedule-format.util';
 
 // Row shape used in the admin Applications table (Application enriched with user + cohort)
 type AppRow = Application & { user?: User; cohort?: Cohort };
@@ -1793,12 +1792,6 @@ export class AdminComponent implements OnInit, OnDestroy {
     return (lab?.weeklySchedule || [])
       .map((s: any) => `${s.day} ${this.toEtFormTime(s, 'start', anchor)}-${this.toEtFormTime(s, 'end', anchor)} ET`)
       .join(', ');
-  }
-
-  /** Applicant-facing multi-timezone view of a class schedule, so an admin can
-   *  see exactly what the applicant will read. */
-  formatClassScheduleForApplicant(cohortClass: any, cohort: Cohort | undefined): string {
-    return formatFullSchedule(cohortClass?.weeklySchedule, cohort?.cohortStartDate);
   }
 
   /**

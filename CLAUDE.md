@@ -388,10 +388,13 @@ This is a production-ready CRM system with comprehensive user management, applic
 The system successfully handles the complete lifecycle from user registration through application submission, admin review, cohort management, and automated email notifications to applicants.
 
 ## Recent Updates
-- **Timezone System Overhaul**: Simplified timezone management with ET as input base
-  - Cohort management now accepts all times as Eastern Time (ET)
-  - Times stored exactly as entered without complex timezone conversion
-  - Display conversion uses simple arithmetic: IL = ET + 7hrs, PT = ET - 3hrs
+- **Timezone System Overhaul**: Zone-explicit storage — see "Timezone Management" above
+  - Cohort management accepts all times as Eastern Time (ET)
+  - Times stored exactly as entered, tagged with an explicit IANA `timeZone`
+  - Display conversion goes through `Intl`, anchored to the occurrence date.
+    Do NOT reintroduce fixed-offset arithmetic (`IL = ET + 7`, `PT = ET - 3`):
+    the US and Israel change DST on different dates, so that gap is not
+    constant and the assumption is what caused this bug to recur.
   - Consistent multi-timezone display across dashboard, application form, and admin interface
 - **Dashboard Messaging**: Updated application status to include email notification timeline
 - **Schedule Links**: Added schedule link field to cohorts for external schedule references

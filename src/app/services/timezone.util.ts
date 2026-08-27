@@ -176,9 +176,13 @@ export function formatClock12InZone(instant: Date, timeZone: string): string {
  */
 export function firstOccurrenceOnOrAfter(
   from: Date, weekday: Weekday | string, timeZone: string,
-): Date {
+): Date | null {
   const target = WEEKDAY_INDEX[weekday as Weekday];
-  if (target === undefined) return from;
+  // Fail closed: an unrecognised day must surface as "TBD" upstream rather
+  // than silently resolving to `from` and rendering a plausible-looking but
+  // fabricated time.
+  if (target === undefined) return null;
+  if (isNaN(from.getTime())) return null;
 
   const wc = getWallClock(from, timeZone);
   const delta = (target - wc.weekday + 7) % 7;
@@ -200,6 +204,21 @@ export function weekdayInZone(instant: Date, timeZone: string): Weekday {
  * what makes the Israel offset come out as +6h during the week where Israel
  * has left DST but the US has not.
  */
+export function formatEntryInZone(
+  entry: ZonedScheduleEntry, occurrence: Date, targetZone: string,
+): string {
+  const sourceZone = entryTimeZone(entry);
+  const onDate = formatDateInZone(occurrence, sourceZone);
+  const start = parseZonedDateTime(onDate, entry.startTime, sourceZone);
+  const end = parseZonedDateTime(onDate, entry.endTime, sourceZone);
+  return `${formatClock12InZone(start, targetZone)} - ${formatClock12InZone(end, targetZone)}`;
+}
+
+/** The viewer's own IANA zone, per the browser. */
+export function browserTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+}
+
 export function formatEntryAcrossZones(
   entry: ZonedScheduleEntry, occurrence: Date,
 ): string {

@@ -14,6 +14,8 @@
 import {
   ZonedScheduleEntry,
   formatEntryAcrossZones,
+  formatEntryInZone,
+  browserTimeZone,
   firstOccurrenceOnOrAfter,
   PROGRAM_TIME_ZONE,
 } from './timezone.util';
@@ -67,16 +69,26 @@ export function formatFullSchedule(
   cohortStartDate?: Date,
 ): string {
   const entries = weeklySchedule || [];
-  if (!entries.length) return 'TBD';
-  const anchor = cohortStartDate instanceof Date ? cohortStartDate : new Date(cohortStartDate ?? Date.now());
+  if (!entries.length || !cohortStartDate) return 'TBD';
+
+  const anchor = cohortStartDate instanceof Date ? cohortStartDate : new Date(cohortStartDate);
+  if (isNaN(anchor.getTime())) return 'TBD';
+
+  // The applicant's own zone is shown alongside the three program zones —
+  // an applicant outside PT/ET/IL should not have to do the arithmetic.
+  const localZone = browserTimeZone();
+  const showLocal = !['America/Los_Angeles', 'America/New_York', 'Asia/Jerusalem']
+    .includes(localZone);
+
   return entries
     .map(entry => {
-      const occurrence = isNaN(anchor.getTime())
-        ? null
-        : firstOccurrenceOnOrAfter(anchor, entry.day, PROGRAM_TIME_ZONE);
-      return occurrence
-        ? `${entry.day}\n${formatEntryAcrossZones(entry, occurrence)}`
-        : `${entry.day}\nTBD`;
+      const occurrence = firstOccurrenceOnOrAfter(anchor, entry.day, PROGRAM_TIME_ZONE);
+      if (!occurrence) return `${entry.day}\nTBD`;
+      const zones = formatEntryAcrossZones(entry, occurrence);
+      const local = showLocal
+        ? `\n${formatEntryInZone(entry, occurrence, localZone)} (your local time)`
+        : '';
+      return `${entry.day}\n${zones}${local}`;
     })
     .join('\n\n');
 }
