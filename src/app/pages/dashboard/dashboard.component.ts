@@ -174,7 +174,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ? formatLongDateInZone(occurrence, PROGRAM_TIME_ZONE)
       : 'TBD';
 
-    const {body} = await this.messageTemplateService.getAcceptedMessage({
+    const {body} = await this.messageTemplateService.getAcceptedDashboardMessage({
       firstName: application.formData.personalInformation.firstName,
       lastName: application.formData.personalInformation.lastName,
       className: application.assignedClass || 'TBD',

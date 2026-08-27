@@ -1,0 +1,26 @@
+Subject: Welcome to the Alpha-Bet Entrepreneurship Program
+
+Hi [Applicant Name],
+
+We are excited to inform you that your application to the **Alpha-Bet Program** has been **ACCEPTED**. Welcome to {className}, set to begin on {classStartDate}.
+
+**📅 Class Schedule**
+
+• Lesson: {classDays}
+&nbsp;&nbsp;&nbsp;• Time: {lessonTime}
+• Lab: {labDays}
+&nbsp;&nbsp;&nbsp;• Time: {labTime}
+
+**✅ Next Steps**
+
+1. To confirm your place in the program, please email eden@thevetted.vc within **12 hours** and ensure you make the program fee payment via [PayPal](https://www.paypal.com/paypalme/AlphaBetbyVetted) within **36 hours** of this acceptance email. (if paying US dollar, $200 / if paying Israel shekel, 500₪)
+2. Complete this Operator Insight Form to help prepare you to form a team: [CLICK HERE](https://forms.gle/bB8UhV9fRPKCZDU29)
+3. Read through the attached Operator Handbook and complete the tasks in your checklist before the first lesson.
+4. Begin preparing for a dynamic and rewarding learning experience.
+5. For any questions, please reach out to Eden, our program manager. [Eden@thevetted.vc](mailto:Eden@thevetted.vc)
+
+Most importantly, welcome to the Vetted community. This is an amazing network of entrepreneurs, Veterans, industry professionals who all share a common mission of helping the next generation of Veterans succeed in their professional careers. We look forward to having you as a meaningful part of that community.
+
+Sincerely,
+
+The Alpha-Bet Team
