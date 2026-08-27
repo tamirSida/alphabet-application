@@ -61,6 +61,8 @@ interface WallClock {
   hour: number; minute: number; weekday: number;
 }
 
+const SHORT_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
 const WEEKDAY_NAMES: Weekday[] = [
   'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
 ];
@@ -98,23 +100,54 @@ function zoneOffsetMs(instant: Date, timeZone: string): number {
   return asIfUtc - instant.getTime();
 }
 
+/** True iff `instant` reads back as exactly the requested wall clock in `timeZone`. */
+function readsBackAs(
+  instant: Date, timeZone: string,
+  year: number, month: number, day: number, hour: number, minute: number,
+): boolean {
+  const wc = getWallClock(instant, timeZone);
+  return wc.year === year && wc.month === month && wc.day === day
+    && wc.hour === hour && wc.minute === minute;
+}
+
 /**
  * Convert a wall-clock date+time in `timeZone` to the absolute instant.
  *
- * Two-pass: the offset itself depends on the instant we're solving for, so we
- * guess with the offset at the naive UTC interpretation, then re-solve using
- * the offset that actually applies at that moment. This is what makes DST
- * boundaries land correctly.
+ * A wall-clock time does not map 1:1 to an instant across DST transitions:
+ *   - Fall back: the time occurs TWICE. We return the first (earlier) one.
+ *   - Spring forward: the time does not exist at all (e.g. 02:30 on the US
+ *     transition Sunday). We shift forward past the gap, matching the
+ *     "compatible" disambiguation used by Temporal and the major date
+ *     libraries — 02:30 becomes 03:30, never 01:30.
+ *
+ * Each candidate is VERIFIED by reading it back, rather than assuming a fixed
+ * number of refinement passes converges. It does not: for a gap time the naive
+ * two-pass solve oscillates between the two branches forever and silently
+ * returns whichever one it happened to stop on — an hour EARLIER than asked.
  */
 export function wallClockToInstant(
   year: number, month: number, day: number,
   hour: number, minute: number,
   timeZone: string,
 ): Date {
+  // Normalise first so out-of-range components (e.g. day 36) roll over before
+  // we start reading zone offsets against them.
   const naive = Date.UTC(year, month - 1, day, hour, minute, 0, 0);
-  let ts = naive - zoneOffsetMs(new Date(naive), timeZone);
-  ts = naive - zoneOffsetMs(new Date(ts), timeZone);
-  return new Date(ts);
+  const n = new Date(naive);
+  const ny = n.getUTCFullYear(), nm = n.getUTCMonth() + 1, nd = n.getUTCDate();
+  const nh = n.getUTCHours(), nmin = n.getUTCMinutes();
+
+  const offsetA = zoneOffsetMs(n, timeZone);
+  const candidateA = new Date(naive - offsetA);
+  if (readsBackAs(candidateA, timeZone, ny, nm, nd, nh, nmin)) return candidateA;
+
+  const offsetB = zoneOffsetMs(candidateA, timeZone);
+  const candidateB = new Date(naive - offsetB);
+  if (readsBackAs(candidateB, timeZone, ny, nm, nd, nh, nmin)) return candidateB;
+
+  // Neither reads back: the requested wall time falls in a spring-forward gap.
+  // Applying the smaller (pre-transition) offset lands just past the gap.
+  return new Date(naive - Math.min(offsetA, offsetB));
 }
 
 /** `"YYYY-MM-DD"` + `"HH:MM"` in `timeZone` → absolute instant. */
@@ -227,8 +260,20 @@ export function formatEntryAcrossZones(
   const start = parseZonedDateTime(onDate, entry.startTime, sourceZone);
   const end = parseZonedDateTime(onDate, entry.endTime, sourceZone);
 
+  // A late-evening ET session can land on the NEXT calendar day in Israel (or
+  // the PREVIOUS one on the US west coast). Rendering only a bare time under a
+  // single weekday heading would send those applicants on the wrong day, so
+  // annotate any zone whose date differs from the source zone's.
+  const sourceDay = getWallClock(start, sourceZone).weekday;
+
   return DISPLAY_ZONES
-    .map(({ zone, label }) =>
-      `${formatClock12InZone(start, zone)} - ${formatClock12InZone(end, zone)} ${label}`)
+    .map(({ zone, label }) => {
+      const time = `${formatClock12InZone(start, zone)} - ${formatClock12InZone(end, zone)}`;
+      const zoneDay = getWallClock(start, zone).weekday;
+      const marker = zoneDay === sourceDay
+        ? ''
+        : ` (${SHORT_WEEKDAYS[zoneDay]})`;
+      return `${time} ${label}${marker}`;
+    })
     .join(' / ');
 }
