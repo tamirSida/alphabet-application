@@ -372,6 +372,12 @@
   box-sizing: border-box;
 }
 
+.filter-hint {
+  font-weight: 400;
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+
 .link-button {
   margin-top: 0.5rem;
   background: none;

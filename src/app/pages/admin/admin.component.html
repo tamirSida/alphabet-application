@@ -775,8 +775,8 @@
                         }
                         @if (isVisible('submittedAt')) {
                           <td class="col-submittedAt">
-                            <span class="submitted-cell" [title]="application.submittedAt | date:'medium'">
-                              {{ formatTimestamp(application.submittedAt) }}
+                            <span class="submitted-cell" [title]="submittedTitle(application)">
+                              {{ formatSubmittedAt(application) }}
                             </span>
                           </td>
                         }
@@ -1608,21 +1608,21 @@
 
           @if (isVisible('submittedAt')) {
             <div class="filter-section">
-              <label class="filter-section-label">Submitted</label>
+              <label class="filter-section-label">Submitted <span class="filter-hint">(ET)</span></label>
               <div class="date-range-filter">
                 <label class="date-range-label" for="submitted-from">From</label>
                 <input
                   id="submitted-from"
                   type="date"
                   [value]="submittedFromFilter()"
-                  [max]="submittedToFilter() || null"
+                  [attr.max]="submittedToFilter() || null"
                   (change)="updateSubmittedFromFilter($any($event.target).value)" />
                 <label class="date-range-label" for="submitted-to">To</label>
                 <input
                   id="submitted-to"
                   type="date"
                   [value]="submittedToFilter()"
-                  [min]="submittedFromFilter() || null"
+                  [attr.min]="submittedFromFilter() || null"
                   (change)="updateSubmittedToFilter($any($event.target).value)" />
               </div>
               @if (submittedFromFilter() || submittedToFilter()) {

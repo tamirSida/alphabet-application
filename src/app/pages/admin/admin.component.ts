@@ -7,6 +7,7 @@ import { User, Application, Cohort, AdminPreferences, PROGRAM_GOAL_LABELS, Progr
 import {
   PROGRAM_TIME_ZONE,
   parseZonedDateTime,
+  wallClockToInstant,
   formatDateInZone,
   formatTimeInZone,
   formatDateTimeInZone,
@@ -15,6 +16,22 @@ import {
 
 // Row shape used in the admin Applications table (Application enriched with user + cohort)
 type AppRow = Application & { user?: User; cohort?: Cohort };
+
+/**
+ * Epoch milliseconds for a row's submittedAt, or null when it is absent or
+ * unparseable.
+ *
+ * A Firestore document missing the field surfaces from ApplicationService as
+ * `new Date(undefined)` — an *Invalid Date object*, which is TRUTHY. A plain
+ * `!app.submittedAt` check therefore never fires for that shape, and naive
+ * sorting yields NaN, which compares false against everything and leaves the
+ * row wherever the sort happens to drop it instead of at the end.
+ */
+function submittedMs(a: AppRow): number | null {
+  if (!a.submittedAt) return null;
+  const t = new Date(a.submittedAt).getTime();
+  return isNaN(t) ? null : t;
+}
 
 export interface ColumnDef {
   key: string;
@@ -59,8 +76,9 @@ export const COLUMN_DEFS: ColumnDef[] = [
     sortValue: a => (a.flags?.englishProficiency ? 1 : 0) + (a.flags?.combatService ? 1 : 0) },
   { key: 'submittedAt', label: 'Submitted', sortable: true, minWidth: 120,
     // Sort on the raw epoch, not the humanised "3d ago" label, so ordering is
-    // chronological rather than alphabetical.
-    sortValue: a => a.submittedAt ? new Date(a.submittedAt).getTime() : null },
+    // chronological rather than alphabetical. Returns null (not NaN) for
+    // missing/invalid dates so the comparator's null-sink actually applies.
+    sortValue: a => submittedMs(a) },
   { key: 'actions', label: 'Actions', locked: true, sortable: false, minWidth: 200,
     sortValue: () => '' },
 ];
@@ -528,19 +546,26 @@ export class AdminComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Apply submission-date range. Bounds are inclusive whole days: "to" is
-    // pushed to the end of its day so an application submitted at 14:00 on the
-    // end date is not excluded.
+    // Apply submission-date range.
+    //
+    // Bounds are whole calendar days in PROGRAM_TIME_ZONE, not in whichever
+    // zone the admin's laptop happens to be set to — otherwise two admins
+    // typing the same dates get different result sets for the same data.
+    // The upper bound is the instant before the NEXT day begins (rather than
+    // +24h) so it stays correct across a DST transition.
+    // A malformed bound is ignored rather than silently emptying the table.
     const from = this.submittedFromFilter();
     const to = this.submittedToFilter();
     if (from || to) {
-      const fromMs = from ? new Date(`${from}T00:00:00`).getTime() : -Infinity;
-      const toMs = to ? new Date(`${to}T23:59:59.999`).getTime() : Infinity;
-      filtered = filtered.filter(app => {
-        if (!app.submittedAt) return false;
-        const t = new Date(app.submittedAt).getTime();
-        return !isNaN(t) && t >= fromMs && t <= toMs;
-      });
+      const fromMs = this.dayStartMs(from) ?? -Infinity;
+      const nextDayMs = this.dayStartMs(to, 1);
+      const toMs = nextDayMs === null ? Infinity : nextDayMs - 1;
+      if (fromMs !== -Infinity || toMs !== Infinity) {
+        filtered = filtered.filter(app => {
+          const t = submittedMs(app);
+          return t !== null && t >= fromMs && t <= toMs;
+        });
+      }
     }
 
     this.filteredApplications.set(this.sortApplications(filtered));
@@ -584,6 +609,33 @@ export class AdminComponent implements OnInit, OnDestroy {
   updateFlagsFilter(value: string) {
     this.flagsFilter.set(value as 'all' | 'has' | 'none');
     this.filterApplications();
+  }
+
+  /** Start-of-day instant (ms) for a "YYYY-MM-DD" string in PROGRAM_TIME_ZONE,
+   *  optionally offset by whole days. Returns null for empty or malformed
+   *  input so callers can treat the bound as unset instead of as NaN. */
+  private dayStartMs(dateStr: string, addDays = 0): number | null {
+    if (!dateStr) return null;
+    const [y, m, d] = dateStr.split('-').map(Number);
+    if (!y || !m || !d || m < 1 || m > 12 || d < 1 || d > 31) return null;
+    const ms = wallClockToInstant(y, m, d + addDays, 0, 0, PROGRAM_TIME_ZONE).getTime();
+    return isNaN(ms) ? null : ms;
+  }
+
+  /** Relative label for the Submitted column; an em dash when we have no
+   *  usable date, so a corrupt record reads as empty rather than
+   *  "Invalid Date" masquerading as a value. */
+  formatSubmittedAt(application: AppRow): string {
+    return submittedMs(application) === null
+      ? '—'
+      : this.formatTimestamp(application.submittedAt);
+  }
+
+  /** Absolute timestamp for the Submitted cell's hover title. Built here
+   *  rather than with the date pipe, which throws on an Invalid Date. */
+  submittedTitle(application: AppRow): string {
+    const t = submittedMs(application);
+    return t === null ? 'No submission date recorded' : new Date(t).toLocaleString();
   }
 
   updateSubmittedFromFilter(value: string) {
