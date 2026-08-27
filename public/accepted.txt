@@ -2,7 +2,7 @@ Subject: Welcome to the Alpha-Bet Entrepreneurship Program
 
 Hi [Applicant Name],
 
-We are excited to inform you that your application to the **Alpha-Bet Program** has been **ACCEPTED**. Welcome to {className}, set to begin on {classStartDate}.
+We are excited to inform you that your application to the **Alpha-Bet Program** has been **ACCEPTED**. Welcome to Class#003, set to begin on {classStartDate}.
 
 **📅 Class Schedule**
 
