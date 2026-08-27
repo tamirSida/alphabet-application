@@ -173,14 +173,27 @@
 
 .region-select {
   width: 100%;
-  padding: 1rem 1rem 1rem 3rem;
+  padding: 1rem 3rem 1rem 3rem;
   border: 2px solid #e5e7eb;
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.2s ease;
   box-sizing: border-box;
-  background: white;
   cursor: pointer;
+  color: #111827;
+
+  /* A native-appearance <select> ignores padding-left on macOS/iOS, which let
+     the option text slide underneath the absolutely-positioned .input-group
+     icon. Suppressing the native menulist restores padding control, so we draw
+     our own dropdown chevron to replace the one we just removed. */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: white;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 12px;
 }
 
 .input-group input.error {
@@ -318,16 +331,8 @@
   /* Enhanced mobile styling for region select */
   .region-select {
     font-size: 16px; /* Prevents zoom on iOS */
-    padding: 1.2rem 1rem 1.2rem 3rem;
+    padding: 1.2rem 3rem 1.2rem 3rem;
     min-height: 50px; /* Better touch target */
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 12px;
-    padding-right: 3rem;
   }
 
   /* Larger touch-friendly form elements on mobile */
