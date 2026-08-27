@@ -4,6 +4,15 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } fr
 import { Router } from '@angular/router';
 import { AuthService, UserService, ApplicationService, CohortService, EmailService } from '../../services';
 import { User, Application, Cohort, AdminPreferences, PROGRAM_GOAL_LABELS, ProgramGoalChoice, PROGRAM_MINDSET_LABELS, ProgramMindsetChoice } from '../../models';
+import {
+  PROGRAM_TIME_ZONE,
+  parseZonedDateTime,
+  formatDateInZone,
+  formatTimeInZone,
+  formatDateTimeInZone,
+  entryTimeZone,
+} from '../../services/timezone.util';
+import { formatFullSchedule } from '../../services/schedule-format.util';
 
 // Row shape used in the admin Applications table (Application enriched with user + cohort)
 type AppRow = Application & { user?: User; cohort?: Cohort };
@@ -1148,8 +1157,8 @@ export class AdminComponent implements OnInit, OnDestroy {
           
           const dayTimeGroup = timesGroup.get(schedule.day) as FormGroup;
           dayTimeGroup.patchValue({
-            startTime: this.convertUTCTimeToET(schedule.startTime),
-            endTime: this.convertUTCTimeToET(schedule.endTime)
+            startTime: this.toEtFormTime(schedule),
+            endTime: this.toEtFormTime(schedule, 'end')
           });
         });
         
@@ -1177,8 +1186,8 @@ export class AdminComponent implements OnInit, OnDestroy {
         
         const dayTimeGroup = labTimesGroup.get(schedule.day) as FormGroup;
         dayTimeGroup.patchValue({
-          startTime: this.convertUTCTimeToET(schedule.startTime),
-          endTime: this.convertUTCTimeToET(schedule.endTime)
+          startTime: this.toEtFormTime(schedule),
+          endTime: this.toEtFormTime(schedule, 'end')
         });
       });
     }
@@ -1329,11 +1338,15 @@ export class AdminComponent implements OnInit, OnDestroy {
   private convertFormClassesToCohortClasses(formClasses: any[]): any[] {
     return formClasses.map(formClass => {
       const selectedDays = Object.keys(formClass.weekdays).filter(day => formClass.weekdays[day]);
-      
+
+      // Times are stored EXACTLY as the admin typed them, tagged with the zone
+      // they were typed in. No offset conversion happens on write — that is what
+      // made saved schedules drift by an hour when re-edited.
       const weeklySchedule = selectedDays.map(day => ({
-        day: day as 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday',
-        startTime: this.convertETTimeToUTC(formClass.times[day].startTime),
-        endTime: this.convertETTimeToUTC(formClass.times[day].endTime)
+        day: day as any,
+        startTime: formClass.times[day].startTime,
+        endTime: formClass.times[day].endTime,
+        timeZone: PROGRAM_TIME_ZONE
       }));
 
       return {
@@ -1347,11 +1360,12 @@ export class AdminComponent implements OnInit, OnDestroy {
   // Convert form lab to cohort lab format
   private convertFormLabToCohortLab(formLab: any): any {
     const selectedDays = Object.keys(formLab.weekdays).filter(day => formLab.weekdays[day]);
-    
+
     const weeklySchedule = selectedDays.map(day => ({
-      day: day as 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday',
-      startTime: this.convertETTimeToUTC(formLab.times[day].startTime),
-      endTime: this.convertETTimeToUTC(formLab.times[day].endTime)
+      day: day as any,
+      startTime: formLab.times[day].startTime,
+      endTime: formLab.times[day].endTime,
+      timeZone: PROGRAM_TIME_ZONE
     }));
 
     return {
@@ -1764,139 +1778,78 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
   }
 
-  formatClassSchedule(cohortClass: any): string {
-    return cohortClass.weeklySchedule
-      .map((schedule: any) => `${schedule.day} ${this.convertUTCTimeToET(schedule.startTime)}-${this.convertUTCTimeToET(schedule.endTime)} ET`)
+  /** Admin-facing schedule summary, always rendered in ET so it matches what
+   *  was typed into cohort management. Legacy (zone-less) entries are
+   *  converted from UTC; new entries pass through. */
+  formatClassSchedule(cohortClass: any, cohort?: Cohort): string {
+    const anchor = cohort?.cohortStartDate;
+    return (cohortClass?.weeklySchedule || [])
+      .map((s: any) => `${s.day} ${this.toEtFormTime(s, 'start', anchor)}-${this.toEtFormTime(s, 'end', anchor)} ET`)
       .join(', ');
   }
 
-  formatLabSchedule(lab: any): string {
-    return lab.weeklySchedule
-      .map((schedule: any) => `${schedule.day} ${this.convertUTCTimeToET(schedule.startTime)}-${this.convertUTCTimeToET(schedule.endTime)} ET`)
+  formatLabSchedule(lab: any, cohort?: Cohort): string {
+    const anchor = cohort?.cohortStartDate;
+    return (lab?.weeklySchedule || [])
+      .map((s: any) => `${s.day} ${this.toEtFormTime(s, 'start', anchor)}-${this.toEtFormTime(s, 'end', anchor)} ET`)
       .join(', ');
   }
 
-  // Create date - save time as entered (ET time)
+  /** Applicant-facing multi-timezone view of a class schedule, so an admin can
+   *  see exactly what the applicant will read. */
+  formatClassScheduleForApplicant(cohortClass: any, cohort: Cohort | undefined): string {
+    return formatFullSchedule(cohortClass?.weeklySchedule, cohort?.cohortStartDate);
+  }
+
+  /**
+   * Stored schedule time -> the "HH:MM" the ET cohort form should show.
+   *
+   * New entries carry timeZone === PROGRAM_TIME_ZONE and are already ET, so
+   * they pass through untouched — this is what makes edit/save idempotent.
+   * Legacy entries have no timeZone (they were stored as UTC) and are
+   * converted once, anchored to the cohort start so DST is resolved correctly.
+   */
+  private toEtFormTime(entry: any, which: 'start' | 'end' = 'start', anchor?: Date): string {
+    const raw = which === 'start' ? entry.startTime : entry.endTime;
+    const zone = entryTimeZone(entry);
+    if (zone === PROGRAM_TIME_ZONE) return raw;
+
+    // Legacy conversion is DST-sensitive, so anchor it on the cohort's own
+    // start date where we have one rather than on "today".
+    const anchorDate = anchor ?? this.editingCohort()?.cohortStartDate ?? new Date();
+    const onDate = formatDateInZone(anchorDate, zone);
+    return formatTimeInZone(parseZonedDateTime(onDate, raw, zone), PROGRAM_TIME_ZONE);
+  }
+
+  /** Interpret an admin-entered date+time as Eastern Time and return the
+   *  absolute instant. All DST handling is delegated to timezone.util. */
   private createDateInETTimezone(dateStr: string, timeStr: string): Date {
-    // Parse date string components
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    
-    // Create date treating the input as ET timezone
-    // Using the ISO string format with ET offset
-    const etOffset = this.getETOffset(new Date(year, month - 1, day));
-    const etISOString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00.000${etOffset}`;
-    
-    return new Date(etISOString);
+    return parseZonedDateTime(dateStr, timeStr, PROGRAM_TIME_ZONE);
   }
 
-  // Get ET timezone offset for a given date (handles DST)
-  private getETOffset(date: Date): string {
-    // Check if date is in DST for ET timezone
-    const january = new Date(date.getFullYear(), 0, 1);
-    const july = new Date(date.getFullYear(), 6, 1);
-    const stdOffset = Math.max(january.getTimezoneOffset(), july.getTimezoneOffset());
-    const isDST = date.getTimezoneOffset() < stdOffset;
-    
-    // Return proper ET offset (EST = -05:00, EDT = -04:00)
-    return isDST ? '-04:00' : '-05:00';
-  }
-
-  // Extract time for form display (convert from UTC back to ET)
+  /** Instant -> "HH:MM" in ET, for repopulating the cohort edit form. */
   private extractTimeInET(date: Date): string {
-    // Use toLocaleString to convert UTC back to ET timezone
-    const etTime = date.toLocaleString('en-US', {
-      timeZone: 'America/New_York',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-    
-    return etTime;
+    return formatTimeInZone(date, PROGRAM_TIME_ZONE);
   }
 
-  // Extract date for form display (convert from UTC back to ET)
+  /** Instant -> "YYYY-MM-DD" in ET, for repopulating the cohort edit form. */
   private extractDateInET(date: Date): string {
-    // Use toLocaleString to get the ET date
-    const etDate = date.toLocaleDateString('en-CA', {
-      timeZone: 'America/New_York',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    
-    return etDate; // Returns YYYY-MM-DD format
+    return formatDateInZone(date, PROGRAM_TIME_ZONE);
   }
 
-  // Convert ET time string to UTC time string
-  private convertETTimeToUTC(etTimeStr: string): string {
-    // Create a reference date (today) with the ET time
-    const today = new Date();
-    const [hours, minutes] = etTimeStr.split(':').map(Number);
-    
-    // Get ET offset for today
-    const etOffset = this.getETOffset(today);
-    
-    // Create date string in ET timezone format
-    const etISOString = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00.000${etOffset}`;
-    
-    // Create date with ET timezone
-    const etDate = new Date(etISOString);
-    
-    // Extract UTC time
-    const utcHours = etDate.getUTCHours().toString().padStart(2, '0');
-    const utcMinutes = etDate.getUTCMinutes().toString().padStart(2, '0');
-    
-    return `${utcHours}:${utcMinutes}`;
+  /** Render a stored cohort instant back in ET so the admin always reads back
+   *  exactly what they typed, regardless of where their browser is. */
+  formatInProgramTime(date: Date | undefined): string {
+    if (!date) return '';
+    const d = date instanceof Date ? date : new Date(date);
+    return isNaN(d.getTime()) ? '' : `${formatDateTimeInZone(d, PROGRAM_TIME_ZONE)} ET`;
   }
 
-  // Convert UTC time string back to ET time string for form display
-  private convertUTCTimeToET(utcTimeStr: string): string {
-    // Create a reference date (today) with the UTC time
-    const today = new Date();
-    const [hours, minutes] = utcTimeStr.split(':').map(Number);
-    
-    // Create UTC date
-    const utcDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes));
-    
-    // Convert to ET timezone
-    const etTime = utcDate.toLocaleString('en-US', {
-      timeZone: 'America/New_York',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-    
-    return etTime;
-  }
-
-  // Format date for multiple timezones using simple conversion
-  formatDateWithTimezones(date: Date): string {
-    // Get the stored time components directly (they represent EST)
-    const estYear = date.getFullYear();
-    const estMonth = date.getMonth();
-    const estDay = date.getDate();
-    const estHour = date.getHours();
-    const estMinute = date.getMinutes();
-
-    // Create new dates with EST as base, then apply hour arithmetic
-    const ilDate = new Date(estYear, estMonth, estDay, estHour + 7, estMinute);
-    const pstDate = new Date(estYear, estMonth, estDay, estHour - 3, estMinute);
-    const estDate = new Date(estYear, estMonth, estDay, estHour, estMinute);
-
-    // Format dates
-    const formatDate = (d: Date, label: string) => {
-      const dateStr = d.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric', 
-        month: 'long',
-        day: 'numeric'
-      });
-      const timeStr = d.toTimeString().slice(0, 5);
-      return `${label}: ${dateStr} ${timeStr}`;
-    };
-    
-    return `${formatDate(ilDate, 'IL')}\n${formatDate(pstDate, 'PT')}\n${formatDate(estDate, 'ET')}`;
+  /** Date-only variant of formatInProgramTime. */
+  formatDateInProgramTime(date: Date | undefined): string {
+    if (!date) return '';
+    const d = date instanceof Date ? date : new Date(date);
+    return isNaN(d.getTime()) ? '' : formatDateInZone(d, PROGRAM_TIME_ZONE);
   }
 
   formatRecommendation(recommendation: Application['recommendation']): string {

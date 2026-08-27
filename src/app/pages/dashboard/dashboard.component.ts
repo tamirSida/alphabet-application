@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService, ApplicationService, CohortService, UserService } from '../../services';
 import { MessageTemplateService } from '../../services/message-template.service';
-import { scheduleDays, scheduleTime } from '../../services/schedule-format.util';
+import { scheduleDays, scheduleTime, scheduleFirstOccurrence } from '../../services/schedule-format.util';
+import { PROGRAM_TIME_ZONE, formatLongDateInZone } from '../../services/timezone.util';
 import { Application, Cohort, User } from '../../models';
 
 @Component({
@@ -160,40 +161,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     
     if (!user || !application || !cohort) return;
     
-    // Find the assigned class details. Mirrors EmailService.sendAcceptanceEmail
-    // so the dashboard and the email show the same class/lab schedule.
+    // Uses the same shared helpers as EmailService.sendAcceptanceEmail so the
+    // dashboard and the acceptance email can never disagree.
     const assignedClass = cohort.classes?.find(c => c.name === application.assignedClass);
     const classDays = scheduleDays(assignedClass?.weeklySchedule);
-    const lessonTime = scheduleTime(assignedClass?.weeklySchedule);
+    const lessonTime = scheduleTime(assignedClass?.weeklySchedule, cohort.cohortStartDate);
     const labDays = scheduleDays(cohort.lab?.weeklySchedule);
-    const labTime = scheduleTime(cohort.lab?.weeklySchedule);
+    const labTime = scheduleTime(cohort.lab?.weeklySchedule, cohort.cohortStartDate);
 
-    // Compute the first occurrence of the class's primary day-of-week on/after
-    // the cohort start date. Mirrors EmailService.getClassStartDate.
-    let classStartDate = 'TBD';
-    if (assignedClass && assignedClass.weeklySchedule.length > 0) {
-      const cohortStart = cohort.cohortStartDate instanceof Date
-        ? cohort.cohortStartDate
-        : new Date(cohort.cohortStartDate);
-      const dayMap: Record<string, number> = {
-        Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3,
-        Thursday: 4, Friday: 5, Saturday: 6
-      };
-      const targetDay = dayMap[assignedClass.weeklySchedule[0].day];
-      const result = new Date(cohortStart);
-      if (targetDay !== undefined) {
-        for (let i = 0; i < 7 && result.getDay() !== targetDay; i++) {
-          result.setDate(result.getDate() + 1);
-        }
-      }
-      classStartDate = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'Asia/Jerusalem',
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }).format(result);
-    }
+    const occurrence = scheduleFirstOccurrence(assignedClass?.weeklySchedule, cohort.cohortStartDate);
+    const classStartDate = occurrence
+      ? formatLongDateInZone(occurrence, PROGRAM_TIME_ZONE)
+      : 'TBD';
 
     const {body} = await this.messageTemplateService.getAcceptedMessage({
       firstName: application.formData.personalInformation.firstName,

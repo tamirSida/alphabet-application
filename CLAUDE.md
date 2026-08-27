@@ -15,13 +15,25 @@ A comprehensive CRM system for managing applications to the Alphabet Program, bu
 - **State Management**: Angular Signals
 
 ### Timezone Management
-- **Input Timezone**: All times in cohort management are entered in **Eastern Time (ET)**
-- **Storage**: Times are stored exactly as entered (ET) without conversion
-- **Display Conversion**: Simple mathematical conversion using:
-  - **IL = ET + 7 hours**
-  - **PT = ET - 3 hours**
-- **Multi-timezone Display**: All schedules show IL, PT, and ET times simultaneously
-- **No Complex Timezone Libraries**: Uses simple hour arithmetic for reliability and consistency
+- **Single source of truth**: `src/app/services/timezone.util.ts`. Nothing outside
+  that file may call `getTimezoneOffset()`, hardcode a UTC offset, or assume a
+  fixed hour delta between two zones.
+- **Authoring zone**: cohort schedules are typed in Eastern Time
+  (`PROGRAM_TIME_ZONE = 'America/New_York'`).
+- **Storage**: schedule times are stored as the wall-clock `"HH:MM"` the admin
+  typed, tagged with an explicit IANA `timeZone` on each entry. No conversion
+  happens on write, so edit/save is idempotent.
+- **Legacy documents**: entries with no `timeZone` were written by the old code
+  path and hold UTC. `entryTimeZone()` treats a missing zone as `'UTC'`, which
+  is what lets old and new cohorts coexist with no data migration.
+- **Display**: every conversion goes through `Intl`, anchored to the ACTUAL DATE
+  of the occurrence. Fixed offsets are wrong — the US and Israel change DST on
+  different dates, so the ET↔IL gap is +7h most of the year but +6h between
+  Israel's DST end and the US's (e.g. 2026-10-25 → 2026-11-01).
+- **Labels**: the applicant-facing line uses the fixed strings PST/EST/IST
+  (not season-correct PDT/EDT/IDT) because the approved email copy does.
+- **Admin display**: cohort dates are rendered back in ET, so an admin always
+  reads back exactly what they typed regardless of their browser's zone.
 
 ### Database Schema (Firestore)
 

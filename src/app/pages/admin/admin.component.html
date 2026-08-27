@@ -282,9 +282,9 @@
                               <div class="class-details">
                                 @for (cohortClass of selectedApplication()?.cohort?.classes || []; track cohortClass.classId) {
                                   @if (cohortClass.classId === unavailable.classId) {
-                                    <div class="class-schedule-info">{{ formatClassSchedule(cohortClass) }}</div>
+                                    <div class="class-schedule-info">{{ formatClassSchedule(cohortClass, selectedApplication()?.cohort) }}</div>
                                     @if (selectedApplication()?.cohort?.lab) {
-                                      <div class="lab-schedule-info"><strong>Lab:</strong> {{ formatLabSchedule(selectedApplication()?.cohort?.lab) }}</div>
+                                      <div class="lab-schedule-info"><strong>Lab:</strong> {{ formatLabSchedule(selectedApplication()?.cohort?.lab, selectedApplication()?.cohort) }}</div>
                                     }
                                   }
                                 }
@@ -1136,11 +1136,11 @@
                   <div class="cohort-timeline">
                     <div class="timeline-item">
                       <i class="fas fa-calendar-plus"></i>
-                      <span>Applications: {{ cohort.applicationStartDate | date:'short' }} - {{ cohort.applicationEndDate | date:'short' }}</span>
+                      <span>Applications: {{ formatInProgramTime(cohort.applicationStartDate) }} - {{ formatInProgramTime(cohort.applicationEndDate) }}</span>
                     </div>
                     <div class="timeline-item">
                       <i class="fas fa-play-circle"></i>
-                      <span>Program: {{ cohort.cohortStartDate | date:'shortDate' }} - {{ cohort.cohortEndDate | date:'shortDate' }}</span>
+                      <span>Program: {{ formatDateInProgramTime(cohort.cohortStartDate) }} - {{ formatDateInProgramTime(cohort.cohortEndDate) }}</span>
                     </div>
                     <div class="timeline-item">
                       <i class="fas fa-external-link-alt"></i>
