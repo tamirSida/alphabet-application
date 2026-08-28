@@ -1,53 +1,105 @@
 /**
  * Shared helpers for rendering cohort schedules consistently across the
- * acceptance email and the applicant dashboard.
+ * acceptance email, the applicant dashboard, and the application form.
  *
- * Times are stored as Eastern Time (ET) per the project's timezone convention.
- * Display conversion is simple hour arithmetic: PST = ET - 3, IST = ET + 7.
+ * All timezone maths lives in timezone.util.ts. This file only decides WHAT
+ * to render; it never computes an offset itself.
+ *
+ * Every formatter takes an `occurrence` date because a weekly schedule has no
+ * single correct rendering — the US and Israel change DST on different dates,
+ * so the same "11:00 ET" class is 6pm IST in one week of a cohort and 5pm IST
+ * in another. The occurrence anchors the conversion to a real date.
  */
 
-interface ScheduleEntry {
-  day: string;
-  startTime: string; // "HH:MM" in ET
-  endTime: string;   // "HH:MM" in ET
-}
+import {
+  ZonedScheduleEntry,
+  formatEntryAcrossZones,
+  formatEntryInZone,
+  browserTimeZone,
+  firstOccurrenceOnOrAfter,
+  PROGRAM_TIME_ZONE,
+} from './timezone.util';
 
-/** "HH:MM" -> minutes since midnight (minutes default to 0 if absent). */
-function toMinutes(time: string): number {
-  const [h, m] = (time || '').split(':').map(Number);
-  return (h || 0) * 60 + (m || 0);
-}
-
-/** minutes since midnight -> "8am" / "10:30am" / "1:30pm" (wraps across midnight). */
-function formatClock(mins: number): string {
-  const normalized = ((mins % 1440) + 1440) % 1440;
-  const h = Math.floor(normalized / 60);
-  const m = normalized % 60;
-  const period = h < 12 ? 'am' : 'pm';
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return m === 0 ? `${h12}${period}` : `${h12}:${String(m).padStart(2, '0')}${period}`;
+/**
+ * Distinct day names from a weekly schedule.
+ *
+ * `plural` renders them as recurring days — "Mondays", "Mondays, Wednesdays" —
+ * which is how the acceptance copy refers to a weekly session. Every English
+ * weekday pluralises with a bare "s", so no irregular-case table is needed.
+ */
+export function scheduleDays(
+  weeklySchedule?: ZonedScheduleEntry[],
+  plural = false,
+): string {
+  const days = (weeklySchedule || []).map(s => s.day).filter(Boolean);
+  if (!days.length) return 'TBD';
+  const unique = Array.from(new Set(days));
+  return (plural ? unique.map(d => `${d}s`) : unique).join(', ');
 }
 
 /**
- * Format an ET start/end range across all three program timezones, e.g.
- * "8am - 10:30am PST / 11am - 1:30pm EST / 6pm - 8:30pm IST".
+ * Multi-timezone time string for the first session of a weekly schedule,
+ * resolved against the first date that session actually runs on or after
+ * `cohortStartDate`.
+ *
+ * e.g. "8am - 10:30am PST / 11am - 1:30pm EST / 6pm - 8:30pm IST"
  */
-export function formatMultiTzTime(startTimeET: string, endTimeET: string): string {
-  const start = toMinutes(startTimeET);
-  const end = toMinutes(endTimeET);
-  const range = (offsetHrs: number) =>
-    `${formatClock(start + offsetHrs * 60)} - ${formatClock(end + offsetHrs * 60)}`;
-  return `${range(-3)} PST / ${range(0)} EST / ${range(7)} IST`;
-}
-
-/** Distinct day names from a weekly schedule, e.g. "Monday" or "Monday, Wednesday". */
-export function scheduleDays(weeklySchedule?: ScheduleEntry[]): string {
-  const days = (weeklySchedule || []).map(s => s.day).filter(Boolean);
-  return days.length ? Array.from(new Set(days)).join(', ') : 'TBD';
-}
-
-/** Multi-timezone time string for the first session of a weekly schedule. */
-export function scheduleTime(weeklySchedule?: ScheduleEntry[]): string {
+export function scheduleTime(
+  weeklySchedule?: ZonedScheduleEntry[],
+  cohortStartDate?: Date,
+): string {
   const first = weeklySchedule?.[0];
-  return first ? formatMultiTzTime(first.startTime, first.endTime) : 'TBD';
+  if (!first) return 'TBD';
+  const occurrence = scheduleFirstOccurrence(weeklySchedule, cohortStartDate);
+  if (!occurrence) return 'TBD';
+  return formatEntryAcrossZones(first, occurrence);
+}
+
+/**
+ * The first date the first session of `weeklySchedule` runs, on or after
+ * `cohortStartDate`. Returns null when either is missing.
+ */
+export function scheduleFirstOccurrence(
+  weeklySchedule?: ZonedScheduleEntry[],
+  cohortStartDate?: Date,
+): Date | null {
+  const first = weeklySchedule?.[0];
+  if (!first || !cohortStartDate) return null;
+  const start = cohortStartDate instanceof Date ? cohortStartDate : new Date(cohortStartDate);
+  if (isNaN(start.getTime())) return null;
+  return firstOccurrenceOnOrAfter(start, first.day, PROGRAM_TIME_ZONE);
+}
+
+/**
+ * Render every session of a weekly schedule, one per line, as
+ * "Monday: 8am - 10:30am PST / 11am - 1:30pm EST / 6pm - 8:30pm IST".
+ * Used by the application form, where the applicant is comparing classes.
+ */
+export function formatFullSchedule(
+  weeklySchedule?: ZonedScheduleEntry[],
+  cohortStartDate?: Date,
+): string {
+  const entries = weeklySchedule || [];
+  if (!entries.length || !cohortStartDate) return 'TBD';
+
+  const anchor = cohortStartDate instanceof Date ? cohortStartDate : new Date(cohortStartDate);
+  if (isNaN(anchor.getTime())) return 'TBD';
+
+  // The applicant's own zone is shown alongside the three program zones —
+  // an applicant outside PT/ET/IL should not have to do the arithmetic.
+  const localZone = browserTimeZone();
+  const showLocal = !['America/Los_Angeles', 'America/New_York', 'Asia/Jerusalem']
+    .includes(localZone);
+
+  return entries
+    .map(entry => {
+      const occurrence = firstOccurrenceOnOrAfter(anchor, entry.day, PROGRAM_TIME_ZONE);
+      if (!occurrence) return `${entry.day}\nTBD`;
+      const zones = formatEntryAcrossZones(entry, occurrence);
+      const local = showLocal
+        ? `\n${formatEntryInZone(entry, occurrence, localZone)} (your local time)`
+        : '';
+      return `${entry.day}\n${zones}${local}`;
+    })
+    .join('\n\n');
 }

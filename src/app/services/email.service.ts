@@ -3,7 +3,8 @@ import { User } from '../models/user.model';
 import { Application } from '../models/application.model';
 import { Cohort } from '../models/cohort.model';
 import { MessageTemplateService } from './message-template.service';
-import { scheduleDays, scheduleTime } from './schedule-format.util';
+import { scheduleDays, scheduleTime, scheduleFirstOccurrence } from './schedule-format.util';
+import { PROGRAM_TIME_ZONE, formatLongDateInZone } from './timezone.util';
 import { environment } from '../../environments/environment';
 
 export interface EmailConfig {
@@ -40,10 +41,12 @@ export class EmailService {
       // the email reflects the actual assignment (works for single- or multi-class
       // cohorts — the assigned class is simply the only class when there's one).
       const assignedClassInfo = cohort.classes?.find(c => c.name === application.assignedClass);
-      const classDays = scheduleDays(assignedClassInfo?.weeklySchedule);
-      const lessonTime = scheduleTime(assignedClassInfo?.weeklySchedule);
-      const labDays = scheduleDays(cohort.lab?.weeklySchedule);
-      const labTime = scheduleTime(cohort.lab?.weeklySchedule);
+      // Every schedule string is anchored to the date that session first runs,
+      // so DST is resolved against the real date rather than a fixed offset.
+      const classDays = scheduleDays(assignedClassInfo?.weeklySchedule, true);
+      const lessonTime = scheduleTime(assignedClassInfo?.weeklySchedule, cohort.cohortStartDate);
+      const labDays = scheduleDays(cohort.lab?.weeklySchedule, true);
+      const labTime = scheduleTime(cohort.lab?.weeklySchedule, cohort.cohortStartDate);
       const classStartDate = this.getClassStartDate(cohort, application.assignedClass);
 
       const templateData = {
@@ -64,7 +67,7 @@ export class EmailService {
       // Operator Handbook is bundled with the Netlify function (see netlify.toml
       // included_files). The function reads it from disk and base64-encodes it
       // server-side; `filename` is what the recipient sees.
-      const attachmentFile = 'Alpha-Bet Operator-Handbook-[Class 002-2026].pdf';
+      const attachmentFile = 'Alpha-Bet Operator-Handbook-[Class 003].pdf';
 
       const emailData = {
         from: this.config.fromEmail,
@@ -186,52 +189,33 @@ export class EmailService {
   }
 
   /**
-   * Resolve the start date for a specific class within a cohort. The cohort
-   * has a single cohortStartDate (the Monday of the first week, by convention)
-   * — this helper finds the first occurrence of the assigned class's primary
-   * day-of-week ON or AFTER that date, so e.g. a Tuesday class returns the
-   * Tuesday of the first week even if the cohort itself begins on Monday.
-   * Falls back to the cohort's start date if class info is missing.
+   * Resolve the start date for a specific class within a cohort.
+   *
+   * The cohort has a single cohortStartDate; this returns the first occurrence
+   * of the assigned class's primary day-of-week on or after it. Both the
+   * day-of-week comparison and the formatting happen in PROGRAM_TIME_ZONE, so
+   * the announced date no longer depends on where the admin's browser is.
    */
   private getClassStartDate(cohort: Cohort, assignedClass?: string): string {
     if (!cohort?.cohortStartDate) return 'TBD';
-    const cohortStart = cohort.cohortStartDate instanceof Date
-      ? cohort.cohortStartDate
-      : new Date(cohort.cohortStartDate);
 
     const classInfo = assignedClass
       ? cohort.classes?.find(c => c.name === assignedClass)
       : undefined;
-    const firstDay = classInfo?.weeklySchedule?.[0]?.day;
 
-    const dayMap: Record<string, number> = {
-      Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3,
-      Thursday: 4, Friday: 5, Saturday: 6
-    };
-    const targetDay = firstDay ? dayMap[firstDay] : undefined;
+    const occurrence = scheduleFirstOccurrence(
+      classInfo?.weeklySchedule,
+      cohort.cohortStartDate
+    );
 
-    let result = new Date(cohortStart);
-    if (targetDay !== undefined) {
-      // Walk forward to the first occurrence of the class's day-of-week.
-      // Bounded loop (max 7 iterations) so this can never run away.
-      for (let i = 0; i < 7 && result.getDay() !== targetDay; i++) {
-        result.setDate(result.getDate() + 1);
-      }
-    }
-    return this.formatDate(result);
-  }
+    // No class schedule to key off — fall back to the cohort's own start date.
+    const target = occurrence ?? (cohort.cohortStartDate instanceof Date
+      ? cohort.cohortStartDate
+      : new Date(cohort.cohortStartDate));
 
-  /**
-   * Format date for email display
-   */
-  private formatDate(date: Date): string {
-    return new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Jerusalem',
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }).format(date);
+    return isNaN(target.getTime())
+      ? 'TBD'
+      : formatLongDateInZone(target, PROGRAM_TIME_ZONE);
   }
 
   /**

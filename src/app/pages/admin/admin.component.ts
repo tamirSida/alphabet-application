@@ -4,9 +4,34 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } fr
 import { Router } from '@angular/router';
 import { AuthService, UserService, ApplicationService, CohortService, EmailService } from '../../services';
 import { User, Application, Cohort, AdminPreferences, PROGRAM_GOAL_LABELS, ProgramGoalChoice, PROGRAM_MINDSET_LABELS, ProgramMindsetChoice } from '../../models';
+import {
+  PROGRAM_TIME_ZONE,
+  parseZonedDateTime,
+  wallClockToInstant,
+  formatDateInZone,
+  formatTimeInZone,
+  formatDateTimeInZone,
+  entryTimeZone,
+} from '../../services/timezone.util';
 
 // Row shape used in the admin Applications table (Application enriched with user + cohort)
 type AppRow = Application & { user?: User; cohort?: Cohort };
+
+/**
+ * Epoch milliseconds for a row's submittedAt, or null when it is absent or
+ * unparseable.
+ *
+ * A Firestore document missing the field surfaces from ApplicationService as
+ * `new Date(undefined)` — an *Invalid Date object*, which is TRUTHY. A plain
+ * `!app.submittedAt` check therefore never fires for that shape, and naive
+ * sorting yields NaN, which compares false against everything and leaves the
+ * row wherever the sort happens to drop it instead of at the end.
+ */
+function submittedMs(a: AppRow): number | null {
+  if (!a.submittedAt) return null;
+  const t = new Date(a.submittedAt).getTime();
+  return isNaN(t) ? null : t;
+}
 
 export interface ColumnDef {
   key: string;
@@ -49,6 +74,11 @@ export const COLUMN_DEFS: ColumnDef[] = [
     sortValue: a => a.status ?? '' },
   { key: 'flags', label: 'Flags', sortable: true, minWidth: 80,
     sortValue: a => (a.flags?.englishProficiency ? 1 : 0) + (a.flags?.combatService ? 1 : 0) },
+  { key: 'submittedAt', label: 'Submitted', sortable: true, minWidth: 120,
+    // Sort on the raw epoch, not the humanised "3d ago" label, so ordering is
+    // chronological rather than alphabetical. Returns null (not NaN) for
+    // missing/invalid dates so the comparator's null-sink actually applies.
+    sortValue: a => submittedMs(a) },
   { key: 'actions', label: 'Actions', locked: true, sortable: false, minWidth: 200,
     sortValue: () => '' },
 ];
@@ -98,7 +128,10 @@ export const EXPORT_FIELDS: ExportField[] = [
       return out.join(', ');
     }},
   { key: 'submittedAt', label: 'Submitted', type: 'date', width: 14,
-    value: a => a.submittedAt ? new Date(a.submittedAt) : null },
+    // Uses submittedMs() for the same reason the table column does: a document
+    // missing the field arrives as an Invalid Date OBJECT, which is truthy, so
+    // a plain truthiness check would emit an Invalid Date into the spreadsheet.
+    value: a => { const t = submittedMs(a); return t === null ? null : new Date(t); } },
   { key: 'programGoal', label: 'Program Goal', width: 60,
     value: a => {
       const goal = a.formData?.programGoal?.goal;
@@ -146,6 +179,11 @@ export class AdminComponent implements OnInit, OnDestroy {
   cohortFilter = signal<string>('all');
   /** Flags filter: 'all' (no filter), 'has' (any red flag), 'none' (clean). */
   flagsFilter = signal<'all' | 'has' | 'none'>('all');
+  /** Submission-date range, as "YYYY-MM-DD" from <input type="date">.
+   *  Empty string means that end of the range is open. Both bounds are
+   *  inclusive and compared against the admin's local calendar day. */
+  submittedFromFilter = signal<string>('');
+  submittedToFilter = signal<string>('');
 
   // Filters modal — single "Filters" button in the toolbar opens a panel that
   // exposes one filter control per visible column, matching the Columns button pattern.
@@ -160,12 +198,13 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (this.recommendationFilter() !== 'all') n++;
     if (this.assignedToFilter() !== 'all') n++;
     if (this.flagsFilter() !== 'all') n++;
+    if (this.submittedFromFilter() || this.submittedToFilter()) n++;
     return n;
   });
   /** Number of column-paired filters that are currently available (= column visible).
    *  When zero, the Filters modal shows an empty-state instead of just a description. */
   availableFilterCount = computed(() => {
-    const keys = ['status', 'country', 'cohortNumber', 'assignedClass', 'recommendation', 'assignedTo', 'flags'];
+    const keys = ['status', 'country', 'cohortNumber', 'assignedClass', 'recommendation', 'assignedTo', 'flags', 'submittedAt'];
     return keys.filter(k => this.isVisible(k)).length;
   });
   selectedApplication = signal<(Application & { user?: User, cohort?: Cohort }) | null>(null);
@@ -510,6 +549,28 @@ export class AdminComponent implements OnInit, OnDestroy {
       });
     }
 
+    // Apply submission-date range.
+    //
+    // Bounds are whole calendar days in PROGRAM_TIME_ZONE, not in whichever
+    // zone the admin's laptop happens to be set to — otherwise two admins
+    // typing the same dates get different result sets for the same data.
+    // The upper bound is the instant before the NEXT day begins (rather than
+    // +24h) so it stays correct across a DST transition.
+    // A malformed bound is ignored rather than silently emptying the table.
+    const from = this.submittedFromFilter();
+    const to = this.submittedToFilter();
+    if (from || to) {
+      const fromMs = this.dayStartMs(from) ?? -Infinity;
+      const nextDayMs = this.dayStartMs(to, 1);
+      const toMs = nextDayMs === null ? Infinity : nextDayMs - 1;
+      if (fromMs !== -Infinity || toMs !== Infinity) {
+        filtered = filtered.filter(app => {
+          const t = submittedMs(app);
+          return t !== null && t >= fromMs && t <= toMs;
+        });
+      }
+    }
+
     this.filteredApplications.set(this.sortApplications(filtered));
   }
 
@@ -550,6 +611,43 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   updateFlagsFilter(value: string) {
     this.flagsFilter.set(value as 'all' | 'has' | 'none');
+    this.filterApplications();
+  }
+
+  /** Start-of-day instant (ms) for a "YYYY-MM-DD" string in PROGRAM_TIME_ZONE,
+   *  optionally offset by whole days. Returns null for empty or malformed
+   *  input so callers can treat the bound as unset instead of as NaN. */
+  private dayStartMs(dateStr: string, addDays = 0): number | null {
+    if (!dateStr) return null;
+    const [y, m, d] = dateStr.split('-').map(Number);
+    if (!y || !m || !d || m < 1 || m > 12 || d < 1 || d > 31) return null;
+    const ms = wallClockToInstant(y, m, d + addDays, 0, 0, PROGRAM_TIME_ZONE).getTime();
+    return isNaN(ms) ? null : ms;
+  }
+
+  /** Relative label for the Submitted column; an em dash when we have no
+   *  usable date, so a corrupt record reads as empty rather than
+   *  "Invalid Date" masquerading as a value. */
+  formatSubmittedAt(application: AppRow): string {
+    return submittedMs(application) === null
+      ? '—'
+      : this.formatTimestamp(application.submittedAt);
+  }
+
+  /** Absolute timestamp for the Submitted cell's hover title. Built here
+   *  rather than with the date pipe, which throws on an Invalid Date. */
+  submittedTitle(application: AppRow): string {
+    const t = submittedMs(application);
+    return t === null ? 'No submission date recorded' : new Date(t).toLocaleString();
+  }
+
+  updateSubmittedFromFilter(value: string) {
+    this.submittedFromFilter.set(value);
+    this.filterApplications();
+  }
+
+  updateSubmittedToFilter(value: string) {
+    this.submittedToFilter.set(value);
     this.filterApplications();
   }
 
@@ -1148,8 +1246,8 @@ export class AdminComponent implements OnInit, OnDestroy {
           
           const dayTimeGroup = timesGroup.get(schedule.day) as FormGroup;
           dayTimeGroup.patchValue({
-            startTime: this.convertUTCTimeToET(schedule.startTime),
-            endTime: this.convertUTCTimeToET(schedule.endTime)
+            startTime: this.toEtFormTime(schedule),
+            endTime: this.toEtFormTime(schedule, 'end')
           });
         });
         
@@ -1177,8 +1275,8 @@ export class AdminComponent implements OnInit, OnDestroy {
         
         const dayTimeGroup = labTimesGroup.get(schedule.day) as FormGroup;
         dayTimeGroup.patchValue({
-          startTime: this.convertUTCTimeToET(schedule.startTime),
-          endTime: this.convertUTCTimeToET(schedule.endTime)
+          startTime: this.toEtFormTime(schedule),
+          endTime: this.toEtFormTime(schedule, 'end')
         });
       });
     }
@@ -1329,11 +1427,15 @@ export class AdminComponent implements OnInit, OnDestroy {
   private convertFormClassesToCohortClasses(formClasses: any[]): any[] {
     return formClasses.map(formClass => {
       const selectedDays = Object.keys(formClass.weekdays).filter(day => formClass.weekdays[day]);
-      
+
+      // Times are stored EXACTLY as the admin typed them, tagged with the zone
+      // they were typed in. No offset conversion happens on write — that is what
+      // made saved schedules drift by an hour when re-edited.
       const weeklySchedule = selectedDays.map(day => ({
-        day: day as 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday',
-        startTime: this.convertETTimeToUTC(formClass.times[day].startTime),
-        endTime: this.convertETTimeToUTC(formClass.times[day].endTime)
+        day: day as any,
+        startTime: formClass.times[day].startTime,
+        endTime: formClass.times[day].endTime,
+        timeZone: PROGRAM_TIME_ZONE
       }));
 
       return {
@@ -1347,11 +1449,12 @@ export class AdminComponent implements OnInit, OnDestroy {
   // Convert form lab to cohort lab format
   private convertFormLabToCohortLab(formLab: any): any {
     const selectedDays = Object.keys(formLab.weekdays).filter(day => formLab.weekdays[day]);
-    
+
     const weeklySchedule = selectedDays.map(day => ({
-      day: day as 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday',
-      startTime: this.convertETTimeToUTC(formLab.times[day].startTime),
-      endTime: this.convertETTimeToUTC(formLab.times[day].endTime)
+      day: day as any,
+      startTime: formLab.times[day].startTime,
+      endTime: formLab.times[day].endTime,
+      timeZone: PROGRAM_TIME_ZONE
     }));
 
     return {
@@ -1439,6 +1542,10 @@ export class AdminComponent implements OnInit, OnDestroy {
       case 'assignedTo': this.assignedToFilter.set('all'); break;
       case 'cohortNumber': this.cohortFilter.set('all'); break;
       case 'flags': this.flagsFilter.set('all'); break;
+      case 'submittedAt':
+        this.submittedFromFilter.set('');
+        this.submittedToFilter.set('');
+        break;
       // Other columns (name/email/id/phone/actions) are covered by the global
       // search box (or have no associated filter), so nothing to reset here.
     }
@@ -1516,6 +1623,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.recommendationFilter.set('all');
     this.assignedToFilter.set('all');
     this.flagsFilter.set('all');
+    this.submittedFromFilter.set('');
+    this.submittedToFilter.set('');
     this.filterApplications();
   }
 
@@ -1764,139 +1873,72 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
   }
 
-  formatClassSchedule(cohortClass: any): string {
-    return cohortClass.weeklySchedule
-      .map((schedule: any) => `${schedule.day} ${this.convertUTCTimeToET(schedule.startTime)}-${this.convertUTCTimeToET(schedule.endTime)} ET`)
+  /** Admin-facing schedule summary, always rendered in ET so it matches what
+   *  was typed into cohort management. Legacy (zone-less) entries are
+   *  converted from UTC; new entries pass through. */
+  formatClassSchedule(cohortClass: any, cohort?: Cohort): string {
+    const anchor = cohort?.cohortStartDate;
+    return (cohortClass?.weeklySchedule || [])
+      .map((s: any) => `${s.day} ${this.toEtFormTime(s, 'start', anchor)}-${this.toEtFormTime(s, 'end', anchor)} ET`)
       .join(', ');
   }
 
-  formatLabSchedule(lab: any): string {
-    return lab.weeklySchedule
-      .map((schedule: any) => `${schedule.day} ${this.convertUTCTimeToET(schedule.startTime)}-${this.convertUTCTimeToET(schedule.endTime)} ET`)
+  formatLabSchedule(lab: any, cohort?: Cohort): string {
+    const anchor = cohort?.cohortStartDate;
+    return (lab?.weeklySchedule || [])
+      .map((s: any) => `${s.day} ${this.toEtFormTime(s, 'start', anchor)}-${this.toEtFormTime(s, 'end', anchor)} ET`)
       .join(', ');
   }
 
-  // Create date - save time as entered (ET time)
+  /**
+   * Stored schedule time -> the "HH:MM" the ET cohort form should show.
+   *
+   * New entries carry timeZone === PROGRAM_TIME_ZONE and are already ET, so
+   * they pass through untouched — this is what makes edit/save idempotent.
+   * Legacy entries have no timeZone (they were stored as UTC) and are
+   * converted once, anchored to the cohort start so DST is resolved correctly.
+   */
+  private toEtFormTime(entry: any, which: 'start' | 'end' = 'start', anchor?: Date): string {
+    const raw = which === 'start' ? entry.startTime : entry.endTime;
+    const zone = entryTimeZone(entry);
+    if (zone === PROGRAM_TIME_ZONE) return raw;
+
+    // Legacy conversion is DST-sensitive, so anchor it on the cohort's own
+    // start date where we have one rather than on "today".
+    const anchorDate = anchor ?? this.editingCohort()?.cohortStartDate ?? new Date();
+    const onDate = formatDateInZone(anchorDate, zone);
+    return formatTimeInZone(parseZonedDateTime(onDate, raw, zone), PROGRAM_TIME_ZONE);
+  }
+
+  /** Interpret an admin-entered date+time as Eastern Time and return the
+   *  absolute instant. All DST handling is delegated to timezone.util. */
   private createDateInETTimezone(dateStr: string, timeStr: string): Date {
-    // Parse date string components
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    
-    // Create date treating the input as ET timezone
-    // Using the ISO string format with ET offset
-    const etOffset = this.getETOffset(new Date(year, month - 1, day));
-    const etISOString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00.000${etOffset}`;
-    
-    return new Date(etISOString);
+    return parseZonedDateTime(dateStr, timeStr, PROGRAM_TIME_ZONE);
   }
 
-  // Get ET timezone offset for a given date (handles DST)
-  private getETOffset(date: Date): string {
-    // Check if date is in DST for ET timezone
-    const january = new Date(date.getFullYear(), 0, 1);
-    const july = new Date(date.getFullYear(), 6, 1);
-    const stdOffset = Math.max(january.getTimezoneOffset(), july.getTimezoneOffset());
-    const isDST = date.getTimezoneOffset() < stdOffset;
-    
-    // Return proper ET offset (EST = -05:00, EDT = -04:00)
-    return isDST ? '-04:00' : '-05:00';
-  }
-
-  // Extract time for form display (convert from UTC back to ET)
+  /** Instant -> "HH:MM" in ET, for repopulating the cohort edit form. */
   private extractTimeInET(date: Date): string {
-    // Use toLocaleString to convert UTC back to ET timezone
-    const etTime = date.toLocaleString('en-US', {
-      timeZone: 'America/New_York',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-    
-    return etTime;
+    return formatTimeInZone(date, PROGRAM_TIME_ZONE);
   }
 
-  // Extract date for form display (convert from UTC back to ET)
+  /** Instant -> "YYYY-MM-DD" in ET, for repopulating the cohort edit form. */
   private extractDateInET(date: Date): string {
-    // Use toLocaleString to get the ET date
-    const etDate = date.toLocaleDateString('en-CA', {
-      timeZone: 'America/New_York',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    
-    return etDate; // Returns YYYY-MM-DD format
+    return formatDateInZone(date, PROGRAM_TIME_ZONE);
   }
 
-  // Convert ET time string to UTC time string
-  private convertETTimeToUTC(etTimeStr: string): string {
-    // Create a reference date (today) with the ET time
-    const today = new Date();
-    const [hours, minutes] = etTimeStr.split(':').map(Number);
-    
-    // Get ET offset for today
-    const etOffset = this.getETOffset(today);
-    
-    // Create date string in ET timezone format
-    const etISOString = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00.000${etOffset}`;
-    
-    // Create date with ET timezone
-    const etDate = new Date(etISOString);
-    
-    // Extract UTC time
-    const utcHours = etDate.getUTCHours().toString().padStart(2, '0');
-    const utcMinutes = etDate.getUTCMinutes().toString().padStart(2, '0');
-    
-    return `${utcHours}:${utcMinutes}`;
+  /** Render a stored cohort instant back in ET so the admin always reads back
+   *  exactly what they typed, regardless of where their browser is. */
+  formatInProgramTime(date: Date | undefined): string {
+    if (!date) return '';
+    const d = date instanceof Date ? date : new Date(date);
+    return isNaN(d.getTime()) ? '' : `${formatDateTimeInZone(d, PROGRAM_TIME_ZONE)} ET`;
   }
 
-  // Convert UTC time string back to ET time string for form display
-  private convertUTCTimeToET(utcTimeStr: string): string {
-    // Create a reference date (today) with the UTC time
-    const today = new Date();
-    const [hours, minutes] = utcTimeStr.split(':').map(Number);
-    
-    // Create UTC date
-    const utcDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes));
-    
-    // Convert to ET timezone
-    const etTime = utcDate.toLocaleString('en-US', {
-      timeZone: 'America/New_York',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-    
-    return etTime;
-  }
-
-  // Format date for multiple timezones using simple conversion
-  formatDateWithTimezones(date: Date): string {
-    // Get the stored time components directly (they represent EST)
-    const estYear = date.getFullYear();
-    const estMonth = date.getMonth();
-    const estDay = date.getDate();
-    const estHour = date.getHours();
-    const estMinute = date.getMinutes();
-
-    // Create new dates with EST as base, then apply hour arithmetic
-    const ilDate = new Date(estYear, estMonth, estDay, estHour + 7, estMinute);
-    const pstDate = new Date(estYear, estMonth, estDay, estHour - 3, estMinute);
-    const estDate = new Date(estYear, estMonth, estDay, estHour, estMinute);
-
-    // Format dates
-    const formatDate = (d: Date, label: string) => {
-      const dateStr = d.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric', 
-        month: 'long',
-        day: 'numeric'
-      });
-      const timeStr = d.toTimeString().slice(0, 5);
-      return `${label}: ${dateStr} ${timeStr}`;
-    };
-    
-    return `${formatDate(ilDate, 'IL')}\n${formatDate(pstDate, 'PT')}\n${formatDate(estDate, 'ET')}`;
+  /** Date-only variant of formatInProgramTime. */
+  formatDateInProgramTime(date: Date | undefined): string {
+    if (!date) return '';
+    const d = date instanceof Date ? date : new Date(date);
+    return isNaN(d.getTime()) ? '' : formatDateInZone(d, PROGRAM_TIME_ZONE);
   }
 
   formatRecommendation(recommendation: Application['recommendation']): string {

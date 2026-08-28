@@ -282,9 +282,9 @@
                               <div class="class-details">
                                 @for (cohortClass of selectedApplication()?.cohort?.classes || []; track cohortClass.classId) {
                                   @if (cohortClass.classId === unavailable.classId) {
-                                    <div class="class-schedule-info">{{ formatClassSchedule(cohortClass) }}</div>
+                                    <div class="class-schedule-info">{{ formatClassSchedule(cohortClass, selectedApplication()?.cohort) }}</div>
                                     @if (selectedApplication()?.cohort?.lab) {
-                                      <div class="lab-schedule-info"><strong>Lab:</strong> {{ formatLabSchedule(selectedApplication()?.cohort?.lab) }}</div>
+                                      <div class="lab-schedule-info"><strong>Lab:</strong> {{ formatLabSchedule(selectedApplication()?.cohort?.lab, selectedApplication()?.cohort) }}</div>
                                     }
                                   }
                                 }
@@ -654,6 +654,15 @@
                              [class.fa-sort-down]="sortColumn() === 'flags' && sortDirection() === 'desc'"></i>
                         </th>
                       }
+                      @if (isVisible('submittedAt')) {
+                        <th class="col-submittedAt sortable" (click)="setSort('submittedAt')">
+                          <span>Submitted</span>
+                          <i class="fas"
+                             [class.fa-sort]="sortColumn() !== 'submittedAt'"
+                             [class.fa-sort-up]="sortColumn() === 'submittedAt' && sortDirection() === 'asc'"
+                             [class.fa-sort-down]="sortColumn() === 'submittedAt' && sortDirection() === 'desc'"></i>
+                        </th>
+                      }
                       <!-- Actions (locked, always visible, not sortable) -->
                       <th class="col-actions">Actions</th>
                     </tr>
@@ -762,6 +771,13 @@
                                 <i class="fas fa-flag flag-icon" title="Has red flags"></i>
                               }
                             </div>
+                          </td>
+                        }
+                        @if (isVisible('submittedAt')) {
+                          <td class="col-submittedAt">
+                            <span class="submitted-cell" [title]="submittedTitle(application)">
+                              {{ formatSubmittedAt(application) }}
+                            </span>
                           </td>
                         }
                         <td class="col-actions">
@@ -1136,11 +1152,11 @@
                   <div class="cohort-timeline">
                     <div class="timeline-item">
                       <i class="fas fa-calendar-plus"></i>
-                      <span>Applications: {{ cohort.applicationStartDate | date:'short' }} - {{ cohort.applicationEndDate | date:'short' }}</span>
+                      <span>Applications: {{ formatInProgramTime(cohort.applicationStartDate) }} - {{ formatInProgramTime(cohort.applicationEndDate) }}</span>
                     </div>
                     <div class="timeline-item">
                       <i class="fas fa-play-circle"></i>
-                      <span>Program: {{ cohort.cohortStartDate | date:'shortDate' }} - {{ cohort.cohortEndDate | date:'shortDate' }}</span>
+                      <span>Program: {{ formatDateInProgramTime(cohort.cohortStartDate) }} - {{ formatDateInProgramTime(cohort.cohortEndDate) }}</span>
                     </div>
                     <div class="timeline-item">
                       <i class="fas fa-external-link-alt"></i>
@@ -1587,6 +1603,33 @@
                 <option value="has">Has flags</option>
                 <option value="none">No flags</option>
               </select>
+            </div>
+          }
+
+          @if (isVisible('submittedAt')) {
+            <div class="filter-section">
+              <label class="filter-section-label">Submitted <span class="filter-hint">(ET)</span></label>
+              <div class="date-range-filter">
+                <label class="date-range-label" for="submitted-from">From</label>
+                <input
+                  id="submitted-from"
+                  type="date"
+                  [value]="submittedFromFilter()"
+                  [attr.max]="submittedToFilter() || null"
+                  (change)="updateSubmittedFromFilter($any($event.target).value)" />
+                <label class="date-range-label" for="submitted-to">To</label>
+                <input
+                  id="submitted-to"
+                  type="date"
+                  [value]="submittedToFilter()"
+                  [attr.min]="submittedFromFilter() || null"
+                  (change)="updateSubmittedToFilter($any($event.target).value)" />
+              </div>
+              @if (submittedFromFilter() || submittedToFilter()) {
+                <button class="link-button" (click)="updateSubmittedFromFilter(''); updateSubmittedToFilter('')">
+                  Clear dates
+                </button>
+              }
             </div>
           }
         </div>

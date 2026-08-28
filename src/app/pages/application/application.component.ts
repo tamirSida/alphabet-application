@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService, CohortService, ApplicationService, UserService, FirebaseService } from '../../services';
 import { Cohort, ApplicationFormData, CreateApplicationRequest, CohortClass, ProgramGoalChoice, PROGRAM_GOALS_REQUIRING_MINDSET } from '../../models';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { formatFullSchedule } from '../../services/schedule-format.util';
 
 @Component({
   selector: 'app-application',
@@ -465,46 +466,15 @@ export class ApplicationComponent implements OnInit {
     return titles[step - 1] || '';
   }
 
+  /** Applicant-facing class schedule, shown across all three program
+   *  timezones and anchored to the real dates the sessions run on. */
   formatClassSchedule(cohortClass: CohortClass): string {
-    return cohortClass.weeklySchedule
-      .map(schedule => this.formatScheduleWithTimezones(schedule.day, schedule.startTime, schedule.endTime))
-      .join('\n\n');
+    return formatFullSchedule(cohortClass.weeklySchedule, this.cohort()?.cohortStartDate);
   }
 
   formatLabSchedule(lab: any): string {
-    return lab.weeklySchedule
-      .map((schedule: any) => this.formatScheduleWithTimezones(schedule.day, schedule.startTime, schedule.endTime))
-      .join('\n\n');
+    return formatFullSchedule(lab?.weeklySchedule, this.cohort()?.cohortStartDate);
   }
-
-  // Format schedule entry in user's local timezone
-  formatScheduleWithTimezones(day: string, startTime: string, endTime: string): string {
-    // Times are now stored as UTC, convert to user's local time
-    const localStartTime = this.convertUTCTimeToLocal(startTime);
-    const localEndTime = this.convertUTCTimeToLocal(endTime);
-    
-    return `${day}\n${localStartTime} - ${localEndTime} (your local time)`;
-  }
-
-  // Convert UTC time string to user's local time
-  private convertUTCTimeToLocal(utcTimeStr: string): string {
-    // Create a reference date (today) with the UTC time
-    const today = new Date();
-    const [hours, minutes] = utcTimeStr.split(':').map(Number);
-    
-    // Create UTC date
-    const utcDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes));
-    
-    // Convert to user's local timezone
-    const localTime = utcDate.toLocaleString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-    
-    return localTime;
-  }
-
 
   // File upload handling — path-driven so the same helpers can serve any
   // upload field. Default points at the only currently-used path.

@@ -1,22 +1,32 @@
+import { Weekday } from '../services/timezone.util';
+
+/**
+ * One weekly session. `startTime`/`endTime` are wall-clock "HH:MM" values in
+ * `timeZone` — NOT UTC and NOT the browser's zone.
+ *
+ * `timeZone` is optional only so legacy cohort documents (written before
+ * schedules carried an explicit zone) still parse. Absence is interpreted as
+ * UTC, which is what the old write path produced — see `entryTimeZone()` in
+ * services/timezone.util.ts. Every new write sets it to PROGRAM_TIME_ZONE.
+ */
+export interface WeeklyScheduleEntry {
+  day: Weekday;
+  startTime: string;
+  endTime: string;
+  timeZone?: string;
+}
+
 export interface CohortClass {
   classId: string;
   name: string; // "Class A", "Class B", etc.
-  weeklySchedule: {
-    day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
-    startTime: string; // "09:00"
-    endTime: string; // "12:00"
-  }[];
+  weeklySchedule: WeeklyScheduleEntry[];
   capacity: number;
   enrolled: number;
 }
 
 export interface CohortLab {
   name: string; // Always "Lab"
-  weeklySchedule: {
-    day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
-    startTime: string; // "18:00" 
-    endTime: string; // "21:00"
-  }[];
+  weeklySchedule: WeeklyScheduleEntry[];
 }
 
 export interface Cohort {
