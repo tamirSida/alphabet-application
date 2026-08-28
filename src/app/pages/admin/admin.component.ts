@@ -128,7 +128,10 @@ export const EXPORT_FIELDS: ExportField[] = [
       return out.join(', ');
     }},
   { key: 'submittedAt', label: 'Submitted', type: 'date', width: 14,
-    value: a => a.submittedAt ? new Date(a.submittedAt) : null },
+    // Uses submittedMs() for the same reason the table column does: a document
+    // missing the field arrives as an Invalid Date OBJECT, which is truthy, so
+    // a plain truthiness check would emit an Invalid Date into the spreadsheet.
+    value: a => { const t = submittedMs(a); return t === null ? null : new Date(t); } },
   { key: 'programGoal', label: 'Program Goal', width: 60,
     value: a => {
       const goal = a.formData?.programGoal?.goal;
